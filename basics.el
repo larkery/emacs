@@ -20,6 +20,10 @@
 	      indicate-empty-lines t
 	      indicate-buffer-boundaries 'right)
 
+(advice-add 'set-mouse-position :override #'ignore)
+(advice-add 'set-mouse-pixel-position :override #'ignore)
+(advice-add 'set-mouse-absolute-pixel-position :override #'ignore)
+
 (prefer-coding-system 'utf-8)
 (set-default-coding-systems 'utf-8)
 (set-terminal-coding-system 'utf-8)
@@ -34,8 +38,14 @@
 
 (use-package ivy
   :ensure t
+  :defer nil
+  :bind ("M-s M-s" . swiper-at-point)
   :config (ivy-mode)
-  (setq ivy-use-virtual-buffers t))
+  (setq ivy-use-virtual-buffers t)
+  (defun swiper-at-point ()
+    (interactive)
+    (swiper (or (thing-at-point 'symbol)
+                (thing-at-point 'word)))))
 
 (use-package counsel
   :ensure t
