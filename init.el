@@ -1,9 +1,6 @@
 (setq gc-cons-threshold (* 100 gc-cons-threshold)
       make-backup-files nil
-      custom-file (concat user-emacs-directory "custom.el")
-      )
-
-
+      custom-file (concat user-emacs-directory "custom.el"))
 
 (require 'package)
 
@@ -23,6 +20,7 @@
 (load (concat user-emacs-directory "basics.el"))
 (load (concat user-emacs-directory "email.el"))
 (load (concat user-emacs-directory "util.el"))
+(load (concat user-emacs-directory "clojure.el"))
 (load custom-file)
 
 (setq gc-cons-threshold (/ gc-cons-threshold 100))
