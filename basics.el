@@ -11,6 +11,7 @@
       mouse-autoselect-window t
       echo-keystrokes 0.2
       disabled-command-function nil
+      set-mark-command-repeat-pop t
       )
 
 (setq-default scroll-bar-width 10
