@@ -20,12 +20,22 @@
               ("C-(" . sp-backward-slurp-sexp)
               ("C-{" . sp-backward-barf-sexp)
               ("C-|" . sp-split-sexp) ;; misc
+              ("C-M-;" . sp-comment-or-uncomment-sexp)
               )
   :init
   (add-hook 'prog-mode-hook 'smartparens-mode)
   (add-hook 'prog-mode-hook 'show-smartparens-mode)
 
   :config
+  (defun sp-comment-or-uncomment-sexp ()
+    (interactive)
+    (comment-or-uncomment-region
+     (point)
+     (save-mark-and-excursion
+      (sp-forward-sexp)
+      (unless (looking-at ".") (insert "\n"))
+      (point))))
+  
   (require 'smartparens-config)
   (setq-default sp-autoskip-closing-pair 'always))
 
