@@ -18,6 +18,7 @@
   (require 'use-package))
 
 (load (concat user-emacs-directory "basics.el"))
+(load (concat user-emacs-directory "mode-line.el"))
 (load (concat user-emacs-directory "email.el"))
 (load (concat user-emacs-directory "util.el"))
 (load (concat user-emacs-directory "clojure.el"))

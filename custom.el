@@ -10,7 +10,7 @@
  '(inhibit-startup-screen t)
  '(package-selected-packages
    (quote
-    (pcre2el projectile smartparens cider clojure-mode magit use-package counsel))))
+    (diminish yascroll pcre2el projectile smartparens cider clojure-mode magit use-package counsel))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

@@ -57,6 +57,7 @@
   (winner-mode 1))
 
 (use-package projectile
+  :diminish
   :ensure t
   :config
   (projectile-global-mode 1)

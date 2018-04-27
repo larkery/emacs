@@ -1,12 +1,14 @@
 (menu-bar-mode -1)
-(set-scroll-bar-mode 'right)
+(set-scroll-bar-mode nil)
 (set-fringe-mode 4)
 (defalias 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
 (transient-mark-mode 1)
+(window-divider-mode 1)
 
-(setq default-frame-scroll-bars 'right
-      default-frame-alist '((scroll-bar-width . 10))
+(setq default-frame-scroll-bars nil
+      default-frame-alist '((scroll-bar-width . 8)
+                            (right-divider-width . 4))
       focus-follows-mouse t
       mouse-autoselect-window t
       echo-keystrokes 0.2
@@ -14,7 +16,7 @@
       set-mark-command-repeat-pop t
       )
 
-(setq-default scroll-bar-width 10
+(setq-default scroll-bar-width 8
 	      indent-tabs-mode nil
 	      case-fold-search t
 	      bidi-display-reordering nil
@@ -38,6 +40,7 @@
 (global-auto-revert-mode 1)
 
 (use-package ivy
+  :diminish
   :ensure t
   :defer nil
   :bind ("M-s M-s" . swiper-at-point)
@@ -49,6 +52,7 @@
                 (thing-at-point 'word)))))
 
 (use-package counsel
+  :diminish
   :ensure t
   :config (counsel-mode)
   (setq counsel-find-file-ignore-regexp "\\`\\."))
@@ -60,3 +64,10 @@
 (use-package paren
   :config
   (show-paren-mode 1))
+
+(use-package yascroll
+  :config
+  (global-yascroll-bar-mode 1))
+
+(use-package diminish
+  :ensure t)
