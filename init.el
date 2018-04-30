@@ -2,6 +2,8 @@
       make-backup-files nil
       custom-file (concat user-emacs-directory "custom.el"))
 
+(add-to-list 'load-path (concat user-emacs-directory "site-lisp/"))
+
 (require 'package)
 
 (setq package-enable-at-startup nil)

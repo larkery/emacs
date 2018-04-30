@@ -39,6 +39,9 @@
 
 (global-auto-revert-mode 1)
 
+(use-package diminish
+  :ensure t)
+
 (use-package ivy
   :diminish
   :ensure t
@@ -66,8 +69,15 @@
   (show-paren-mode 1))
 
 (use-package yascroll
+  :ensure t
   :config
   (global-yascroll-bar-mode 1))
 
-(use-package diminish
-  :ensure t)
+(use-package dakrone-light-theme
+  :ensure t
+  :config
+  (load-theme 'dakrone-light t))
+
+(use-package theme-to-xresources
+  :config
+  (theme-to-xresources))
