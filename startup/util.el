@@ -132,9 +132,8 @@
 (use-package dumb-jump
   :ensure t
   :defer t
-  :bind (("M-." . dumb-jump-go) ;; Go to Symbol, ish
-         )
-  )
+  :bind (("C-." . dumb-jump-go) ;; Go to Symbol, ish
+         ("C-," . dumb-jump-back)))
 
 (use-package which-key
   :ensure t
