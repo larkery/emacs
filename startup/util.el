@@ -139,4 +139,5 @@
 (use-package which-key
   :ensure t
   :config
-  (which-key-mode 1))
+  (which-key-mode 1)
+  (setq which-key-idle-delay 0.75))
