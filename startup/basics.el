@@ -33,9 +33,6 @@
 (set-keyboard-coding-system 'utf-8)
 
 (global-set-key (kbd "C-z") 'undo)
-
-
-
 (global-set-key (kbd "C-x k") 'kill-buffer-and-window)
 (global-set-key (kbd "M-o") 'other-window)
 (global-set-key (kbd "<f5>") 'save-buffer)
@@ -76,19 +73,21 @@
   :config
   (global-yascroll-bar-mode 1))
 
+(use-package theme-to-xresources
+  :config
+  (theme-to-xresources)
+  (defadvice load-theme (after update-xresources-after-load-theme activate)
+    (theme-to-xresources)))
+
 (use-package dakrone-light-theme
   :ensure t
   :config
   (load-theme 'dakrone-light t))
-
-(use-package theme-to-xresources
-  :config
-  (theme-to-xresources))
 
 (use-package visual-line
   :commands visual-line-mode
   :init
   (add-hook 'text-mode-hook 'visual-line-mode)
   :config
-  (setq visual-line-fringe-indicators '(nil right-curly-arrow))
-  )
+  (setq visual-line-fringe-indicators '(nil right-curly-arrow)))
+

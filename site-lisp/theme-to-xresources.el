@@ -32,7 +32,7 @@
                          ("color5" term-color-magenta :background)
                          ("color6" term-color-cyan :background)
                          ("color7" term-color-white :background))
-           do (destructuring-bind
+           do (cl-destructuring-bind
                   (resource face attr) spec
                 (let ((att (face-attribute face attr)))
                   (unless (eq att 'unspecified)
@@ -47,7 +47,7 @@
                          ("color13" term-color-magenta :background)
                          ("color14" term-color-cyan :background)
                          ("color15" term-color-white :background))
-           do (destructuring-bind
+           do (cl-destructuring-bind
                   (resource face attr) spec
                 (let ((nam (face-rgb-color face attr)))
                   (when nam
