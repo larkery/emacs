@@ -23,13 +23,12 @@
 
   (defun notmuch-search-flag ()
     (interactive)
-    (notmuch-search-toggle-tag "flagged")
-    )
+    (notmuch-search-toggle-tag "flagged"))
+  
   (defun notmuch-search-delete ()
     (interactive)
     (notmuch-search-toggle-tag "deleted")
-    (notmuch-search-next-thread)
-    )
+    (notmuch-search-next-thread))
   )
 
 (use-package message

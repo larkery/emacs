@@ -33,7 +33,10 @@
 (set-keyboard-coding-system 'utf-8)
 
 (global-set-key (kbd "C-z") 'undo)
-(global-set-key (kbd "C-x k") 'kill-this-buffer)
+
+
+
+(global-set-key (kbd "C-x k") 'kill-buffer-and-window)
 (global-set-key (kbd "M-o") 'other-window)
 (global-set-key (kbd "<f5>") 'save-buffer)
 
@@ -81,3 +84,11 @@
 (use-package theme-to-xresources
   :config
   (theme-to-xresources))
+
+(use-package visual-line
+  :commands visual-line-mode
+  :init
+  (add-hook 'text-mode-hook 'visual-line-mode)
+  :config
+  (setq visual-line-fringe-indicators '(nil right-curly-arrow))
+  )

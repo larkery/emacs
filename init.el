@@ -19,11 +19,14 @@
 (eval-when-compile
   (require 'use-package))
 
-(load (concat user-emacs-directory "basics.el"))
-(load (concat user-emacs-directory "mode-line.el"))
-(load (concat user-emacs-directory "email.el"))
-(load (concat user-emacs-directory "util.el"))
-(load (concat user-emacs-directory "clojure.el"))
+(let ((startup-directory (concat user-emacs-directory "startup/")))
+  (load (concat startup-directory "basics.el"))
+  (load (concat startup-directory "mode-line.el"))
+  (load (concat startup-directory "email.el"))
+  (load (concat startup-directory "util.el"))
+  (load (concat startup-directory "clojure.el"))
+  (load (concat startup-directory "modes.el")))
+
 (load custom-file)
 
 (setq gc-cons-threshold (/ gc-cons-threshold 100))
