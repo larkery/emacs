@@ -132,6 +132,11 @@
 (use-package dumb-jump
   :ensure t
   :defer t
-  :bind (("M-g s" . dumb-jump-go) ;; Go to Symbol
+  :bind (("M-." . dumb-jump-go) ;; Go to Symbol, ish
          )
   )
+
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode 1))
