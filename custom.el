@@ -3,23 +3,17 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ansi-color-faces-vector
-   [default default default italic underline success warning error])
  '(ansi-color-names-vector
-   ["#dddddd" "#222222" "#555555" "#000000" "#000000" "#222222" "#000000" "#000000"])
- '(fci-rule-color "#eeeeee")
- '(inhibit-startup-buffer-menu t)
- '(inhibit-startup-echo-area-message t)
- '(inhibit-startup-screen t)
+   ["#3C3836" "#FB4933" "#86C9D3" "#8DD1CA" "#419BB0" "#A59FC0" "#3FD7E5" "#EBDBB2"])
+ '(org-agenda-files (quote ("~/notes/inbox.org" "~/notes/calendar.org")))
  '(package-selected-packages
    (quote
-    (nix-mode faff-theme eziam-theme dakrone-light-theme diminish yascroll pcre2el projectile smartparens cider clojure-mode magit use-package counsel)))
- '(pdf-view-midnight-colors (quote ("#eeeeee" . "#000000")))
- '(vc-annotate-background "#eeeeee")
- '(window-divider-mode t))
+    (yaml-mode which-key dumb-jump anzu creamsody-theme northcode-theme yascroll use-package smartparens projectile pcre2el nix-mode magit faff-theme eziam-theme diminish dakrone-theme dakrone-light-theme counsel cider)))
+ '(pos-tip-background-color "#1A3734")
+ '(pos-tip-foreground-color "#FFFFC8"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(org-agenda-date-weekend ((t (:inherit (org-agenda-date italic) :weight bold))) t))

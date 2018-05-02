@@ -25,7 +25,8 @@
   (load (concat startup-directory "email.el"))
   (load (concat startup-directory "util.el"))
   (load (concat startup-directory "clojure.el"))
-  (load (concat startup-directory "modes.el")))
+  (load (concat startup-directory "modes.el"))
+  (load (concat startup-directory "org.el")))
 
 (load custom-file)
 
