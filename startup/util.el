@@ -126,8 +126,7 @@
       (funcall f prompt beg end use-re overlay-limit)))
 
   (advice-add 'anzu--check-minibuffer-input :around #'my-anzu-wangle-minibuffer-input)
-  (advice-add 'anzu--query-from-string :around #'my-anzu-pcre-mode)
-  )
+  (advice-add 'anzu--query-from-string :around #'my-anzu-pcre-mode))
 
 (use-package dumb-jump
   :ensure t
@@ -136,6 +135,7 @@
          ("C-," . dumb-jump-back)))
 
 (use-package which-key
+  :diminish ""
   :ensure t
   :config
   (which-key-mode 1)

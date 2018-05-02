@@ -33,9 +33,14 @@
 (set-keyboard-coding-system 'utf-8)
 
 (global-set-key (kbd "C-z") 'undo)
-(global-set-key (kbd "C-x k") 'kill-buffer-and-window)
+(defun kill-current-buffer ()
+  (interactive) (kill-buffer nil))
+(global-set-key (kbd "C-x k") 'kill-current-buffer)
 (global-set-key (kbd "M-o") 'other-window)
 (global-set-key (kbd "<f5>") 'save-buffer)
+(defun cycle-space ()
+  (interactive) (cycle-spacing -1 t))
+(global-set-key [remap just-one-space] 'cycle-space)
 
 (global-auto-revert-mode 1)
 
@@ -49,10 +54,45 @@
   :bind ("M-s M-s" . swiper-at-point)
   :config (ivy-mode)
   (setq ivy-use-virtual-buffers t)
+
   (defun swiper-at-point ()
     (interactive)
     (swiper (or (thing-at-point 'symbol)
-                (thing-at-point 'word)))))
+                (thing-at-point 'word))))
+
+  (defvar ivy--switch-buffer-transformer-format "%-50s%10s")
+
+  (defun ivy--switch-buffer-mb-width (orig)
+    (let* ((mb-width (window-width (minibuffer-window)))
+           (ivy--switch-buffer-transformer-format
+            (format "%%-%ds%%%ds"
+                    (- mb-width 22)
+                    20)))
+      (funcall orig)))
+
+  (advice-add 'ivy-switch-buffer :around 'ivy--switch-buffer-mb-width)
+  
+  (defun ivy-switch-buffer-transformer (str)
+    (let ((b (get-buffer str)))
+      (if b
+          (with-current-buffer b
+            (let ((file (or buffer-file-name dired-directory)))
+              (if file
+                  (let* ((project (if (projectile-project-p)
+                                      (concat " " (projectile-project-name)) ""))
+                         (file (or buffer-file-name dired-directory))
+                         (host (if (and file (file-remote-p file))
+                                   (concat "@" (tramp-file-name-host (tramp-dissect-file-name file)))
+                                 ""))
+                         (dir (if (and file (file-directory-p file)) "D" ""))
+                         (misc (format "%-2s%-10s%10s" dir host project)))
+
+                    (format ivy--switch-buffer-transformer-format str misc))
+                (ivy-append-face str 'italic)
+                )))
+        str)
+      ))
+  )
 
 (use-package counsel
   :diminish

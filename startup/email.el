@@ -1,18 +1,30 @@
+(use-package notmuch-agenda
+  :defer t
+  :commands notmuch-agenda-insert-part)
+
 (use-package notmuch
   :commands notmuch
   :bind
   (:map notmuch-search-mode-map
 	("f" . notmuch-search-flag)
 	("d" . notmuch-search-delete)
-	("g" . notmuch-refresh-this-buffer))
+	("g" . notmuch-refresh-this-buffer)
+        :map notmuch-message-mode-map
+        ("C-c m" . notmuch-switch-identity))
   
   :config
+  (require 'notmuch-switch-identity)
+  (fset 'notmuch-show-insert-part-text/calendar #'notmuch-agenda-insert-part)
+  
   (setq notmuch-search-oldest-first nil
 	notmuch-fcc-dirs
 	'(("tom\\.hinton@cse\\.org\\.uk" . "\"cse/Sent Items\" +sent -inbox")
 	  ("larkery\\.com" . "\"fastmail/Sent Items\" +sent -inbox"))
 	notmuch-identities
 	'("Tom Hinton <tom.hinton@cse.org.uk>" "Tom Hinton <t@larkery.com>")
+        notmuch-draft-folders
+        '(("tom\\.hinton@cse\\.org\\.uk" . "cse/Drafts")
+	  ("larkery\\.com" . "fastmail/Drafts"))
 	)
   
   (defun notmuch-search-toggle-tag (&rest tags)
@@ -39,7 +51,17 @@
    message-sendmail-envelope-from 'header
    mm-coding-system-priorities '(utf-8)
    mm-inline-large-images 'resize
-   mm-inline-large-images-proportion 0.5
+   mm-inline-large-images-proportion 0.9
    mm-inline-text-html-with-images t
    sendmail-program "msmtpq-quiet"
-   user-mail-address "tom.hinton@cse.org.uk"))
+   user-mail-address "tom.hinton@cse.org.uk"
+   message-auto-save-directory nil))
+
+(use-package mailcap
+  :defer t
+  :config
+  (mailcap-add "application/pdf" 'pdf-view-mode)
+  (mailcap-add "application/msword" 'pdf-view-word-document)
+  (mailcap-add "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+               'pdf-view-word-document))
+
