@@ -31,7 +31,7 @@
 
  mode-line-format
  '("%5l "
-   "%b"
+   "%* %b"
    (:eval (mode-line-get-project))
    (:eval (mode-line-get-host))
    (:eval (mode-line-pad-right

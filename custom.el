@@ -5,7 +5,7 @@
  ;; If there is more than one, they won't work right.
  '(ansi-color-names-vector
    ["#3C3836" "#FB4933" "#86C9D3" "#8DD1CA" "#419BB0" "#A59FC0" "#3FD7E5" "#EBDBB2"])
- '(org-agenda-files (quote ("~/notes/inbox.org" "~/notes/calendar.org")))
+ '(org-agenda-files (quote ("~/notes/agenda/")))
  '(package-selected-packages
    (quote
     (yaml-mode which-key dumb-jump anzu creamsody-theme northcode-theme yascroll use-package smartparens projectile pcre2el nix-mode magit faff-theme eziam-theme diminish dakrone-theme dakrone-light-theme counsel cider)))

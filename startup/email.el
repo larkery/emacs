@@ -41,6 +41,14 @@
     (interactive)
     (notmuch-search-toggle-tag "deleted")
     (notmuch-search-next-thread))
+
+  (defun notmuch-expand-calendar-parts (o msg part depth &optional hide)
+    (funcall o
+             msg part depth (and hide
+                                 (not (string= (downcase (plist-get part :content-type))
+                                               "text/calendar")))))
+  
+  (advice-add 'notmuch-show-insert-bodypart :around #'notmuch-expand-calendar-parts)
   )
 
 (use-package message

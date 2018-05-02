@@ -21,6 +21,7 @@
 
 (let ((startup-directory (concat user-emacs-directory "startup/")))
   (load (concat startup-directory "basics.el"))
+  (load (concat startup-directory "dired.el"))
   (load (concat startup-directory "mode-line.el"))
   (load (concat startup-directory "email.el"))
   (load (concat startup-directory "util.el"))
