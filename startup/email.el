@@ -16,6 +16,12 @@
   :config
   (require 'notmuch-switch-identity)
   (fset 'notmuch-show-insert-part-text/calendar #'notmuch-agenda-insert-part)
+
+  (defun in-home-directory (o &rest args)
+    (let ((default-directory "~"))
+      (apply o args)))
+
+  (advice-add 'notmuch :around 'in-home-directory)
   
   (setq notmuch-search-oldest-first nil
 	notmuch-fcc-dirs
