@@ -80,3 +80,10 @@
   (mailcap-add "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                'pdf-view-word-document))
 
+
+(use-package shr
+  :defer t
+  :config
+  (defun shr-color-check-ignore-bg (shr-color-check fg bg)
+    (funcall shr-color-check fg nil))
+  (advice-add 'shr-color-check :around 'shr-color-check-ignore-bg))
