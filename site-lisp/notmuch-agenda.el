@@ -84,61 +84,61 @@
          
          (org-agenda-custom-commands '(("q" "Mail agenda" ((agenda ""))))))
     (org-eval-in-environment
-     (org-make-parameter-alist
-      `(org-agenda-span 'day
-        org-agenda-start-day ,(format "%04d-%02d-%02d" year month day)
-        org-agenda-use-time-grid nil
-        org-agenda-remove-tags t
-        org-agenda-window-setup 'nope))
+        (org-make-parameter-alist
+         `(org-agenda-span 'day
+                           org-agenda-start-day ,(format "%04d-%02d-%02d" year month day)
+                           org-agenda-use-time-grid nil
+                           org-agenda-remove-tags t
+                           org-agenda-window-setup 'nope))
 
-     (progn
-       (save-excursion
-         (org-agenda nil "q")
-         (org-agenda-redo)
-         (setq org-agenda-mail-buffer (current-buffer)))
-       (set-window-configuration wins)
-       (let ((p (point))
-             pa)
-         ;; copy text
-         (insert-buffer-substring org-agenda-mail-buffer)
+      (progn
+        (save-excursion
+          (org-agenda nil "q")
+          (org-agenda-redo)
+          (setq org-agenda-mail-buffer (current-buffer)))
+        (set-window-configuration wins)
+        (let ((p (point))
+              pa)
+          ;; copy text
+          (insert-buffer-substring org-agenda-mail-buffer)
 
-         ;; copy markers
-         (save-restriction
-           (narrow-to-region p (point))
-           (let ((org-marker-regions
-                  (with-current-buffer
-                      org-agenda-mail-buffer
-                    (setq pa (point-min))
-                    (gnus-find-text-property-region (point-min) (point-max) 'org-marker))))
-             (loop for marker in org-marker-regions
-                   do
-                   (add-text-properties
-                    (+ p (- (car marker) pa)) (+ p (- (cadr marker) pa))
-                    `(org-marker
-                      ,(copy-marker (get-text-property (car marker) 'org-marker org-agenda-mail-buffer))))
+          ;; copy markers
+          (save-restriction
+            (narrow-to-region p (point))
+            (let ((org-marker-regions
+                   (with-current-buffer
+                       org-agenda-mail-buffer
+                     (setq pa (point-min))
+                     (gnus-find-text-property-region (point-min) (point-max) 'org-marker))))
+              (loop for marker in org-marker-regions
+                    do
+                    (add-text-properties
+                     (+ p (- (car marker) pa)) (+ p (- (cadr marker) pa))
+                     `(org-marker
+                       ,(copy-marker (get-text-property (car marker) 'org-marker org-agenda-mail-buffer))))
 
-                   (set-marker (car marker) nil)
-                   (set-marker (cadr marker) nil))))
+                    (set-marker (car marker) nil)
+                    (set-marker (cadr marker) nil))))
 
-         ;; copy faces via font-lock-face
-         (save-restriction
-           (narrow-to-region p (point))
-           (let ((face-regions (gnus-find-text-property-region (point-min) (point-max) 'face)))
-             (loop for range in face-regions
-                   do
-                   (let ((face (get-text-property (car range) 'face)))
-                     (add-text-properties
-                      (car range) (cadr range)
-                      `(font-lock-face ,face)))
+          ;; copy faces via font-lock-face
+          (save-restriction
+            (narrow-to-region p (point))
+            (let ((face-regions (gnus-find-text-property-region (point-min) (point-max) 'face)))
+              (loop for range in face-regions
+                    do
+                    (let ((face (get-text-property (car range) 'face)))
+                      (add-text-properties
+                       (car range) (cadr range)
+                       `(font-lock-face ,face)))
 
 
-                   (set-marker (car range) nil)
-                   (set-marker (cadr range) nil))))
+                    (set-marker (car range) nil)
+                    (set-marker (cadr range) nil))))
 
-         (kill-buffer org-agenda-mail-buffer)
-         (put-text-property p (point) 'keymap
-                            org-agenda-keymap)))
-                             )
+          (kill-buffer org-agenda-mail-buffer)
+          (put-text-property p (point) 'keymap
+                             org-agenda-keymap)))
+      )
     )
   )
 
@@ -200,11 +200,90 @@
           ;; insert event description string
           (notmuch-agenda-insert-summary event zone-map)
           (notmuch-agenda-insert-agenda event zone-map))
-        
-        
         t))))
 
+(defun notmuch-agenda-reply-advice (o &rest args)
+  ;; look for any text/calendar parts
+  (require 'cl)
+  (let* ((responded (cl-intersection (notmuch-show-get-tags)
+                                     '("accepted" "declined" "tentative")
+                                     :test 'string=
+                                     ))
+
+         requires-response
+
+         response
+
+         (query (car args))
+         (original (unless responded
+                     (notmuch-call-notmuch-sexp
+                      "reply" "--format=sexp" "--format-version=4" query)))
+         (body (unless responded
+                 (plist-get (plist-get original :original)
+                            :body))))
+    (while body
+      (let ((head (car body)))
+        (setq body (cdr body))
+        (let ((content-type (plist-get head :content-type)))
+          (cond
+           ((string= content-type "multipart/alternative")
+            (setq body (append body (plist-get head :content)))
+            )
+           ((and (string= content-type "text/calendar")
+                 (string-match-p "^METHOD:REQUEST$" (plist-get head :content)))
+            (setq requires-response (plist-get head :content)
+                  body nil))))))
+
+    (when requires-response
+      (setq response (completing-read "Event invitation: "
+                                      '("Accepted"
+                                        "Declined"
+                                        "Tentative"
+                                        "Skip")
+                                      nil t)))
+
+    (when (and response (not (string= "Skip" response)))
+      (notmuch-show-tag-message (concat "+" (downcase response))))
+    
+    (apply o args)
+    
+    (when (and requires-response
+               response
+               (not (string= response "Skip")))
+      (require 'ox-icalendar)
+      
+      (make-variable-buffer-local 'message-syntax-checks)
+      (push '(illegible-text . disabled) message-syntax-checks)
+      
+      (save-excursion
+        (goto-char (point-max))
+        (save-excursion
+          (mml-insert-part "text/calendar; method=REPLY")
+          (insert
+           (replace-regexp-in-string
+            "\n" "\r\n"
+            (org-icalendar-fold-string 
+             (with-temp-buffer
+               (insert requires-response)
+               (goto-char (point-min))
+               (with-current-buffer
+                   (icalendar--get-unfolded-buffer (current-buffer))
+                 (goto-char (point-min))
+                 (setq requires-response (icalendar--read-element nil nil))
+                 (kill-buffer))
+               (erase-buffer)
+
+               (imip-write-element
+                (imip-respond (car requires-response)
+                              '("tom.hinton@cse.org.uk" "larkery.com")
+                              (upcase response)))
+
+               (buffer-string))))))
+        ))))
+
+(advice-add 'notmuch-mua-reply :around 'notmuch-agenda-reply-advice)
 
 (fset 'notmuch-show-insert-part-text/calendar #'notmuch-agenda-insert-part)
+
 
 (provide 'notmuch-agenda)
