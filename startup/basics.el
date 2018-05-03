@@ -8,7 +8,7 @@
 
 (setq default-frame-scroll-bars nil
       default-frame-alist '((scroll-bar-width . 8)
-                            (right-divider-width . 4))
+                            (right-divider-width . 2))
       focus-follows-mouse t
       mouse-autoselect-window t
       echo-keystrokes 0.2
@@ -60,14 +60,12 @@
     (swiper (or (thing-at-point 'symbol)
                 (thing-at-point 'word))))
 
-  (defvar ivy--switch-buffer-transformer-format "%-50s%10s")
+  (defvar ivy--switch-buffer-format "%s %-50s%10s")
 
   (defun ivy--switch-buffer-mb-width (orig)
     (let* ((mb-width (window-width (minibuffer-window)))
-           (ivy--switch-buffer-transformer-format
-            (format "%%-%ds%%%ds"
-                    (- mb-width 22)
-                    20)))
+           (ivy--switch-buffer-format
+            (format "%%s %%-%ds%%%ds" (- mb-width 40) 38)))
       (funcall orig)))
 
   (advice-add 'ivy-switch-buffer :around 'ivy--switch-buffer-mb-width)
@@ -76,22 +74,28 @@
     (let ((b (get-buffer str)))
       (if b
           (with-current-buffer b
-            (let ((file (or buffer-file-name dired-directory)))
-              (if file
-                  (let* ((project (if (projectile-project-p)
-                                      (concat " " (projectile-project-name)) ""))
-                         (file (or buffer-file-name dired-directory))
-                         (host (if (and file (file-remote-p file))
-                                   (concat "@" (tramp-file-name-host (tramp-dissect-file-name file)))
-                                 ""))
-                         (dir (if (and file (file-directory-p file)) "D" ""))
-                         (misc (format "%-2s%-10s%10s" dir host project)))
+            (let* ((proj (if (projectile-project-p)
+                             (projectile-project-name)))
+                   (file (or buffer-file-name dired-directory))
+                   (host (if (and file (file-remote-p file))
+                             (concat "@"
+                                     (tramp-file-name-host
+                                      (tramp-dissect-file-name
+                                       (or buffer-file-name dired-directory))))
+                           "")))
+              (cond
+               (dired-directory
+                (format ivy--switch-buffer-format ":" str (or proj host)))
+               
+               (buffer-file-name
+                (format ivy--switch-buffer-format "." str (or proj host)))
 
-                    (format ivy--switch-buffer-transformer-format str misc))
-                (ivy-append-face str 'italic)
-                )))
-        str)
-      ))
+               (t (format ivy--switch-buffer-format "%" str (or proj host)))
+               
+               )))
+        (format ivy--switch-buffer-format "v" str "")
+        )))
+  
   )
 
 (use-package counsel

@@ -5,7 +5,8 @@
 (use-package notmuch
   :commands notmuch
   :bind
-  (:map notmuch-search-mode-map
+  (("C-c m" . notmuch)
+   :map notmuch-search-mode-map
 	("f" . notmuch-search-flag)
 	("d" . notmuch-search-delete)
 	("g" . notmuch-refresh-this-buffer)
