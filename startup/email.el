@@ -32,6 +32,12 @@
         notmuch-draft-folders
         '(("tom\\.hinton@cse\\.org\\.uk" . "cse/Drafts")
 	  ("larkery\\.com" . "fastmail/Drafts"))
+
+        notmuch-address-selection-function
+        (lambda
+          (prompt collection initial-input)
+          (completing-read prompt collection nil nil nil
+                           (quote notmuch-address-history)))
 	)
   
   (defun notmuch-search-toggle-tag (&rest tags)
@@ -84,6 +90,7 @@
 (use-package shr
   :defer t
   :config
+  (setq shr-color-visible-luminance-min 75)
   (defun shr-color-check-ignore-bg (shr-color-check fg bg)
     (funcall shr-color-check fg nil))
   (advice-add 'shr-color-check :around 'shr-color-check-ignore-bg))

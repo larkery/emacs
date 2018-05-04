@@ -140,3 +140,14 @@
   :config
   (which-key-mode 1)
   (setq which-key-idle-delay 0.75))
+
+(use-package hippie-expand
+  :bind ("M-/" . hippie-expand)
+  :config
+  (setq hippie-expand-try-functions-list
+        '(try-complete-file-name
+          try-complete-file-name-partially
+          try-expand-dabbrev
+          try-expand-dabbrev-all-buffers
+          try-expand-dabbrev-from-kill)))
+

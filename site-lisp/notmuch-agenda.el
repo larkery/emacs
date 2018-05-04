@@ -138,9 +138,96 @@
           (kill-buffer org-agenda-mail-buffer)
           (put-text-property p (point) 'keymap
                              org-agenda-keymap)))
-      )
-    )
-  )
+      )))
+
+(defvar notmuch-agenda-capture-target
+  '(file+datetree "~/notes/agenda/calendar.org"))
+
+(defvar notmuch-agenda-capture-template
+  ;; TODO insert also link to email
+  "* %:event-summary
+:PROPERTIES:
+:LOCATION: %:event-location
+:SEQUENCE: %:event-sequence
+:ORGANIZER: [[%:event-organizer]]
+:ID: %:event-uid
+:END:
+%:event-timestamp
+%:event-comment
+%?")
+
+(defvar notmuch-agenda-capturing-event nil)
+
+(defun notmuch-agenda-store-link ()
+  (when-let ((event notmuch-agenda-capturing-event))
+    (let ((zone-map (icalendar--convert-all-timezones (list event)))
+          (props (mapcan
+                  (lambda (prop)
+                    (let* ((val (icalendar--get-event-property event prop))
+                           (val (and val (icalendar--convert-string-for-import val))))
+                      (list
+                       (intern (concat ":event-" (downcase (symbol-name prop))))
+                       (or val ""))))
+                  
+                  (list 'LOCATION 'SEQUENCE 'UID 'SUMMARY 'COMMENT 'ORGANIZER))))
+      (apply 'org-store-link-props
+             :type "event"
+             :link "nope://nope"
+             :event-timestamp (notmuch-agenda-org-date
+                               (notmuch-agenda-event-time event zone-map 'DTSTART)
+                               (notmuch-agenda-event-time event zone-map 'DTEND)
+                               (icalendar--get-event-property event 'RRULE)
+                               (icalendar--get-event-property event 'RDATE)
+                               (icalendar--get-event-property event 'DURATION))
+             props))
+    t))
+
+(defun notmuch-agenda-org-capture-or-update (event)
+  (require 'org-id)
+  (require 'org-capture)
+
+  (let ((existing-event (org-id-find (icalendar--get-event-property event 'UID) t)))
+    (if existing-event
+        (let ((use-dialog-box nil)
+              (existing-sequence
+               (org-entry-get existing-event "SEQUENCE")))
+          (with-current-buffer
+              (pop-to-buffer (marker-buffer existing-event))
+            (goto-char existing-event)
+            (outline-hide-sublevels 1)
+            (outline-show-entry)
+            (org-reveal)
+            (if (>= (string-to-number existing-sequence)
+                    (string-to-number (icalendar--get-event-property event 'SEQUENCE)))
+                (message "Event is already in calendar")
+              (when (y-or-n-p "Update event?")
+                (org-entry-put nil "ID" nil)
+                (org-id-update-id-locations (list buffer-file-name))
+                (org-archive-subtree)
+                (notmuch-agenda-org-capture-or-update event))))
+          
+          (set-marker existing-event nil nil))
+      
+        (let* ((notmuch-agenda-capturing-event event)
+               
+               (org-store-link-functions '(notmuch-agenda-store-link))
+
+               (org-overriding-default-time
+                (apply 'encode-time
+                       (notmuch-agenda-event-time event
+                                                  (icalendar--convert-all-timezones (list event))
+                                                  'DTSTART)))
+               
+               (org-capture-templates
+                `(("e" "Capture an event from email invitation"
+                   entry
+                   ,notmuch-agenda-capture-target
+                   ,notmuch-agenda-capture-template))))
+          (org-capture t "e")))))
+
+(defun notmuch-agenda-do-capture (event)
+  (let ((calendar-event (plist-get (overlay-properties event) 'calendar-event)))
+    (notmuch-agenda-org-capture-or-update calendar-event)))
 
 (defun notmuch-agenda-insert-summary (event zone-map)
   (let* ((summary (icalendar--get-event-property event 'SUMMARY))
@@ -158,8 +245,7 @@
          (duration (icalendar--get-event-property event 'DURATION))
          
          
-         (friendly-date (notmuch-agenda-friendly-date dtstart dtend rrule rdate duration))
-         )
+         (friendly-date (notmuch-agenda-friendly-date dtstart dtend rrule rdate duration)))
 
     (when friendly-date (insert friendly-date "\n"))
     (when summary (insert "Summary: "summary"\n"))
@@ -170,9 +256,6 @@
     (while attendees
       (insert "  - " (car attendees) "\n")
       (setq attendees (cdr attendees)))
-
-    ;; also insert org-mode agenda summary for this day
-
     ))
 
 (defun notmuch-agenda-insert-part (msg part content-type nth depth button)
@@ -199,7 +282,13 @@
         (dolist (event events)
           ;; insert event description string
           (notmuch-agenda-insert-summary event zone-map)
-          (notmuch-agenda-insert-agenda event zone-map))
+          (notmuch-agenda-insert-agenda event zone-map)
+          (insert-button "[ Update agenda ]"
+                         :type 'notmuch-show-part-button-type
+                         'action 'notmuch-agenda-do-capture
+                         'calendar-event event
+                         )
+          )
         t))))
 
 (defun notmuch-agenda-reply-advice (o &rest args)
@@ -239,17 +328,17 @@
                                       '("Accepted"
                                         "Declined"
                                         "Tentative"
-                                        "Skip")
+                                        "Ignore")
                                       nil t)))
 
-    (when (and response (not (string= "Skip" response)))
+    (when (and response (not (string= "Ignore" response)))
       (notmuch-show-tag-message (concat "+" (downcase response))))
     
     (apply o args)
     
     (when (and requires-response
                response
-               (not (string= response "Skip")))
+               (not (string= response "Ignore")))
       (require 'ox-icalendar)
       
       (make-variable-buffer-local 'message-syntax-checks)
