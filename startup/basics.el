@@ -98,9 +98,24 @@
   
   )
 
+(use-package recentf
+  :config
+  (recentf-mode 1)
+
+  (defun recentf-excluded-deleted-local-files (fi)
+    (unless (file-remote-p fi)
+      (not (file-exists-p fi))))
+  
+  (setq recentf-max-saved-items 100
+        recentf-exclude '("^/home/hinton/notes/" "^/nix/store"
+                          recentf-exclude-deleted-local-files))
+  (custom-set-variables
+   '(recentf-auto-cleanup 300)))
+
 (use-package counsel
   :diminish
   :ensure t
+  :bind ("C-x C-r" . counsel-recentf)
   :config (counsel-mode)
   (setq counsel-find-file-ignore-regexp "\\`\\."))
 

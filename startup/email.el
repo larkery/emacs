@@ -5,15 +5,32 @@
 (use-package notmuch
   :commands notmuch
   :bind
-  (("C-c m" . notmuch)
+  (("C-c m" . counsel-notmuch)
    :map notmuch-search-mode-map
 	("f" . notmuch-search-flag)
 	("d" . notmuch-search-delete)
 	("g" . notmuch-refresh-this-buffer)
         :map notmuch-message-mode-map
-        ("C-c m" . notmuch-switch-identity))
+        ("C-c f" . notmuch-switch-identity))
   
   :config
+
+  (defvar counsel-notmuch-history nil)
+  
+  (defun counsel-notmuch ()
+    (interactive)
+    (let* ((search
+            (ivy-read "Notmuch: "
+                      (mapcar (lambda (x) (plist-get x :name)) notmuch-saved-searches)
+                      :history 'counsel-notmuch-history
+                      :caller 'counsel-notmuch-blah))
+           (match (car (remove-if-not (lambda (x)
+                                        (string= (plist-get x :name) search))
+                                      notmuch-saved-searches))))
+      (if match
+          (notmuch-search (plist-get match :query))
+        (notmuch-search search))))
+  
   (require 'notmuch-switch-identity)
   (fset 'notmuch-show-insert-part-text/calendar #'notmuch-agenda-insert-part)
 
@@ -62,6 +79,15 @@
                                                "text/calendar")))))
   
   (advice-add 'notmuch-show-insert-bodypart :around #'notmuch-expand-calendar-parts)
+
+  (defun replace-notmuch-insert-part-text/html (msg part content-type nth depth button)
+    (let ((shr-blocked-images notmuch-show-text/html-blocked-images)
+          (shr-width (- (frame-width) (* depth notmuch-show-indent-messages-width))))
+      (notmuch-show--insert-part-text/html-shr msg part))
+    )
+  (advice-add 'notmuch-show-insert-part-text/html
+              :override 'replace-notmuch-insert-part-text/html)
+
   )
 
 (use-package message
@@ -76,7 +102,17 @@
    mm-inline-text-html-with-images t
    sendmail-program "msmtpq-quiet"
    user-mail-address "tom.hinton@cse.org.uk"
-   message-auto-save-directory nil))
+   message-auto-save-directory nil
+   message-interactive nil
+   message-kill-buffer-on-exit t
+   message-default-charset 'utf-8
+   user-full-name "Tom Hinton"
+
+   message-citation-line-function 'message-insert-formatted-citation-line
+
+   message-yank-empty-prefix ""
+   )
+  )
 
 (use-package mailcap
   :defer t

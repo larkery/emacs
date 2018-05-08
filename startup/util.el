@@ -87,6 +87,7 @@
   (([remap query-replace] . 'anzu-query-replace)
    ([remap query-replace-regexp] . 'anzu-query-replace-regexp)
    ("M-s r" . anzu-query-replace-regexp)
+   ("M-s N" . anzu-replace-at-cursor-thing)
    ("M-s n" . anzu-query-replace-at-cursor)
    :map isearch-mode-map
         ([remap isearch-query-replace] . anzu-isearch-query-replace)
