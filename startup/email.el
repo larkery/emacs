@@ -90,7 +90,23 @@
 (use-package shr
   :defer t
   :config
-  (setq shr-color-visible-luminance-min 75)
-  (defun shr-color-check-ignore-bg (shr-color-check fg bg)
-    (funcall shr-color-check fg nil))
-  (advice-add 'shr-color-check :around 'shr-color-check-ignore-bg))
+  (setq shr-color-visible-luminance-min 75
+        shr-use-fonts nil)
+
+  (defun shr-colorise-region-ignore-bg
+      (shr-colorise-region start end fg &optional bg)
+    (funcall shr-colorise-region start end fg nil))
+  
+  (advice-add 'shr-colorize-region :around 'shr-colorise-region-ignore-bg)
+
+  (defun disabling-gc (o &rest args)
+    (let* ((start (current-time))
+           (gc-cons-threshold (* 100 gc-cons-threshold))
+           (result (apply o args))
+           (end (current-time))
+           )
+      (message "%.2f" (float-time (subtract-time end start)))
+      result))
+
+  (advice-add 'shr-insert-document :around 'disabling-gc))
+
