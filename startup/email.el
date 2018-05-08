@@ -81,10 +81,19 @@
   (advice-add 'notmuch-show-insert-bodypart :around #'notmuch-expand-calendar-parts)
 
   (defun replace-notmuch-insert-part-text/html (msg part content-type nth depth button)
-    (let ((shr-blocked-images notmuch-show-text/html-blocked-images)
-          (shr-width (- (frame-width) (* depth notmuch-show-indent-messages-width))))
-      (notmuch-show--insert-part-text/html-shr msg part))
-    )
+    (let* ((shr-blocked-images notmuch-show-text/html-blocked-images)
+           (shr-width (- (frame-width) (* depth notmuch-show-indent-messages-width)))
+           (start (if button (button-start button) (point)))
+           (result (notmuch-show--insert-part-text/html-shr msg part))
+           )
+      (save-excursion
+        (save-restriction
+          (narrow-to-region start (point-max))
+          (goto-char (point-min))
+          (notmuch-wash-excerpt-citations msg depth)
+          ))
+      result))
+  
   (advice-add 'notmuch-show-insert-part-text/html
               :override 'replace-notmuch-insert-part-text/html)
 
