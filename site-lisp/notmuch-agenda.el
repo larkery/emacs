@@ -340,6 +340,7 @@
                response
                (not (string= response "Ignore")))
       (require 'ox-icalendar)
+      (require 'imip)
       
       (make-variable-buffer-local 'message-syntax-checks)
       (push '(illegible-text . disabled) message-syntax-checks)
@@ -361,7 +362,7 @@
                  (setq requires-response (icalendar--read-element nil nil))
                  (kill-buffer))
                (erase-buffer)
-
+               
                (imip-write-element
                 (imip-respond (car requires-response)
                               '("tom.hinton@cse.org.uk" "larkery.com")
