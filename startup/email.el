@@ -145,12 +145,15 @@
   (advice-add 'shr-colorize-region :around 'shr-colorise-region-ignore-bg)
 
   (defun disabling-gc (o &rest args)
-    (let* ((start (current-time))
+    (let* (;; (start (current-time))
+
            (gc-cons-threshold (* 100 gc-cons-threshold))
            (result (apply o args))
-           (end (current-time))
+           ;; (end (current-time))
+
            )
-      (message "%.2f" (float-time (subtract-time end start)))
+      ;; (message "%.2f" (float-time (subtract-time end start)))
+
       result))
 
   (advice-add 'shr-insert-document :around 'disabling-gc))

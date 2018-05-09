@@ -1,6 +1,6 @@
 (menu-bar-mode -1)
 (set-scroll-bar-mode nil)
-(set-fringe-mode 4)
+(set-fringe-mode '(0 . 8))
 (defalias 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
 (transient-mark-mode 1)
@@ -8,7 +8,7 @@
 
 (setq default-frame-scroll-bars nil
       default-frame-alist '((scroll-bar-width . 8)
-                            (right-divider-width . 2))
+                            (right-divider-width . 3))
       focus-follows-mouse t
       mouse-autoselect-window t
       echo-keystrokes 0.2
@@ -136,12 +136,14 @@
   :config
   (theme-to-xresources)
   (defadvice load-theme (after update-xresources-after-load-theme activate)
-    (theme-to-xresources)))
+    (theme-to-xresources)
+    (set-fringe-mode '(0 . 8))))
 
-(use-package dakrone-light-theme
+(use-package base16-theme
   :ensure t
   :config
-  (load-theme 'dakrone-light t))
+  (load-theme 'base16-tomorrow-night t)
+  )
 
 (use-package visual-line
   :commands visual-line-mode
