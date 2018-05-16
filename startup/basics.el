@@ -14,6 +14,8 @@
       echo-keystrokes 0.2
       disabled-command-function nil
       set-mark-command-repeat-pop t
+
+      kill-ring-max 1000
       )
 
 (setq-default scroll-bar-width 8
@@ -116,7 +118,8 @@
   :diminish
   :ensure t
   :bind ("C-x C-r" . counsel-recentf)
-  :config (counsel-mode)
+  :config
+  (counsel-mode 1)
   (setq counsel-find-file-ignore-regexp "\\`\\."))
 
 (use-package uniquify

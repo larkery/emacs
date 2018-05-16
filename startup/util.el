@@ -142,7 +142,7 @@
   (which-key-mode 1)
   (setq which-key-idle-delay 0.75))
 
-(use-package hippie-expand
+(use-package hippie-exp
   :bind ("M-/" . hippie-expand)
   :config
   (setq hippie-expand-try-functions-list
@@ -152,3 +152,6 @@
           try-expand-dabbrev-all-buffers
           try-expand-dabbrev-from-kill)))
 
+
+(use-package ibuffer
+  :bind ("C-x C-b" . ibuffer))

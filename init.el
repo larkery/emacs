@@ -1,3 +1,5 @@
+(setq gc-cons-threshold 16000000)
+
 (setq gc-cons-threshold (* 100 gc-cons-threshold)
       make-backup-files nil
       custom-file (concat user-emacs-directory "custom.el"))

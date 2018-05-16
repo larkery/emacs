@@ -40,7 +40,9 @@
 
   (advice-add 'notmuch :around 'in-home-directory)
   
-  (setq notmuch-search-oldest-first nil
+  (setq notmuch-multipart/alternative-discouraged '("text/plain") ;; prefer html?
+
+        notmuch-search-oldest-first nil
 	notmuch-fcc-dirs
 	'(("tom\\.hinton@cse\\.org\\.uk" . "\"cse/Sent Items\" +sent -inbox")
 	  ("larkery\\.com" . "\"fastmail/Sent Items\" +sent -inbox"))
