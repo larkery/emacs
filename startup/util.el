@@ -155,3 +155,27 @@
 
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer))
+
+(use-package rcirc
+  :defer t
+  :config
+  (setq rcirc-server-alist
+        `(("larkery.com"
+           :port 7778
+           :user-name "hinton"
+           :nick "TomHinton"
+           :encryption tls
+           :password ,(funcall (plist-get (car
+                                           (auth-source-search :host "larkery.com"  :port "7778")) :secret))
+           ))
+        )
+  
+  )
+
+
+(use-package auth-source-pass
+  :ensure t
+  :after auth-source
+  :config
+  (auth-source-pass-enable)
+  )
