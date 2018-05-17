@@ -7,5 +7,6 @@
         org-use-speed-commands t
         org-agenda-diary-file "~/notes/agenda/calendar.org"
         org-id-locations-file "~/notes/.metadata/org-id-locations"
+        org-agenda-insert-diary-extract-time t
         )
   )
