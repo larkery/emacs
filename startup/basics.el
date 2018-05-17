@@ -16,6 +16,8 @@
       set-mark-command-repeat-pop t
 
       kill-ring-max 1000
+
+      sentence-end-double-space nil
       )
 
 (setq-default scroll-bar-width 8
