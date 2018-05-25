@@ -168,10 +168,13 @@
            :password ,(funcall (plist-get (car
                                            (auth-source-search :host "larkery.com"  :port "7778")) :secret))
            ))
-        )
+
+        rcirc-fill-flag nil)
+
+  (add-hook 'rcirc-mode-hook 'visual-line-mode)
+  (add-hook 'rcirc-mode-hook (lambda () (setq wrap-prefix "      ")))
   
   )
-
 
 (use-package auth-source-pass
   :ensure t
@@ -179,3 +182,38 @@
   :config
   (auth-source-pass-enable)
   )
+
+(use-package god-mode
+  :ensure t
+  :bind ("<escape>" . god-local-mode)
+  :diminish god-local-mode
+  :config
+
+  (define-key god-local-mode-map (kbd ".") 'repeat)
+  (add-to-list 'god-exempt-major-modes 'notmuch-search-mode)
+  (add-to-list 'god-exempt-major-modes 'notmuch-show-mode)
+
+  (defvar god-mode-modeline-text nil)
+  (make-variable-buffer-local 'god-mode-modeline-text)
+
+  (setq god-mode-modeline-text nil)
+  
+  (push '(:propertize god-mode-modeline-text
+                     face (:foreground "white" :background "red")
+                     )
+        mode-line-misc-info)
+
+  (defun god-local-mode-lighter ()
+    (setq god-mode-modeline-text
+          (and god-local-mode " G ")))
+  
+  (add-hook 'god-local-mode-hook
+            'god-local-mode-lighter)
+  
+  )
+
+(use-package editorconfig
+  :ensure t
+  :diminish
+  :config
+  (editorconfig-mode 1))
