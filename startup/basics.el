@@ -18,7 +18,19 @@
       kill-ring-max 1000
 
       sentence-end-double-space nil
+
+      calendar-week-start-day 1
+
+      calendar-today-marker 'error
+      calendar-offset -1
+      calendar-intermonth-spacing 2
+
+      calendar-latitude 51.455313
+      calendar-longitude -2.591902
+
       )
+
+(custom-set-variables '(calendar-date-style 'european))
 
 (setq-default scroll-bar-width 8
 	      indent-tabs-mode nil
@@ -119,10 +131,15 @@
 (use-package counsel
   :diminish
   :ensure t
-  :bind ("C-x C-r" . counsel-recentf)
+  :bind (("C-x C-r" . counsel-recentf)
+         :map counsel-mode-map
+         ([remap yank-pop] . nil)
+         )
   :config
   (counsel-mode 1)
-  (setq counsel-find-file-ignore-regexp "\\`\\."))
+  (setq counsel-find-file-ignore-regexp "\\`\\.")
+  
+  )
 
 (use-package uniquify
   :config
@@ -142,13 +159,16 @@
   (theme-to-xresources)
   (defadvice load-theme (after update-xresources-after-load-theme activate)
     (theme-to-xresources)
-    (set-fringe-mode '(0 . 8))))
+    (set-fringe-mode '(0 . 8)))
+  
+  )
 
 (use-package base16-theme
   :ensure t
   :config
-  (load-theme 'base16-tomorrow-night t)
-  )
+  (load-theme 'base16-gruvbox-dark-hard t)
+  (theme-to-xresources))
+
 
 (use-package visual-line
   :commands visual-line-mode
@@ -157,3 +177,23 @@
   :config
   (setq visual-line-fringe-indicators '(nil right-curly-arrow)))
 
+(use-package browse-kill-ring
+  :commands browse-kill-ring
+  :ensure t
+  :init
+  (defadvice yank-pop (around kill-ring-browse-maybe (arg))
+    "If last action was not a yank, run `browse-kill-ring' instead."
+    ;; pinched from browse-kill-ring, so we don't have to autoload it at startup
+    (interactive "p")
+    (if (not (eq last-command 'yank))
+        (browse-kill-ring)
+      (barf-if-buffer-read-only)
+      ad-do-it))
+  (ad-activate 'yank-pop)
+  :config
+  (bind-key "M-y" 'browse-kill-ring-forward browse-kill-ring-mode-map))
+
+(use-package calendar
+  :defer t
+  :config
+  (add-hook 'calendar-today-visible-hook 'calendar-mark-today))
