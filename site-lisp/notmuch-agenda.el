@@ -36,7 +36,7 @@
                                    ))
            ((and (not past) (< abs-days 15))
             (concat "a week next"
-                    (format-time-string " %A" encoded-tiemstamp)
+                    (format-time-string " %A" encoded-timestamp)
                     ))
            (t (format "%s, %d week%s %s" (format-time-string "%A %e %B %Y" encoded-timestamp)
                       (floor (/ abs-days 7))

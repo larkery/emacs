@@ -197,3 +197,18 @@
   :defer t
   :config
   (add-hook 'calendar-today-visible-hook 'calendar-mark-today))
+
+(defun update-dbus-session-bus-address ()
+  (interactive)
+  (setenv "DBUS_SESSION_BUS_ADDRESS"
+          (with-temp-buffer
+            (insert-file-contents "~/.dbus_session_bus_address")
+            (buffer-string))))
+
+(inotify-add-watch
+ (expand-file-name "~/.dbus_session_bus_address")
+ 'close-write
+ (lambda (_) (update-dbus-session-bus-address)))
+
+(update-dbus-session-bus-address)
+

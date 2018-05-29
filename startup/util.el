@@ -156,9 +156,17 @@
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer))
 
+(use-package rcirc-notify
+  :defer t
+  :ensure t
+  :config
+  (rcirc-notify-add-hooks)
+  (setq rcirc-notify-keywords '("tom" "tomhinton" "hinton")))
+
 (use-package rcirc
   :defer t
   :config
+  (require 'rcirc-notify)
   (setq rcirc-server-alist
         `(("larkery.com"
            :port 7778
@@ -172,9 +180,7 @@
         rcirc-fill-flag nil)
 
   (add-hook 'rcirc-mode-hook 'visual-line-mode)
-  (add-hook 'rcirc-mode-hook (lambda () (setq wrap-prefix "      ")))
-  
-  )
+  (add-hook 'rcirc-mode-hook (lambda () (setq wrap-prefix "      "))))
 
 (use-package auth-source-pass
   :ensure t
@@ -217,3 +223,8 @@
   :diminish
   :config
   (editorconfig-mode 1))
+
+(use-package ediff
+  :defer t
+  :config
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain))

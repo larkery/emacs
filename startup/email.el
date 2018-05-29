@@ -42,6 +42,28 @@
   
   (setq notmuch-multipart/alternative-discouraged '("text/plain") ;; prefer html?
 
+        notmuch-saved-searches
+        '((:name "needs action" :query "tag:unread and tag:inbox" :key "j")
+          (:name "unread" :query "tag:unread" :key "u")
+          (:name "inbox" :query "tag:inbox" :key "i")
+          (:name "drafts" :query "tag:draft" :key "d"))
+
+        notmuch-tag-formats
+        '(("unread" (propertize tag 'face 'notmuch-tag-unread))
+          ("flagged" (propertize tag 'face 'notmuch-tag-flagged)
+           (notmuch-tag-format-image-data tag (notmuch-tag-star-icon)))
+          ("low-importance" "↓")
+          ("high-importance" "!")
+
+          ("sent" "→")
+          ("replied" "⮱")
+          ("attachment" "📎")
+          ("meeting" "📅")
+          ("inbox" "I")
+          ("accepted" "🗸")
+          ("rejected" "❌")
+          )
+        
         notmuch-search-oldest-first nil
 	notmuch-fcc-dirs
 	'(("tom\\.hinton@cse\\.org\\.uk" . "\"cse/Sent Items\" +sent -inbox")
@@ -84,7 +106,7 @@
 
   (defun replace-notmuch-insert-part-text/html (msg part content-type nth depth button)
     (let* ((shr-blocked-images notmuch-show-text/html-blocked-images)
-           (shr-width (- (frame-width) (* depth notmuch-show-indent-messages-width)))
+           (shr-width (- (window-width) 1 (* depth notmuch-show-indent-messages-width)))
            (start (if button (button-start button) (point)))
            (result (notmuch-show--insert-part-text/html-shr msg part))
            )
@@ -99,7 +121,19 @@
   (advice-add 'notmuch-show-insert-part-text/html
               :override 'replace-notmuch-insert-part-text/html)
 
+  (defun notmuch-show-skip-to-unread ()
+    (interactive)
+     (while (and (not (member "unread" (notmuch-show-get-tags)))
+                 (notmuch-show-goto-message-next)))
+     (notmuch-show-message-visible (notmuch-show-get-message-properties) t)
+     (recenter-top-bottom 0))
+
+  (bind-key "u" 'notmuch-show-skip-to-unread 'notmuch-show-mode-map)
+
+;;  (add-hook 'notmuch-show-mode-hook 'notmuch-show-skip-to-unread)
+  
   )
+
 
 (use-package message
   :defer t
