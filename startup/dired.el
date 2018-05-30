@@ -20,6 +20,8 @@
          dired-omit-files "^\\.[^\\.]"
          dired-omit-verbose nil)
 
+  (add-hook 'dired-mode-hook 'auto-revert-mode)
+  
   (defun dired-C-x-C-f ()
     (interactive)
 
