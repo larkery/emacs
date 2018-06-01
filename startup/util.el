@@ -15,18 +15,25 @@
               ("C-M-n" . sp-up-sexp)
               ("C-%" . sp-splice-sexp) ;; depth-changing commands
               ("C-^" . sp-splice-sexp-killing-around)
-              ("C-)" . sp-forward-slurp-sexp) ;; barf/slurp
-              ("C-}" . sp-forward-barf-sexp)
-              ("C-(" . sp-backward-slurp-sexp)
-              ("C-{" . sp-backward-barf-sexp)
+              ("C-(" . sp-forward-slurp-sexp) ;; barf/slurp
+              ("C-)" . sp-forward-barf-sexp)
+              ("C-~" . sp-convolute-sexp)
               ("C-|" . sp-split-sexp) ;; misc
               ("C-M-;" . sp-comment-or-uncomment-sexp)
-              )
+              ("C-<tab>" . sp-reindent-toplevel)
+              ("C-;" . move-past-close-and-reindent))
   :init
+  
   (add-hook 'prog-mode-hook 'smartparens-mode)
   (add-hook 'prog-mode-hook 'show-smartparens-mode)
 
   :config
+  (defun sp-reindent-toplevel ()
+    (interactive)
+    (save-excursion
+      (mark-defun)
+      (indent-region (point) (mark))))
+  
   (defun sp-comment-or-uncomment-sexp ()
     (interactive)
     (comment-or-uncomment-region
@@ -37,7 +44,7 @@
       (point))))
   
   (require 'smartparens-config)
-  (setq-default sp-autoskip-closing-pair 'always))
+  (setq-default sp-autoskip-closing-pair 'always-end))
 
 (use-package paredit
   :defer t
@@ -228,3 +235,11 @@
   :defer t
   :config
   (setq ediff-window-setup-function 'ediff-setup-windows-plain))
+
+(use-package expand-region
+  :defer t
+  :ensure t
+  :bind
+  ("C-=" . er/expand-region))
+
+
