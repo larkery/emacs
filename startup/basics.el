@@ -67,7 +67,9 @@
   :diminish
   :ensure t
   :defer nil
-  :bind ("M-s M-s" . swiper-at-point)
+  :bind (("M-s M-s" . swiper-at-point)
+         :map swiper-map
+         ("C-'" . nil))
   :config (ivy-mode)
   (setq ivy-use-virtual-buffers t)
 

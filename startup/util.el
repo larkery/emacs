@@ -242,4 +242,21 @@
   :bind
   ("C-=" . er/expand-region))
 
+(defun mark-symbol-or-minibuffer-it ()
+  (interactive)
+  (if (minibufferp)
+      (insert
+       (with-current-buffer
+           (window-buffer (minibuffer-selected-window))
+         (when-let ((b (bounds-of-thing-at-point 'symbol)))
+           (buffer-substring-no-properties
+            (car b) (cdr b))
+           )
+         ))
+    (when-let ((b (bounds-of-thing-at-point 'symbol)))
+      (set-mark (car b))
+      (goto-char (cdr b)))
+    )
+  )
 
+(bind-key "C-'" 'mark-symbol-or-minibuffer-it)
