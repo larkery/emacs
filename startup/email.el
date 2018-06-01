@@ -54,6 +54,7 @@
            (notmuch-tag-format-image-data tag (notmuch-tag-star-icon)))
           ("low-importance" "↓")
           ("high-importance" "!")
+          ("normal-importance")
 
           ("sent" "→")
           ("replied" "⮱")
@@ -63,6 +64,12 @@
           ("accepted" "🗸")
           ("rejected" "❌")
           )
+        notmuch-search-result-format
+        '(("date" . "%12s  ")
+          ;;("count" . "%-7s ")
+          ("authors" . "%-20s ")
+          ("subject" . "%s ")
+          ("tags" . "%s"))
         
         notmuch-search-oldest-first nil
 	notmuch-fcc-dirs
