@@ -73,8 +73,8 @@
 
   (defun swiper-at-point ()
     (interactive)
-    (swiper (or (thing-at-point 'symbol)
-                (thing-at-point 'word))))
+    (swiper (when (region-active-p)
+              (buffer-substring-no-properties (region-beginning) (region-end)))))
 
   (defvar ivy--switch-buffer-format "%s %-50s%10s")
 
@@ -159,9 +159,7 @@
   (theme-to-xresources)
   (defadvice load-theme (after update-xresources-after-load-theme activate)
     (theme-to-xresources)
-    (set-fringe-mode '(0 . 8)))
-  
-  )
+    (set-fringe-mode '(0 . 8))))
 
 (use-package base16-theme
   :ensure t
