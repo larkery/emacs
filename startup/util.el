@@ -15,7 +15,8 @@
               ("C-M-n" . sp-up-sexp)
               ("C-%" . sp-splice-sexp) ;; depth-changing commands
               ("C-^" . sp-splice-sexp-killing-around)
-              ("C-(" . sp-forward-slurp-sexp) ;; barf/slurp
+              ("C-(" . sp-wrap-or-cycle) ;; barf/slurp
+              ("C-\"" . sp-forward-slurp-sexp)
               ("C-)" . sp-forward-barf-sexp)
               ("C-~" . sp-convolute-sexp)
               ("C-|" . sp-split-sexp) ;; misc
@@ -28,6 +29,23 @@
   (add-hook 'prog-mode-hook 'show-smartparens-mode)
 
   :config
+
+  (defun sp-wrap-or-cycle ()
+    (interactive)
+    (if (eq last-command 'sp-wrap-or-cycle)
+        (let ((delim (plist-get (sp-get-enclosing-sexp)
+                                :op
+                                )))
+          (pcase delim
+            ("(" (sp-rewrap-sexp '("[" . "]")))
+            ("[" (sp-rewrap-sexp '("{" . "}")))
+            ("{" (sp-rewrap-sexp '("(" . ")")))
+            ("_" (sp-wrap-with-pair "("))))
+      
+      (sp-wrap-with-pair "("))
+    
+    )
+  
   (defun sp-reindent-toplevel ()
     (interactive)
     (save-excursion
