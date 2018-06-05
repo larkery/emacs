@@ -278,3 +278,92 @@
   )
 
 (bind-key "C-'" 'mark-symbol-or-minibuffer-it)
+
+(use-package tabbar
+  :ensure t
+  :config
+
+
+  ;; https://emacs.stackexchange.com/questions/984/what-is-the-right-way-to-install-tab-bar
+
+
+  (defun reset-header-line (&rest args)
+    (when tabbar-mode
+      (setq-local header-line-format
+                  '(:eval (tabbar-line)))
+      )
+    )
+
+  (advice-add 'notmuch-show--build-buffer :after 'reset-header-line)
+  
+  (defun my-tabbar-groups ()
+    (cond
+     ((memql major-mode '(notmuch-show-mode notmuch-search-mode message-mode))
+      (list "email"))
+
+     ((or (not (projectile-project-p))
+          (not (or (buffer-file-name)
+                   (eql major-mode 'dired-mode)
+                   (get-buffer-process (current-buffer)))))
+      (tabbar-buffer-groups))
+     
+     (t
+      (list (projectile-project-name)))))
+
+  (setq tabbar-buffer-groups-function
+        'my-tabbar-groups)
+  
+
+  (defun tabbar-disable-bg-color (o &rest args)
+    (let ((tabbar-background-color nil))
+      (apply o args)))
+
+  (advice-add 'tabbar-background-color :around 'tabbar-disable-bg-color)
+
+  (setq tabbar-separator '(1.0))
+
+  (defun reset-tabbar-mode ()
+    (set-face-attribute 'tabbar-default nil
+     :inherit 'default
+     :background (face-attribute 'mode-line :background nil t)
+     :foreground 'unspecified
+     :box nil)
+
+    (set-face-attribute 'tabbar-button nil
+     :background 'unspecified
+     :box nil)
+
+    (set-face-attribute 'tabbar-selected nil
+     :weight 'bold
+     :foreground 'unspecified
+     :background 'unspecified
+     :box 1
+     :underline t)
+
+    (set-face-attribute 'tabbar-unselected nil
+     :box (face-attribute 'shadow :foreground nil t))
+
+    (set-face-attribute 'tabbar-highlight nil
+     :foreground 'unspecified :background 'unspecified
+     :underline 'unspecified
+     :inverse-video t)
+
+    (set-face-attribute 'tabbar-modified nil
+     :foreground 'unspecified
+     :background 'unspecified
+     :box (face-attribute 'shadow :foreground nil t))
+
+    (set-face-attribute 'tabbar-selected-modified nil
+     :slant 'italic
+     :box 1
+     :foreground 'unspecified :background 'unspecified
+     :inherit 'tabbar-selected)
+    
+    (tabbar-mode -1)
+    (tabbar-mode 1)
+    )
+  
+  (reset-tabbar-mode)
+
+  
+  )
