@@ -87,6 +87,34 @@
           (completing-read prompt collection nil nil nil
                            (quote notmuch-address-history)))
 	)
+
+  (defun notmuch-search-buffer-title (query)
+    "Returns the title for a buffer with notmuch search results."
+    (let* ((saved-search
+            (let (longest
+                  (longest-length 0))
+              (loop for tuple in notmuch-saved-searches
+                    if (let ((quoted-query (regexp-quote (notmuch-saved-search-get tuple :query))))
+                         (and (string-match (concat "^" quoted-query) query)
+                              (> (length (match-string 0 query))
+                                 longest-length)))
+                    do (setq longest tuple
+                             longest-length (length (match-string 0 query))))
+              longest))
+           (saved-search-name (notmuch-saved-search-get saved-search :name))
+           (saved-search-query (notmuch-saved-search-get saved-search :query)))
+      (cond ((and saved-search (equal saved-search-query query))
+             ;; Query is the same as saved search (ignoring case)
+             (concat "*notmuch-saved-search-" saved-search-name "*"))
+            (saved-search
+             (concat "*notmuch-search-"
+                     (replace-regexp-in-string (concat "^" (regexp-quote saved-search-query))
+                                               (concat "[ " saved-search-name " ]")
+                                               query)
+                     "*"))
+            (t
+             (concat "*notmuch-search-" query "*"))
+            )))
   
   (defun notmuch-search-toggle-tag (&rest tags)
     (let* ((cur-tags (notmuch-search-get-tags))
@@ -120,6 +148,7 @@
       (save-excursion
         (save-restriction
           (narrow-to-region start (point-max))
+          (delete-trailing-whitespace (point-min) (point-max))
           (goto-char (point-min))
           (notmuch-wash-excerpt-citations msg depth)
           ))
