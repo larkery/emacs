@@ -67,12 +67,15 @@
   :diminish
   :ensure t
   :defer nil
-  :bind (("M-s M-s" . swiper-at-point)
-         :map swiper-map
-         ("C-'" . nil))
+  :bind (("M-s M-s" . swiper-at-point))
+  
   :config (ivy-mode)
   (setq ivy-use-virtual-buffers t)
 
+  (with-eval-after-load
+      'swiper 
+    (bind-key "C-'" nil swiper-map))
+  
   (defun swiper-at-point ()
     (interactive)
     (swiper (when (region-active-p)
