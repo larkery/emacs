@@ -301,9 +301,13 @@
      ((memql major-mode '(notmuch-show-mode notmuch-search-mode message-mode))
       (list "email"))
 
+     ((memql major-mode '(rcirc-mode))
+      (list "IRC"))
+     
      ((or (not (projectile-project-p))
+          
           (not (or (buffer-file-name)
-                   (eql major-mode 'dired-mode)
+                   dired-directory
                    (get-buffer-process (current-buffer)))))
       (tabbar-buffer-groups))
      
@@ -364,6 +368,6 @@
     )
   
   (reset-tabbar-mode)
-
+  (add-hook custom-theme-load-hook 'reset-tabbar-mode)
   
   )

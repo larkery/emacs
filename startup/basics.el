@@ -159,17 +159,23 @@
   :config
   (global-yascroll-bar-mode 1))
 
+(defvar custom-theme-load-hook nil)
+(defadvice load-theme (after update-xresources-after-load-theme activate)
+  (run-hooks 'custom-theme-load-hook))
+
 (use-package theme-to-xresources
   :config
   (theme-to-xresources)
-  (defadvice load-theme (after update-xresources-after-load-theme activate)
-    (theme-to-xresources)
-    (set-fringe-mode '(0 . 8))))
+  (add-hook 'custom-theme-load-hook
+            (lambda ()
+              (theme-to-xresources)
+              (set-fringe-mode '(0 . 8))))
+  )
 
 (use-package base16-theme
   :ensure t
   :config
-  (load-theme 'base16-gruvbox-dark-hard t)
+  (load-theme 'base16-gruvbox-light-hard t)
   (theme-to-xresources))
 
 
