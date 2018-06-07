@@ -139,6 +139,9 @@
   :bind (("C-x C-r" . counsel-recentf)
          :map counsel-mode-map
          ([remap yank-pop] . nil)
+         :map projectile-mode-map
+         ("C-c p s s" . counsel-ag)
+         ("C-c p s a" . projectile-ag)
          )
   :config
   (counsel-mode 1)
