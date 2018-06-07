@@ -298,7 +298,7 @@
   
   (defun my-tabbar-groups ()
     (cond
-     ((memql major-mode '(notmuch-show-mode notmuch-search-mode message-mode))
+     ((memql major-mode '(notmuch-show-mode notmuch-search-mode notmuch-message-mode message-mode))
       (list "email"))
 
      ((memql major-mode '(rcirc-mode))
@@ -368,6 +368,6 @@
     )
   
   (reset-tabbar-mode)
-  (add-hook custom-theme-load-hook 'reset-tabbar-mode)
+  (add-hook 'custom-theme-load-hook 'reset-tabbar-mode)
   
   )

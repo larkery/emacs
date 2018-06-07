@@ -163,20 +163,32 @@
 (defadvice load-theme (after update-xresources-after-load-theme activate)
   (run-hooks 'custom-theme-load-hook))
 
+(defun run-custom-theme-load-hook-once (frame)
+  (when (window-system frame)
+    (run-hooks 'custom-theme-load-hook)
+    (remove-hook 'after-make-frame-functions 'run-custom-theme-load-hook-once)))
+
+(add-hook 'after-make-frame-functions 'run-custom-theme-load-hook-once)
+
 (use-package theme-to-xresources
-  :config
-  (theme-to-xresources)
+  :defer nil
+  :commands theme-to-xresources
+  :init
   (add-hook 'custom-theme-load-hook
             (lambda ()
               (theme-to-xresources)
-              (set-fringe-mode '(0 . 8))))
-  )
+              (set-fringe-mode '(0 . 8)))))
 
 (use-package base16-theme
   :ensure t
   :config
   (load-theme 'base16-gruvbox-light-hard t)
-  (theme-to-xresources))
+  (add-to-list 'custom-theme-load-path
+               (concat user-emacs-directory "site-lisp/themes")
+               )
+  (load-theme 'tweaks t)
+  
+  )
 
 
 (use-package visual-line
