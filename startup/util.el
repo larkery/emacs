@@ -21,7 +21,7 @@
               ("C-~" . sp-convolute-sexp)
               ("C-|" . sp-split-sexp) ;; misc
               ("C-M-;" . sp-comment-or-uncomment-sexp)
-              ("C-<tab>" . sp-reindent-toplevel)
+              ("C-#" . sp-reindent-toplevel)
               ("C-;" . move-past-close-and-reindent))
   :init
   
@@ -87,6 +87,7 @@
               ("C-c p s s" . counsel-ag)
               ("C-c p s a" . projectile-ag))
   :ensure t
+  :demand t
   :config
   (projectile-global-mode 1)
   (setq projectile-completion-system 'ivy
@@ -332,40 +333,41 @@
 
   (defun reset-tabbar-mode ()
     (set-face-attribute 'tabbar-default nil
-     :inherit 'default
-     :background (face-attribute 'mode-line :background nil t)
-     :foreground 'unspecified
-     :box nil)
+                        :inherit 'default
+                        :background (face-attribute 'mode-line :background nil t)
+                        :foreground 'unspecified
+                        :family "Sans Serif"
+                        :box nil)
 
     (set-face-attribute 'tabbar-button nil
-     :background 'unspecified
-     :box nil)
+                        :background 'unspecified
+                        :box nil)
 
     (set-face-attribute 'tabbar-selected nil
-     :weight 'bold
-     :foreground 'unspecified
-     :background 'unspecified
-     :box 1
-     :underline t)
+                        :weight 'bold
+                        :foreground 'unspecified
+                        :background 'unspecified
+                        :box (face-attribute 'shadow :foreground nil t)
+                        :underline t)
 
     (set-face-attribute 'tabbar-unselected nil
-     :box (face-attribute 'shadow :foreground nil t))
+                        :box (face-attribute 'shadow :foreground nil t))
 
     (set-face-attribute 'tabbar-highlight nil
-     :foreground 'unspecified :background 'unspecified
-     :underline 'unspecified
-     :inverse-video t)
+                        :foreground 'unspecified :background 'unspecified
+                        :underline 'unspecified
+                        :inverse-video t)
 
     (set-face-attribute 'tabbar-modified nil
-     :foreground 'unspecified
-     :background 'unspecified
-     :box (face-attribute 'shadow :foreground nil t))
+                        :foreground 'unspecified
+                        :background 'unspecified
+                        :box (face-attribute 'shadow :foreground nil t))
 
     (set-face-attribute 'tabbar-selected-modified nil
-     :slant 'italic
-     :box 1
-     :foreground 'unspecified :background 'unspecified
-     :inherit 'tabbar-selected)
+                        :slant 'italic
+                        :box (face-attribute 'shadow :foreground nil t)
+                        :foreground 'unspecified :background 'unspecified
+                        :inherit 'tabbar-selected)
     
     (tabbar-mode -1)
     (tabbar-mode 1)
@@ -373,7 +375,10 @@
   
   (reset-tabbar-mode)
   (add-hook 'custom-theme-load-hook 'reset-tabbar-mode)
-  
+
+  (bind-key "C-<prior>" (lambda () (interactive) (tabbar-cycle t)) tabbar-mode-map)
+  (bind-key "C-<next>" (lambda () (interactive) (tabbar-cycle)) tabbar-mode-map)
+  (bind-key "C-<tab>" (lambda () (interactive) (tabbar-cycle)) tabbar-mode-map)
   )
 
 (use-package multiple-cursors
