@@ -174,6 +174,25 @@
 (use-package message
   :defer t
   :config
+
+  (defvar message-signatures-alist
+    `(( ,(rx "tom.hinton@cse.org.uk") .
+        "Tom Hinton (📞 0117 934 1455)")))
+  
+  (defun message-signature-select-by-from ()
+    (let ((from (save-restriction
+                  (message-narrow-to-headers-or-head)
+                  (mail-fetch-field "From")))
+          result
+          (choices message-signatures-alist))
+      (while (and (not result) choices)
+        (message "%s %s" (caar choices) (cdar choices))
+        (when (string-match-p (caar choices) from)
+          (setq result (cdar choices))
+          (message "%s" result)
+          (setq choices (cdr choices))))
+      result))
+  
   (setq
    message-send-mail-function 'message-send-mail-with-sendmail
    message-sendmail-envelope-from 'header
@@ -188,6 +207,7 @@
    message-kill-buffer-on-exit t
    message-default-charset 'utf-8
    user-full-name "Tom Hinton"
+   message-signature 'message-signature-select-by-from
 
    message-citation-line-function 'message-insert-formatted-citation-line
 

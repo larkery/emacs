@@ -83,10 +83,14 @@
 
 (use-package projectile
   :diminish
+  :bind (:map projectile-mode-map
+              ("C-c p s s" . counsel-ag)
+              ("C-c p s a" . projectile-ag))
   :ensure t
   :config
   (projectile-global-mode 1)
-  (setq projectile-completion-system 'ivy))
+  (setq projectile-completion-system 'ivy
+        projectile-switch-project-action 'projectile-dired))
 
 (use-package pcre2el
   :ensure t
@@ -370,4 +374,9 @@
   (reset-tabbar-mode)
   (add-hook 'custom-theme-load-hook 'reset-tabbar-mode)
   
+  )
+
+(use-package multiple-cursors
+  :defer t
+  :bind ("C-/" . mc/mark-more-like-this-extended)
   )
