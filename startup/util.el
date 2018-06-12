@@ -385,3 +385,6 @@
   :defer t
   :bind ("C-/" . mc/mark-more-like-this-extended)
   )
+
+(use-package edit-as-root
+  :bind ("C-x C-a" . edit-as-root))

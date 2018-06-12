@@ -188,9 +188,8 @@
       (while (and (not result) choices)
         (message "%s %s" (caar choices) (cdar choices))
         (when (string-match-p (caar choices) from)
-          (setq result (cdar choices))
-          (message "%s" result)
-          (setq choices (cdr choices))))
+          (setq result (cdar choices)))
+        (setq choices (cdr choices)))
       result))
   
   (setq
