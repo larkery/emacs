@@ -22,7 +22,7 @@
               ("C-|" . sp-split-sexp) ;; misc
               ("C-M-;" . sp-comment-or-uncomment-sexp)
               ("C-#" . sp-reindent-toplevel)
-              ("C-;" . move-past-close-and-reindent))
+              ("C-;" . move-past-close-reindent-and-flash))
   :init
   
   (add-hook 'prog-mode-hook 'smartparens-mode)
@@ -42,15 +42,24 @@
             ("{" (sp-rewrap-sexp '("(" . ")")))
             ("_" (sp-wrap-with-pair "("))))
       
-      (sp-wrap-with-pair "("))
-    
-    )
+      (sp-wrap-with-pair "(")))
   
   (defun sp-reindent-toplevel ()
     (interactive)
     (save-excursion
       (mark-defun)
       (indent-region (point) (mark))))
+
+  (defun move-past-close-reindent-and-flash ()
+    (interactive)
+    
+    (move-past-close-and-reindent)
+    (pulse-momentary-highlight-region
+     (save-excursion
+       (sp-backward-sexp)
+       (point))
+     (point)))
+  
   
   (defun sp-comment-or-uncomment-sexp ()
     (interactive)
@@ -388,3 +397,7 @@
 
 (use-package edit-as-root
   :bind ("C-x C-a" . edit-as-root))
+
+(use-package transpose-frame
+  :ensure t
+  :bind ("C-M-o" . transpose-frame))
