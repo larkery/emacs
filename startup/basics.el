@@ -135,6 +135,7 @@
 
 (use-package counsel
   :diminish
+  :defer nil
   :ensure t
   :bind (("C-x C-r" . counsel-recentf)
          :map counsel-mode-map
