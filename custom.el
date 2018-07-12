@@ -4,9 +4,13 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(calendar-date-style (quote european))
+ '(org-babel-load-languages (quote ((emacs-lisp . t) (dot . t))))
+ '(org-latex-pdf-process
+   (quote
+    ("xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f")))
  '(package-selected-packages
    (quote
-    (transpose-frame haskell-mode rainbow-mode wgrep multiple-cursors yascroll yaml-mode xmlgen which-key use-package tabbar syntactic-close srcery-theme smartparens rcirc-notify projectile powerline pcre2el num3-mode nordless-theme nix-mode mode-icons magit god-mode expand-region editorconfig dumb-jump diminish counsel color-theme-sanityinc-tomorrow cider browse-kill-ring birds-of-paradise-plus-theme base16-theme autothemer auth-source-pass anzu ag adaptive-wrap)))
+    (ace-popup-menu gruvbox-theme symbol-overlay dired-subtree transpose-frame haskell-mode rainbow-mode wgrep multiple-cursors yascroll yaml-mode xmlgen which-key use-package tabbar syntactic-close srcery-theme smartparens rcirc-notify projectile powerline pcre2el num3-mode nordless-theme nix-mode mode-icons magit god-mode expand-region editorconfig dumb-jump diminish counsel color-theme-sanityinc-tomorrow cider browse-kill-ring birds-of-paradise-plus-theme base16-theme autothemer auth-source-pass anzu ag adaptive-wrap)))
  '(recentf-auto-cleanup 300))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

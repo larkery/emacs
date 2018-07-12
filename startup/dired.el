@@ -85,3 +85,9 @@
   :commands dired-omit-mode
   :bind (:map dired-mode-map
               (")" . dired-omit-mode)))
+
+(use-package dired-subtree
+  :bind (:map dired-mode-map
+              ("<tab>" . dired-subtree-toggle)
+              )
+  )

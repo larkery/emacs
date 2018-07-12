@@ -94,7 +94,8 @@
   :diminish
   :bind (:map projectile-mode-map
               ("C-c p s s" . counsel-ag)
-              ("C-c p s a" . projectile-ag))
+              ("C-c p s a" . projectile-ag)
+              ("C-x C-b" . projectile-ibuffer))
   :ensure t
   :demand t
   :config
@@ -193,7 +194,17 @@
 
 
 (use-package ibuffer
-  :bind ("C-x C-b" . ibuffer))
+  :config
+  (setq ibuffer-formats
+        '(
+          (mark modified read-only
+                " "
+                (name 32 32 :left :elide)
+                " "
+                (mode 16 16 :left :elide)
+                " "
+                filename-and-process))))
+
 
 (use-package rcirc-notify
   :defer t
@@ -293,102 +304,103 @@
 
 (bind-key "C-'" 'mark-symbol-or-minibuffer-it)
 
-(use-package tabbar
-  :ensure t
-  :config
+;; (use-package tabbar
+;;   :ensure t
+;;   :config
 
 
-  ;; https://emacs.stackexchange.com/questions/984/what-is-the-right-way-to-install-tab-bar
+;;   ;; https://emacs.stackexchange.com/questions/984/what-is-the-right-way-to-install-tab-bar
 
 
-  (defun reset-header-line (&rest args)
-    (when tabbar-mode
-      (setq-local header-line-format
-                  '(:eval (tabbar-line)))
-      )
-    )
+;;   (defun reset-header-line (&rest args)
+;;     (when tabbar-mode
+;;       (setq-local header-line-format
+;;                   '(:eval (tabbar-line)))
+;;       )
+;;     )
 
-  (advice-add 'notmuch-show--build-buffer :after 'reset-header-line)
+;;   (advice-add 'notmuch-show--build-buffer :after 'reset-header-line)
   
-  (defun my-tabbar-groups ()
-    (cond
-     ((memql major-mode '(notmuch-show-mode notmuch-search-mode notmuch-message-mode message-mode))
-      (list "email"))
+;;   (defun my-tabbar-groups ()
+;;     (cond
+;;      ((memql major-mode '(notmuch-show-mode notmuch-search-mode notmuch-message-mode message-mode))
+;;       (list "email"))
 
-     ((memql major-mode '(rcirc-mode))
-      (list "IRC"))
+;;      ((memql major-mode '(rcirc-mode))
+;;       (list "IRC"))
      
-     ((or (not (projectile-project-p))
+;;      ((or (not (projectile-project-p))
           
-          (not (or (buffer-file-name)
-                   dired-directory
-                   (get-buffer-process (current-buffer)))))
-      (tabbar-buffer-groups))
+;;           (not (or (buffer-file-name)
+;;                    dired-directory
+;;                    (get-buffer-process (current-buffer)))))
+;;       (tabbar-buffer-groups))
      
-     (t
-      (list (projectile-project-name)))))
+;;      (t
+;;       (list (projectile-project-name)))))
 
-  (setq tabbar-buffer-groups-function
-        'my-tabbar-groups)
+;;   (setq tabbar-buffer-groups-function
+;;         'my-tabbar-groups)
   
 
-  (defun tabbar-disable-bg-color (o &rest args)
-    (let ((tabbar-background-color nil))
-      (apply o args)))
+;;   (defun tabbar-disable-bg-color (o &rest args)
+;;     (let ((tabbar-background-color nil))
+;;       (apply o args)))
 
-  (advice-add 'tabbar-background-color :around 'tabbar-disable-bg-color)
+;;   (advice-add 'tabbar-background-color :around 'tabbar-disable-bg-color)
 
-  (setq tabbar-separator '(1.0))
+;;   (setq tabbar-separator '(1.0))
 
-  (defun reset-tabbar-mode ()
-    (set-face-attribute 'tabbar-default nil
-                        :inherit 'default
-                        :background (face-attribute 'mode-line :background nil t)
-                        :foreground 'unspecified
-                        :family "Sans Serif"
-                        :box nil)
+;;   (defun reset-tabbar-mode ()
+;;     (set-face-attribute 'tabbar-default nil
+;;                         :inherit 'default
+;;                         :background (face-attribute 'mode-line :background nil t)
+;;                         :foreground 'unspecified
+;;                         :family "Sans Serif"
+;;                         :box nil)
 
-    (set-face-attribute 'tabbar-button nil
-                        :background 'unspecified
-                        :box nil)
+;;     (set-face-attribute 'tabbar-button nil
+;;                         :background 'unspecified
+;;                         :box nil)
 
-    (set-face-attribute 'tabbar-selected nil
-                        :weight 'bold
-                        :foreground 'unspecified
-                        :background 'unspecified
-                        :box (face-attribute 'shadow :foreground nil t)
-                        :underline t)
+;;     (set-face-attribute 'tabbar-selected nil
+;;                         :weight 'bold
+;;                         :foreground 'unspecified
+;;                         :background 'unspecified
+;;                         :box (face-attribute 'shadow :foreground nil t)
+;;                         :underline t)
 
-    (set-face-attribute 'tabbar-unselected nil
-                        :box (face-attribute 'shadow :foreground nil t))
+;;     (set-face-attribute 'tabbar-unselected nil
+;;                         :box (face-attribute 'shadow :foreground nil t))
 
-    (set-face-attribute 'tabbar-highlight nil
-                        :foreground 'unspecified :background 'unspecified
-                        :underline 'unspecified
-                        :inverse-video t)
+;;     (set-face-attribute 'tabbar-highlight nil
+;;                         :foreground 'unspecified :background 'unspecified
+;;                         :underline 'unspecified
+;;                         :inverse-video t)
 
-    (set-face-attribute 'tabbar-modified nil
-                        :foreground 'unspecified
-                        :background 'unspecified
-                        :box (face-attribute 'shadow :foreground nil t))
+;;     (set-face-attribute 'tabbar-modified nil
+;;                         :foreground 'unspecified
+;;                         :background 'unspecified
+;;                         :box (face-attribute 'shadow :foreground nil t))
 
-    (set-face-attribute 'tabbar-selected-modified nil
-                        :slant 'italic
-                        :box (face-attribute 'shadow :foreground nil t)
-                        :foreground 'unspecified :background 'unspecified
-                        :inherit 'tabbar-selected)
+;;     (set-face-attribute 'tabbar-selected-modified nil
+;;                         :slant 'italic
+;;                         :box (face-attribute 'shadow :foreground nil t)
+;;                         :foreground 'unspecified :background 'unspecified
+;;                         :inherit 'tabbar-selected)
     
-    (tabbar-mode -1)
-    (tabbar-mode 1)
-    )
+;;     (tabbar-mode -1)
+;;     (tabbar-mode 1)
+;;     )
   
-  (reset-tabbar-mode)
-  (add-hook 'custom-theme-load-hook 'reset-tabbar-mode)
+;;   (reset-tabbar-mode)
+;;   (add-hook 'custom-theme-load-hook 'reset-tabbar-mode)
 
-  (bind-key "C-<prior>" (lambda () (interactive) (tabbar-cycle t)) tabbar-mode-map)
-  (bind-key "C-<next>" (lambda () (interactive) (tabbar-cycle)) tabbar-mode-map)
-  (bind-key "C-<tab>" (lambda () (interactive) (tabbar-cycle)) tabbar-mode-map)
-  )
+;;   (bind-key "C-<prior>" (lambda () (interactive) (tabbar-cycle t)) tabbar-mode-map)
+;;   (bind-key "C-<next>" (lambda () (interactive) (tabbar-cycle)) tabbar-mode-map)
+;;   (bind-key "C-<tab>" (lambda () (interactive) (tabbar-cycle)) tabbar-mode-map)
+;;   )
+
 
 (use-package multiple-cursors
   :defer t
@@ -401,3 +413,19 @@
 (use-package transpose-frame
   :ensure t
   :bind ("C-M-o" . transpose-frame))
+
+(use-package symbol-overlay
+  :ensure t
+  :bind (:map symbol-overlay-mode-map
+              ("M-p" . symbol-overlay-jump-prev)
+              ("M-n" . symbol-overlay-jump-next)
+              )
+  :commands symbol-overlay-mode
+  :init
+  (add-hook 'prog-mode-hook 'symbol-overlay-mode))
+
+
+(use-package browse-url
+  :config
+  (setq browse-url-generic-program "xdg-open"
+        browse-url-browser-function 'browse-url-generic))

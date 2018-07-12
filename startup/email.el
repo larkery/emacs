@@ -11,7 +11,10 @@
 	("d" . notmuch-search-delete)
 	("g" . notmuch-refresh-this-buffer)
         :map notmuch-message-mode-map
-        ("C-c f" . notmuch-switch-identity))
+        ("C-c f" . notmuch-switch-identity)
+        :map notmuch-show-mode-map
+        ("C-o" . browse-url-at-point)
+        )
   
   :config
 
@@ -193,8 +196,10 @@
       result))
   
   (setq
+   mml-enable-flowed nil
    message-send-mail-function 'message-send-mail-with-sendmail
    message-sendmail-envelope-from 'header
+   message-fill-column nil
    mm-coding-system-priorities '(utf-8)
    mm-inline-large-images 'resize
    mm-inline-large-images-proportion 0.9
@@ -212,6 +217,7 @@
 
    message-yank-empty-prefix ""
    )
+  
   )
 
 (use-package mailcap

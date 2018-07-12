@@ -116,8 +116,7 @@
                )))
         (format ivy--switch-buffer-format "v" str "")
         )))
-  
-  )
+    )
 
 (use-package recentf
   :config
