@@ -25,3 +25,13 @@
          date))
       (org-cut-subtree))) 
   )
+
+
+(use-package org-extras
+  :commands org-log-goto
+  :bind ("C-c j" . org-log-goto)
+  :config
+  (setq org-log-location
+  '("~/notes/journal/%Y/%B.org"
+    "[%Y-%m-%d %a]")))
+
