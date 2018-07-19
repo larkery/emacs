@@ -4,6 +4,7 @@
   :commands magit-status)
 
 (use-package smartparens
+  :diminish smartparens-mode
   :ensure t
   :commands smartparens-mode
   :bind (:map smartparens-mode-map
@@ -95,15 +96,21 @@
   :bind (:map projectile-mode-map
               ("C-c p s s" . counsel-ag)
               ("C-c p s a" . projectile-ag)
-              ("C-x C-b" . projectile-ibuffer))
+              ("C-x C-b" . projectile-or-global-ibuffer))
   :ensure t
   :demand t
   :config
   (projectile-global-mode 1)
   (setq projectile-completion-system 'ivy
-        projectile-switch-project-action 'projectile-dired))
+        projectile-switch-project-action 'projectile-dired)
+  (defun projectile-or-global-ibuffer (prefix)
+    (interactive "p")
+    (if (projectile-project-p)
+        (projectile-ibuffer prefix)
+      (ibuffer))))
 
 (use-package pcre2el
+  :diminish pcre-mode
   :ensure t
   :config
   (pcre-mode t))
@@ -415,6 +422,7 @@
   :bind ("C-M-o" . transpose-frame))
 
 (use-package symbol-overlay
+  :diminish symbol-overlay-mode
   :ensure t
   :bind (:map symbol-overlay-mode-map
               ("M-p" . symbol-overlay-jump-prev)
@@ -429,3 +437,9 @@
   :config
   (setq browse-url-generic-program "xdg-open"
         browse-url-browser-function 'browse-url-generic))
+
+(use-package composable
+  :diminish
+  :config
+  (composable-mode 1)
+  (composable-mark-mode 1))
