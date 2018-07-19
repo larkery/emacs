@@ -46,7 +46,7 @@
   (setq notmuch-multipart/alternative-discouraged '("text/plain") ;; prefer html?
 
         notmuch-saved-searches
-        '((:name "needs action" :query "tag:unread and tag:inbox" :key "j")
+        '((:name "needs action" :query "tag:flagged or tag:unread and tag:inbox" :key "j")
           (:name "unread" :query "tag:unread" :key "u")
           (:name "inbox" :query "tag:inbox" :key "i")
           (:name "drafts" :query "tag:draft" :key "d"))

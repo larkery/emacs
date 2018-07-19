@@ -188,6 +188,18 @@
   
   )
 
+(defvar light-theme 'base16-tomorrow)
+(defvar dark-theme 'base16-tomorrow-night)
+
+(defun switch-theme ()
+  (interactive)
+  (let ((themes (if (custom-theme-enabled-p light-theme)
+                    (cons light-theme dark-theme)
+                  (cons dark-theme light-theme))))
+    (disable-theme (car themes))
+    (load-theme (cdr themes) t)))
+
+(bind-key "<f6>" 'switch-theme)
 
 (use-package visual-line
   :commands visual-line-mode
