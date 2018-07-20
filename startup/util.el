@@ -443,3 +443,15 @@
   :config
   (composable-mode 1)
   (composable-mark-mode 1))
+
+
+(defun insert-file-path ()
+  (interactive)
+  (save-excursion
+    (let ((path (read-file-name "Insert path: ")))
+      (when path
+        (insert "\"")
+        (insert path)
+        (insert "\"")))))
+
+(bind-key "C-c f" #'insert-file-path)

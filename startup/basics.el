@@ -180,16 +180,15 @@
 (use-package base16-theme
   :ensure t
   :config
-  (load-theme 'base16-gruvbox-light-hard t)
-  (add-to-list 'custom-theme-load-path
-               (concat user-emacs-directory "site-lisp/themes")
-               )
-  (load-theme 'tweaks t)
   
-  )
+  (defvar dark-theme 'base16-gruvbox-light-hard)
+  (defvar light-theme 'base16-gruvbox-dark-hard)
+  
+  (load-theme light-theme t)
+  (add-to-list 'custom-theme-load-path
+               (concat user-emacs-directory "site-lisp/themes"))
 
-(defvar light-theme 'base16-tomorrow)
-(defvar dark-theme 'base16-tomorrow-night)
+  (load-theme 'tweaks t))
 
 (defun switch-theme ()
   (interactive)
@@ -197,7 +196,8 @@
                     (cons light-theme dark-theme)
                   (cons dark-theme light-theme))))
     (disable-theme (car themes))
-    (load-theme (cdr themes) t)))
+    (load-theme (cdr themes) t))
+  (load-theme 'tweaks t))
 
 (bind-key "<f6>" 'switch-theme)
 
@@ -222,7 +222,18 @@
       ad-do-it))
   (ad-activate 'yank-pop)
   :config
+  (setq browse-kill-ring-show-preview nil)
+  (setq counsel-yank-pop-preselect-last t)
   (bind-key "M-y" 'browse-kill-ring-forward browse-kill-ring-mode-map))
+
+(use-package savehist
+  :config
+  (savehist-mode 1)
+  (setq savehist-file
+        (concat user-emacs-directory "/savehist")
+        
+        savehist-additional-variables
+        '(kill-ring)))
 
 (use-package calendar
   :defer t
