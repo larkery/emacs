@@ -69,7 +69,7 @@
           )
         notmuch-search-result-format
         '(("date" . "%12s  ")
-          ;;("count" . "%-7s ")
+          ("count" . "%-7s ")
           ("authors" . "%-20s ")
           ("subject" . "%s ")
           ("tags" . "%s"))

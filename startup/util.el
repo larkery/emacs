@@ -286,12 +286,6 @@
   :config
   (setq ediff-window-setup-function 'ediff-setup-windows-plain))
 
-(use-package expand-region
-  :defer t
-  :ensure t
-  :bind
-  ("C-=" . er/expand-region))
-
 (defun mark-symbol-or-minibuffer-it ()
   (interactive)
   (if (minibufferp)
@@ -311,108 +305,23 @@
 
 (bind-key "C-'" 'mark-symbol-or-minibuffer-it)
 
-;; (use-package tabbar
-;;   :ensure t
-;;   :config
-
-
-;;   ;; https://emacs.stackexchange.com/questions/984/what-is-the-right-way-to-install-tab-bar
-
-
-;;   (defun reset-header-line (&rest args)
-;;     (when tabbar-mode
-;;       (setq-local header-line-format
-;;                   '(:eval (tabbar-line)))
-;;       )
-;;     )
-
-;;   (advice-add 'notmuch-show--build-buffer :after 'reset-header-line)
-  
-;;   (defun my-tabbar-groups ()
-;;     (cond
-;;      ((memql major-mode '(notmuch-show-mode notmuch-search-mode notmuch-message-mode message-mode))
-;;       (list "email"))
-
-;;      ((memql major-mode '(rcirc-mode))
-;;       (list "IRC"))
-     
-;;      ((or (not (projectile-project-p))
-          
-;;           (not (or (buffer-file-name)
-;;                    dired-directory
-;;                    (get-buffer-process (current-buffer)))))
-;;       (tabbar-buffer-groups))
-     
-;;      (t
-;;       (list (projectile-project-name)))))
-
-;;   (setq tabbar-buffer-groups-function
-;;         'my-tabbar-groups)
-  
-
-;;   (defun tabbar-disable-bg-color (o &rest args)
-;;     (let ((tabbar-background-color nil))
-;;       (apply o args)))
-
-;;   (advice-add 'tabbar-background-color :around 'tabbar-disable-bg-color)
-
-;;   (setq tabbar-separator '(1.0))
-
-;;   (defun reset-tabbar-mode ()
-;;     (set-face-attribute 'tabbar-default nil
-;;                         :inherit 'default
-;;                         :background (face-attribute 'mode-line :background nil t)
-;;                         :foreground 'unspecified
-;;                         :family "Sans Serif"
-;;                         :box nil)
-
-;;     (set-face-attribute 'tabbar-button nil
-;;                         :background 'unspecified
-;;                         :box nil)
-
-;;     (set-face-attribute 'tabbar-selected nil
-;;                         :weight 'bold
-;;                         :foreground 'unspecified
-;;                         :background 'unspecified
-;;                         :box (face-attribute 'shadow :foreground nil t)
-;;                         :underline t)
-
-;;     (set-face-attribute 'tabbar-unselected nil
-;;                         :box (face-attribute 'shadow :foreground nil t))
-
-;;     (set-face-attribute 'tabbar-highlight nil
-;;                         :foreground 'unspecified :background 'unspecified
-;;                         :underline 'unspecified
-;;                         :inverse-video t)
-
-;;     (set-face-attribute 'tabbar-modified nil
-;;                         :foreground 'unspecified
-;;                         :background 'unspecified
-;;                         :box (face-attribute 'shadow :foreground nil t))
-
-;;     (set-face-attribute 'tabbar-selected-modified nil
-;;                         :slant 'italic
-;;                         :box (face-attribute 'shadow :foreground nil t)
-;;                         :foreground 'unspecified :background 'unspecified
-;;                         :inherit 'tabbar-selected)
-    
-;;     (tabbar-mode -1)
-;;     (tabbar-mode 1)
-;;     )
-  
-;;   (reset-tabbar-mode)
-;;   (add-hook 'custom-theme-load-hook 'reset-tabbar-mode)
-
-;;   (bind-key "C-<prior>" (lambda () (interactive) (tabbar-cycle t)) tabbar-mode-map)
-;;   (bind-key "C-<next>" (lambda () (interactive) (tabbar-cycle)) tabbar-mode-map)
-;;   (bind-key "C-<tab>" (lambda () (interactive) (tabbar-cycle)) tabbar-mode-map)
-;;   )
-
-
 (use-package multiple-cursors
   :defer t
-  :bind ("C-/" . mc/mark-more-like-this-extended)
-  )
+  :bind (("C-/" . mc/mark-more-like-this-extended)
+         ("C-M-/" . mc/mark-all-dwim))
+  :config
+  (defvar was-in-composable-mode nil)
+  (make-variable-buffer-local 'was-in-composable-mode)
+  (defun toggle-composable-mode ()
+    (if multiple-cursors-mode
+        (progn
+          (setq-local was-in-composable-mode composable-mode)
+          (composable-mode 0))
+      (when was-in-composable-mode
+        (composable-mode 1))))
+  
+  (add-hook 'multiple-cursors-mode-hook
+            #'toggle-composable-mode))
 
 (use-package edit-as-root
   :bind ("C-x C-a" . edit-as-root))
@@ -426,8 +335,7 @@
   :ensure t
   :bind (:map symbol-overlay-mode-map
               ("M-p" . symbol-overlay-jump-prev)
-              ("M-n" . symbol-overlay-jump-next)
-              )
+              ("M-n" . symbol-overlay-jump-next))
   :commands symbol-overlay-mode
   :init
   (add-hook 'prog-mode-hook 'symbol-overlay-mode))
@@ -442,16 +350,34 @@
   :diminish
   :config
   (composable-mode 1)
-  (composable-mark-mode 1))
+  (composable-mark-mode 1)
+  (bind-key "M-;" nil composable-mode-map))
 
 
 (defun insert-file-path ()
   (interactive)
-  (save-excursion
-    (let ((path (read-file-name "Insert path: ")))
-      (when path
-        (insert "\"")
-        (insert path)
-        (insert "\"")))))
+  (push-mark)
+  (let ((path (read-file-name "Insert path: ")))
+    (when path
+      (insert "\"")
+      (insert path)
+      (insert "\""))))
 
 (bind-key "C-c f" #'insert-file-path)
+
+(use-package yasnippet
+  :ensure t
+  :defer t
+  :commands yas/minor-mode
+  :init
+  (add-hook 'prog-mode-hook #'yas/minor-mode)
+  )
+
+(use-package hydra
+  :ensure t
+  :defer t)
+
+(use-package comment-dwim-2
+  :ensure t
+  :bind ("M-;" . comment-dwim-2))
+

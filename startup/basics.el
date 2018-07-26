@@ -28,6 +28,11 @@
       calendar-latitude 51.455313
       calendar-longitude -2.591902
 
+      inhibit-startup-screen t
+      inhibit-startup-echo-area-message t
+      initial-buffer-choice t
+      initial-major-mode 'text-mode
+      
       )
 
 (custom-set-variables '(calendar-date-style 'european))
@@ -228,12 +233,12 @@
 
 (use-package savehist
   :config
-  (savehist-mode 1)
   (setq savehist-file
-        (concat user-emacs-directory "/savehist")
+        (concat user-emacs-directory "savehist")
         
         savehist-additional-variables
-        '(kill-ring)))
+        '(kill-ring))
+  (savehist-mode 1))
 
 (use-package calendar
   :defer t

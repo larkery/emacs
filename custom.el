@@ -7,7 +7,7 @@
  '(custom-safe-themes
    (quote
     ("3de3f36a398d2c8a4796360bfce1fa515292e9f76b655bb9a377289a6a80a132" default)))
- '(debug-on-error t)
+ '(debug-on-error nil)
  '(fci-rule-character-color "#452E2E")
  '(fci-rule-color "#452E2E")
  '(org-babel-load-languages (quote ((emacs-lisp . t) (dot . t))))
