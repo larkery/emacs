@@ -21,6 +21,7 @@
        for term in '("XTerm" "URxvt")
        do (cl-loop
            for spec in '(("background" default :background)
+                         ("borderColor" default :background)
                          ("foreground" default :foreground)
                          ("cursorColor" cursor :background)
                          ;; normal versions of colors
