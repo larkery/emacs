@@ -33,6 +33,10 @@
      (:background "grey85"))
     (((background dark))
      (:background "grey15"))))
+
+ '(symbol-overlay-default-face
+   ((t (:underline "grey50")))
+   )
  )
 
 (provide-theme 'tweaks)

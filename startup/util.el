@@ -337,6 +337,8 @@
               ("M-p" . symbol-overlay-jump-prev)
               ("M-n" . symbol-overlay-jump-next))
   :commands symbol-overlay-mode
+  :config
+  (setq symbol-overlay-idle-time 0.75)
   :init
   (add-hook 'prog-mode-hook 'symbol-overlay-mode))
 
