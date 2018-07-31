@@ -186,8 +186,8 @@
   :ensure t
   :config
   
-  (defvar dark-theme 'base16-gruvbox-light-hard)
-  (defvar light-theme 'base16-gruvbox-dark-hard)
+  (defvar dark-theme 'base16-gruvbox-dark-hard)
+  (defvar light-theme 'base16-gruvbox-light-hard)
   
   (load-theme light-theme t)
   (add-to-list 'custom-theme-load-path
