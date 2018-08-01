@@ -22,6 +22,9 @@
   (let* ((encoded-reference (apply 'encode-time reference))
          (encoded-timestamp (apply 'encode-time timestamp))
 
+         (reference-day (nth 3 reference))
+         (timestamp-day (nth 3 timestamp))
+         
          (days (/ (float-time (time-subtract encoded-timestamp encoded-reference))
                   86400))
          (past (< days 0))
@@ -29,11 +32,12 @@
 
          (day-part
           (cond
-           ((< abs-days 1) "today") ;; not quite right I guess?
+           ((and (< abs-days 2)
+                 (= reference-day timestamp-day))
+            "today")
            ((< abs-days 2) (if past "yesterday" "tomorrow"))
            ((< abs-days 8) (concat (if past "last" "next")
-                                   (format-time-string " %A" encoded-timestamp)
-                                   ))
+                                   (format-time-string " %A" encoded-timestamp)))
            ((and (not past) (< abs-days 15))
             (concat "a week next"
                     (format-time-string " %A" encoded-timestamp)
