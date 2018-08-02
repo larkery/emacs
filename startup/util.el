@@ -119,27 +119,13 @@
   :bind ("M-s o" . occur)
   :defer t
   :commands occur)
-  
-(use-package visual-regexp-steroids
-  :ensure t
-  :defer t
-  :config
-  (setq vr/engine 'pcre2el))
-
-
-(use-package visual-regexp
-  :ensure t
-  :defer t
-  :bind (([remap query-replace-regexp] . vr/query-replace)
-         ("<f5>" . vr/query-replace)
-         )
-  :config (require 'visual-regexp-steroids)
-  )
 
 (use-package anzu
   :ensure t
   :bind
   (([remap query-replace] . 'anzu-query-replace)
+   ([remap query-replace-regexp] . 'anzu-query-replace-regexp)
+   ("<f5>" . anzu-query-replace-regexp)
    ("M-s N" . anzu-replace-at-cursor-thing)
    ("M-s n" . anzu-query-replace-at-cursor)
    :map isearch-mode-map
@@ -151,6 +137,30 @@
              anzu-query-replace-at-cursor
              anzu-isearch-query-replace)
   :config
+  (defun my-anzu-wangle-minibuffer-input (f buf beg end use-re overlay-limit)
+    (if (and use-re pcre-mode)
+        (let ((-minibuffer-contents (symbol-function 'minibuffer-contents)))
+          (flet ((minibuffer-contents
+                  ()
+                  (let ((mc (funcall -minibuffer-contents)))
+                    (condition-case nil
+                        (rxt-pcre-to-elisp mc)
+                      (error mc)))
+                  ))
+            (funcall f buf beg end use-re overlay-limit)))
+
+      (funcall f buf beg end use-re overlay-limit)))
+
+  (defun my-anzu-pcre-mode (f prompt beg end use-re overlay-limit)
+    (if (and use-re pcre-mode)
+        (let ((res (funcall f (concat prompt " (PCRE)") beg end use-re overlay-limit)))
+          (condition-case nil
+              (rxt-pcre-to-elisp res)
+            (error res)))
+      (funcall f prompt beg end use-re overlay-limit)))
+
+  (advice-add 'anzu--check-minibuffer-input :around #'my-anzu-wangle-minibuffer-input)
+  (advice-add 'anzu--query-from-string :around #'my-anzu-pcre-mode)
   (setq anzu-mode-lighter ""))
 
 (use-package dumb-jump
