@@ -129,8 +129,8 @@
    ("M-s N" . anzu-replace-at-cursor-thing)
    ("M-s n" . anzu-query-replace-at-cursor)
    :map isearch-mode-map
-        ([remap isearch-query-replace] . anzu-isearch-query-replace)
-        ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
+   ([remap isearch-query-replace] . anzu-isearch-query-replace)
+   ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
   
   :defer t
   :commands (anzu-query-replace
