@@ -58,7 +58,7 @@
   (interactive) (kill-buffer nil))
 (global-set-key (kbd "C-x k") 'kill-current-buffer)
 (global-set-key (kbd "M-o") 'other-window)
-(global-set-key (kbd "<f5>") 'save-buffer)
+
 (defun cycle-space ()
   (interactive) (cycle-spacing -1 t))
 (global-set-key [remap just-one-space] 'cycle-space)
