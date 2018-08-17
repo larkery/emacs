@@ -297,18 +297,22 @@
   :bind (("C-/" . mc/mark-more-like-this-extended)
          ("C-M-/" . mc/mark-all-dwim))
   :config
-  (defvar was-in-composable-mode nil)
-  (make-variable-buffer-local 'was-in-composable-mode)
-  (defun toggle-composable-mode ()
-    (if multiple-cursors-mode
-        (progn
-          (setq-local was-in-composable-mode composable-mode)
-          (composable-mode 0))
-      (when was-in-composable-mode
-        (composable-mode 1))))
+  ;; (defvar was-in-composable-mode nil)
+
+  ;; (make-variable-buffer-local 'was-in-composable-mode)
+
+  ;; (defun toggle-composable-mode ()
+  ;;   (if multiple-cursors-mode
+  ;;       (progn
+  ;;         (setq-local was-in-composable-mode composable-mode)
+  ;;         (composable-mode 0))
+  ;;     (when was-in-composable-mode
+  ;;       (composable-mode 1))))
+
   
-  (add-hook 'multiple-cursors-mode-hook
-            #'toggle-composable-mode))
+  ;; (add-hook 'multiple-cursors-mode-hook
+  ;;           #'toggle-composable-mode)
+  )
 
 (use-package edit-as-root
   :bind ("C-x C-a" . edit-as-root))
@@ -335,12 +339,12 @@
   (setq browse-url-generic-program "xdg-open"
         browse-url-browser-function 'browse-url-generic))
 
-(use-package composable
-  :diminish
-  :config
-  (composable-mode 1)
-  (composable-mark-mode 1)
-  (bind-key "M-;" nil composable-mode-map))
+;; (use-package composable
+;;   :diminish
+;;   :config
+;;   (composable-mode 1)
+;;   (composable-mark-mode 1)
+;;   (bind-key "M-;" nil composable-mode-map))
 
 
 (defun insert-file-path ()

@@ -32,7 +32,8 @@
       inhibit-startup-echo-area-message t
       initial-buffer-choice t
       initial-major-mode 'text-mode
-      
+
+      enable-recursive-minibuffers t
       )
 
 (custom-set-variables '(calendar-date-style 'european))

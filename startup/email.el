@@ -14,6 +14,7 @@
         ("C-c f" . notmuch-switch-identity)
         :map notmuch-show-mode-map
         ("C-o" . browse-url-at-point)
+        ("d" . notmuch-show-delete)
         )
   
   :config
@@ -134,6 +135,11 @@
     (notmuch-search-toggle-tag "deleted")
     (notmuch-search-next-thread))
 
+  (defun notmuch-show-delete ()
+    (interactive)
+    (notmuch-show-add-tag (list "+deleted"))
+    (notmuch-show-next-thread))
+
   (defun notmuch-expand-calendar-parts (o msg part depth &optional hide)
     (funcall o
              msg part depth (and hide
@@ -169,10 +175,42 @@
 
   (bind-key "u" 'notmuch-show-skip-to-unread 'notmuch-show-mode-map)
 
-;;  (add-hook 'notmuch-show-mode-hook 'notmuch-show-skip-to-unread)
+  (defvar notmuch-reply-sender-regexes
+    (list (cons (regexp-quote "tom.hinton@cse.org.uk") "Tom Hinton")
+          (cons (regexp-quote "larkery.com") "Tom Hinton")))
   
-  )
+  (defun notmuch-mua-reply-guess-sender (o query-string &optional sender reply-all)
+    (let ((sender (or sender
+                      (let* ((to
+                              (notmuch-query-map-threads
+                               (lambda (m)
+                                 (ietf-drums-parse-addresses
+                                  (plist-get (plist-get m :headers) :To)))
+                               (notmuch-call-notmuch-sexp
+                                "show"
+                                "--format=sexp"
+                                "--format-version=4"
+                                "--entire-thread=false"
+                                "--body=false"
+                                query-string)
+                               )
+                              )
+                             (to (apply #'nconc to))
+                             (case-fold-search t))
+                        (message "guess sender in %s with %s"
+                                 notmuch-reply-sender-regexes
+                                 to
+                                 )
+                        ;; TODO check notmuch filing rules as well?
+                        (cl-loop for a in to
+                                 thereis
+                                 (cl-loop for i in notmuch-reply-sender-regexes
+                                          when (string-match-p (car i) (car a))
+                                          return (format "%s <%s>" (cdr i) (car a))))))))
+      (funcall o query-string sender reply-all)))
 
+
+  (advice-add 'notmuch-mua-reply :around 'notmuch-mua-reply-guess-sender))
 
 (use-package message
   :defer t
