@@ -23,7 +23,25 @@
         (org-datetree-file-entry-under
          (buffer-substring (region-beginning) (region-end))
          date))
-      (org-cut-subtree))) 
+      (org-cut-subtree)))
+
+
+  (defun org-read-date-analyze-no-stupid-endian (o ans org-def org-defdecode)
+    (funcall o
+             (if (string-match-p
+                  "^ *\\(0?[1-9]\\|1[012]\\)/\\(0?[1-9]\\|[12][0-9]\\|3[01]\\)\\(/\\([0-9]+\\)\\)?\\([^/0-9]\\|$\\)"
+                  ans)
+
+                 (replace-regexp-in-string "/" "." ans)
+
+                 ans)
+
+             org-def org-defdecode)
+    )
+
+  (advice-add 'org-read-date-analyze :around
+              'org-read-date-analyze-no-stupid-endian)
+  
   )
 
 
@@ -35,3 +53,16 @@
   '("~/notes/journal/%Y/%B.org"
     "[%Y-%m-%d %a]")))
 
+(use-package date-at-point
+  :ensure t
+
+  (defun org-agenda-date-at-point (o &rest args)
+    (let* ((dap (date-at-point))
+           (org-agenda-start-day
+            (or org-agenda-start-day
+                dap)))
+      (apply o args)))
+
+  (advice-add 'org-agenda :around 'org-agenda-date-at-point)
+  
+  )
