@@ -2,6 +2,25 @@
   :defer t
   :commands notmuch-agenda-insert-part)
 
+(use-package gnus-dired
+  :commands turn-on-gnus-dired-mode
+  :init
+  (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
+
+  :config
+  (defun gnus-dired-mail-buffers ()
+    "Return a list of active message buffers."
+    (let (buffers)
+      (save-current-buffer
+        (dolist (buffer (buffer-list t))
+          (set-buffer buffer)
+          (when (and (derived-mode-p 'message-mode)
+                     (null message-sent-message-via))
+            (push (buffer-name buffer) buffers))))
+      (nreverse buffers)))
+  
+  (setq gnus-dired-mail-mode 'notmuch-user-agent))
+
 (use-package notmuch
   :commands notmuch
   :bind
