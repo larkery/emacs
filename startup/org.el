@@ -55,7 +55,8 @@
 
 (use-package date-at-point
   :ensure t
-
+  
+  :config
   (defun org-agenda-date-at-point (o &rest args)
     (let* ((dap (date-at-point))
            (org-agenda-start-day

@@ -93,14 +93,20 @@
 
 (use-package projectile
   :diminish
-  :bind (:map projectile-mode-map
-              ("C-c p s s" . counsel-ag)
-              ("C-c p s a" . projectile-ag)
-              ("C-x C-b" . projectile-or-global-ibuffer))
   :ensure t
   :demand t
+  :init
+  (setq projectile-keymap-prefix (kbd "C-c p"))
   :config
   (projectile-global-mode 1)
+
+  (bind-keys
+   :map projectile-mode-map
+   ("C-c p s s" . counsel-ag)
+   ("C-c p s a" . projectile-ag)
+   ("C-x C-b" . projectile-or-global-ibuffer))
+  ;; (define-key projectile-mode-map (kbd projectile-keymap-prefix) 'projectile-command-map)
+
   (setq projectile-completion-system 'ivy
         projectile-switch-project-action 'projectile-dired)
   (defun projectile-or-global-ibuffer (prefix)
@@ -140,7 +146,7 @@
   (defun my-anzu-wangle-minibuffer-input (f buf beg end use-re overlay-limit)
     (if (and use-re pcre-mode)
         (let ((-minibuffer-contents (symbol-function 'minibuffer-contents)))
-          (flet ((minibuffer-contents
+          (cl-flet ((minibuffer-contents
                   ()
                   (let ((mc (funcall -minibuffer-contents)))
                     (condition-case nil
