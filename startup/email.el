@@ -72,21 +72,26 @@
           (:name "drafts" :query "tag:draft" :key "d"))
 
         notmuch-tag-formats
-        '(("unread" (propertize tag 'face 'notmuch-tag-unread))
+        '(("unread" (propertize "•" 'face 'notmuch-tag-unread))
           ("flagged" (propertize tag 'face 'notmuch-tag-flagged)
            (notmuch-tag-format-image-data tag (notmuch-tag-star-icon)))
-          ("low-importance" "↓")
-          ("high-importance" "!")
+          ("low-importance" (propertize "_" 'face 'shadow))
+          ("high-importance" (propertize "^" 'face 'error))
           ("normal-importance")
 
           ("sent" "→")
           ("replied" "⮱")
-          ("attachment" "📎")
-          ("meeting" "📅")
-          ("inbox" "I")
-          ("accepted" "🗸")
-          ("rejected" "❌")
+          ("attachment" "att")
+          ("inbox" "%")
+
           )
+
+        notmuch-search-line-faces
+        '(("unread" . notmuch-search-unread-face)
+          ("deleted" . (:strike-through "red"))
+          ("flagged" . notmuch-search-flagged-face)
+          )
+        
         notmuch-search-result-format
         '(("date" . "%12s  ")
           ("count" . "%-7s ")
@@ -229,7 +234,37 @@
       (funcall o query-string sender reply-all)))
 
 
-  (advice-add 'notmuch-mua-reply :around 'notmuch-mua-reply-guess-sender))
+  (advice-add 'notmuch-mua-reply :around 'notmuch-mua-reply-guess-sender)
+
+  ;; don't colour in the whole line
+  (defun notmuch-search-color-line-here ()
+    (let ((face (plist-get (text-properties-at (point)) 'face)))
+      (or (eq face 'notmuch-search-matching-authors)
+          (eq face 'notmuch-search-subject)
+          (eq face 'notmuch-search-date)
+          (not face))))
+
+  (defun notmuch-search-color-line-partially (o start end line-tag-list)
+    (save-excursion
+      (goto-char start)
+
+      (let (npt (in (notmuch-search-color-line-here)) (last start))
+        (while (and (setq npt (next-single-property-change (point) 'face nil end))
+                    (< npt end))
+          (goto-char npt)
+          (let ((face (assoc 'face (text-properties-at (point)))))
+            (if (notmuch-search-color-line-here)
+                (unless in (setq in t last (point)))
+              (when in
+                (setq in nil)
+                (funcall o last (point) line-tag-list)))))
+        (when in
+          (setq in nil)
+          (funcall o last (point) line-tag-list)))))
+
+  (advice-add 'notmuch-search-color-line :around #'notmuch-search-color-line-partially)
+
+  )
 
 (use-package message
   :defer t

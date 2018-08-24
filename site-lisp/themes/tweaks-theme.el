@@ -9,6 +9,8 @@
  '(dired-subtree-depth-4-face ((t)))
  '(dired-subtree-depth-5-face ((t)))
  '(dired-subtree-depth-6-face ((t)))
+
+ '(notmuch-search-unread-face ((t (:foreground "white" :distant-foreground "black" :weight bold))))
  )
 
 (provide-theme 'tweaks)
