@@ -78,6 +78,7 @@
           ("low-importance" (propertize "_" 'face 'shadow))
           ("high-importance" (propertize "^" 'face 'error))
           ("normal-importance")
+          ("medium-importance")
 
           ("sent" "→")
           ("replied" "⮱")
