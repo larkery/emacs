@@ -18,7 +18,16 @@
          dired-isearch-filenames 'dwim
          dired-listing-switches "-lah"
          dired-omit-files "^\\.[^\\.]"
-         dired-omit-verbose nil)
+         dired-omit-verbose nil
+         dired-subtree-line-prefix
+         (lambda (d)
+           (concat (make-string (* 3 d) ? ) (propertize ">"
+                                                        'face 'error
+                                                        ))
+           )
+         dired-subtree-use-backgrounds nil
+         dired-subtree-line-prefix-face 'subtree
+         )
 
   (add-hook 'dired-mode-hook 'auto-revert-mode)
   
