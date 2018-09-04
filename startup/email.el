@@ -80,8 +80,8 @@
           ("normal-importance")
           ("medium-importance")
 
-          ("sent" "→")
-          ("replied" "⮱")
+          ("sent")
+          ("replied" "→")
           ("attachment" "att")
           ("inbox" "%")
 
