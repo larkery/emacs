@@ -9,6 +9,11 @@
         org-agenda-diary-file "~/notes/agenda/calendar.org"
         org-id-locations-file "~/notes/.metadata/org-id-locations"
         org-agenda-insert-diary-extract-time t
+        
+        org-babel-load-languages '((emacs-lisp . t) (dot . t) (ditaa . t))
+
+        org-latex-pdf-process
+        '("xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f")
         org-refile-targets '((nil . (:maxlevel . 3))))
 
   (defun org-refile-to-datetree ()

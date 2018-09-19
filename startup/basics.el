@@ -134,7 +134,7 @@
   (defun recentf-excluded-deleted-local-files (fi)
     (unless (file-remote-p fi)
       (not (file-exists-p fi))))
-  
+  (run-with-idle-timer 600 t 'recentf-save-list)
   (setq recentf-max-saved-items 100
         recentf-exclude '("^/home/hinton/notes/" "^/nix/store"
                           recentf-exclude-deleted-local-files))
