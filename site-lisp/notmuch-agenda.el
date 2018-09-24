@@ -213,8 +213,10 @@
           (set-marker existing-event nil nil))
       
         (let* ((notmuch-agenda-capturing-event event)
-               
-               (org-store-link-functions '(notmuch-agenda-store-link))
+
+               (org-link-parameters
+                '(("nope" :store notmuch-agenda-store-link))
+                )
 
                (org-overriding-default-time
                 (apply 'encode-time
