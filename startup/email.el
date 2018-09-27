@@ -29,6 +29,7 @@
 	("f" . notmuch-search-flag)
 	("d" . notmuch-search-delete)
 	("g" . notmuch-refresh-this-buffer)
+        ("@" . notmuch-search-person)
         :map notmuch-message-mode-map
         ("C-c f" . notmuch-switch-identity)
         :map notmuch-show-mode-map
@@ -39,6 +40,20 @@
   :config
 
   (defvar counsel-notmuch-history nil)
+
+  (defun notmuch-search-person ()
+    (interactive)
+    (let* ((options (notmuch-address-options ""))
+           (choice (ivy-completing-read
+                    "Person: "
+                    options
+                    nil
+                    nil
+                    ;; (plist-get  :authors)
+                    "" ;; TODO get author email addresses here? or stick them at the start?
+                    )))
+      (when choice
+        (notmuch-search (format "from: %s or to:%s" choice choice)))))
   
   (defun counsel-notmuch ()
     (interactive)
@@ -263,9 +278,8 @@
           (setq in nil)
           (funcall o last (point) line-tag-list)))))
 
-  (advice-add 'notmuch-search-color-line :around #'notmuch-search-color-line-partially)
+  (advice-add 'notmuch-search-color-line :around #'notmuch-search-color-line-partially))
 
-  )
 
 (use-package message
   :defer t
