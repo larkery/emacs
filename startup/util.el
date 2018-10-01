@@ -146,13 +146,13 @@
   (defun my-anzu-wangle-minibuffer-input (f buf beg end use-re overlay-limit)
     (if (and use-re pcre-mode)
         (let ((-minibuffer-contents (symbol-function 'minibuffer-contents)))
-          (cl-flet ((minibuffer-contents
-                  ()
-                  (let ((mc (funcall -minibuffer-contents)))
-                    (condition-case nil
-                        (rxt-pcre-to-elisp mc)
-                      (error mc)))
-                  ))
+          (cl-letf (((symbol-function 'minibuffer-contents)
+                     (lambda ()
+                       (let ((mc (funcall -minibuffer-contents)))
+                         (condition-case nil
+                             (rxt-pcre-to-elisp mc)
+                           (error "";; mc
+                                  ))))))
             (funcall f buf beg end use-re overlay-limit)))
 
       (funcall f buf beg end use-re overlay-limit)))
@@ -162,11 +162,15 @@
         (let ((res (funcall f (concat prompt " (PCRE)") beg end use-re overlay-limit)))
           (condition-case nil
               (rxt-pcre-to-elisp res)
-            (error res)))
+            (error (error "'%s' is invalid regexp." res))))
       (funcall f prompt beg end use-re overlay-limit)))
 
   (advice-add 'anzu--check-minibuffer-input :around #'my-anzu-wangle-minibuffer-input)
   (advice-add 'anzu--query-from-string :around #'my-anzu-pcre-mode)
+
+  ;;(advice-remove 'anzu--check-minibuffer-input #'my-anzu-wangle-minibuffer-input)
+  ;;(advice-remove 'anzu--query-from-string #'my-anzu-pcre-mode)
+  
   (setq anzu-mode-lighter ""))
 
 (use-package dumb-jump
