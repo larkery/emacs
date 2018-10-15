@@ -81,9 +81,8 @@
   (setq notmuch-multipart/alternative-discouraged '("text/plain") ;; prefer html?
 
         notmuch-saved-searches
-        '((:name "needs action" :query "tag:flagged or tag:unread and tag:inbox" :key "j")
+        '((:name "inbox" :query "tag:inbox or tag:flagged" :key "i")
           (:name "unread" :query "tag:unread" :key "u")
-          (:name "inbox" :query "tag:inbox" :key "i")
           (:name "drafts" :query "tag:draft" :key "d"))
 
         notmuch-tag-formats
