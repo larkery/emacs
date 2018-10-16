@@ -9,6 +9,7 @@
         org-agenda-diary-file "~/notes/agenda/calendar.org"
         org-id-locations-file "~/notes/.metadata/org-id-locations"
         org-agenda-insert-diary-extract-time t
+        org-adapt-indentation nil
         
         org-babel-load-languages '((emacs-lisp . t) (dot . t) (ditaa . t))
 
