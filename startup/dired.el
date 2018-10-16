@@ -29,6 +29,8 @@
          dired-subtree-line-prefix-face 'subtree
          )
 
+  (require 'dired-parent-links)
+  
   (add-hook 'dired-mode-hook 'auto-revert-mode)
   
   (defun dired-C-x-C-f ()
