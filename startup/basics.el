@@ -189,9 +189,11 @@
 (use-package base16-theme
   :ensure t
   :config
+
+  (setq base16-highlight-mode-line 'contrast)
   
-  (defvar dark-theme 'base16-gruvbox-dark-hard)
-  (defvar light-theme 'base16-gruvbox-light-hard)
+  (setq dark-theme 'base16-gruvbox-dark-hard)
+  (setq light-theme 'base16-google-light)
   
   (load-theme light-theme t)
   (add-to-list 'custom-theme-load-path
