@@ -6,7 +6,6 @@
   :commands turn-on-gnus-dired-mode
   :init
   (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
-
   :config
   (defun gnus-dired-mail-buffers ()
     "Return a list of active message buffers."
@@ -18,6 +17,8 @@
                      (null message-sent-message-via))
             (push (buffer-name buffer) buffers))))
       (nreverse buffers)))
+
+  (bind-key "," 'gnus-dired-attach gnus-dired-mode-map)
   
   (setq gnus-dired-mail-mode 'notmuch-user-agent))
 
@@ -301,6 +302,15 @@
           (setq result (cdar choices)))
         (setq choices (cdr choices)))
       result))
+
+  (defun message-attach-at-end (o file &rest args)
+    (save-excursion
+      (goto-char (point-max))
+      (when-let ((dir (file-name-directory file)))
+        (setq default-directory dir))
+      (apply o args)))
+
+  (advice-add 'mml-attach-file :around 'message-attach-at-end)
   
   (setq
    mml-enable-flowed nil
@@ -322,10 +332,7 @@
 
    message-citation-line-function 'message-insert-formatted-citation-line
 
-   message-yank-empty-prefix ""
-   )
-  
-  )
+   message-yank-empty-prefix ""))
 
 (use-package mailcap
   :defer t
