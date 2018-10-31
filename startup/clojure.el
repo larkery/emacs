@@ -13,23 +13,36 @@
           (display-buffer-reuse-window display-buffer-pop-up-window)
           (reusable-frames . nil)))
 
-  (defun cider-short-mode-line ()
-    (if-let* ((current-connection (ignore-errors (cider-current-connection))))
-      (with-current-buffer current-connection
-        (concat
-         cider-repl-type
-         (when cider-mode-line-show-connection
-           (format ":%s%s"
-                   (pcase (car nrepl-endpoint)
-                     ("localhost" "")
-                     (x (concat ":@" x)))
-                   (cadr nrepl-endpoint))
-           )))
-      "none"))
-  
-  (setq cider-mode-line
-        '(:eval (concat " " (cider-short-mode-line))))
-  
+  (setq cider-mode-line-show-connection nil)
+
+  (defun cider-unaliased-keyword (sym)
+    (if (string-match (rx bos "::" (group (+ any)) "/" (group (+ any)) eos) sym)
+        (let* ((sym-ns-alias (match-string 1 sym))
+               (sym-name (match-string 2 sym))
+               (expanded-ns (cider-resolve-alias (cider-current-ns) sym-ns-alias)))
+          (format ":%s/%s" expanded-ns sym-name))
+      sym))
+
+  (defun cider-eldoc-format-function-with-spec (o thing pos eldoc-info)
+    (let ((result (funcall o thing pos eldoc-info))
+          (specs (lax-plist-get eldoc-info "specs")))
+      (if specs
+          (format "%s (has spec)" result)
+        result)))
+
+
+  (defun cider-eldoc-info-add-specs (output)
+    (let ((sym (lax-plist-get output "symbol")))
+
+      (if (and sym (string-prefix-p ":" sym))
+          (let* ((full-sym (cider-unaliased-keyword sym))
+                 (specs (cider-sync-request:spec-list (regexp-quote
+                                                       (substring full-sym 1)))))
+            (append (list "specs" specs) output))
+        output)))
+
+  (advice-add 'cider-eldoc-info :filter-return 'cider-eldoc-info-add-specs)
+  (advice-add 'cider-eldoc-format-function :around 'cider-eldoc-format-function-with-spec)
   )
 
 (use-package clj-refactor
