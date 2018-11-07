@@ -3,6 +3,21 @@
   :ensure t
   :commands magit-status)
 
+(use-package rainbow-delimiters
+  :commands rainbow-delimiters-mode
+  :init
+  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+  (set-face-attribute
+   'rainbow-delimiters-unmatched-face
+   nil :foreground "white"
+   )
+
+  (set-face-attribute
+   'rainbow-delimiters-unmatched-face
+   nil :background "red"
+   )
+  )
+
 (use-package smartparens
   :diminish smartparens-mode
   :ensure t
@@ -16,10 +31,11 @@
               ("C-M-n" . sp-up-sexp)
               ("C-%" . sp-splice-sexp) ;; depth-changing commands
               ("C-^" . sp-splice-sexp-killing-around)
-              ("C-(" . sp-wrap-or-cycle) ;; barf/slurp
+              ("C-(" . sp-wrap-with-paren) ;; barf/slurp
               ("C-\"" . sp-forward-slurp-sexp)
               ("C-)" . sp-forward-barf-sexp)
               ("C-~" . sp-convolute-sexp)
+              ("C-&" . sp-rewrap-cycle)
               ("C-|" . sp-split-sexp) ;; misc
               ("C-M-;" . sp-comment-or-uncomment-sexp)
               ("C-#" . sp-reindent-toplevel)
@@ -31,19 +47,18 @@
 
   :config
 
-  (defun sp-wrap-or-cycle ()
+  (defun sp-wrap-with-paren ()
     (interactive)
-    (if (eq last-command 'sp-wrap-or-cycle)
-        (let ((delim (plist-get (sp-get-enclosing-sexp)
-                                :op
-                                )))
-          (pcase delim
-            ("(" (sp-rewrap-sexp '("[" . "]")))
-            ("[" (sp-rewrap-sexp '("{" . "}")))
-            ("{" (sp-rewrap-sexp '("(" . ")")))
-            ("_" (sp-wrap-with-pair "("))))
-      
-      (sp-wrap-with-pair "(")))
+    (sp-wrap-with-pair "("))
+
+  (defun sp-rewrap-cycle ()
+    (interactive)
+    (let ((delim (plist-get (sp-get-enclosing-sexp) :op)))
+      (pcase delim
+        ("(" (sp-rewrap-sexp '("[" . "]")))
+        ("[" (sp-rewrap-sexp '("{" . "}")))
+        ("{" (sp-rewrap-sexp '("(" . ")")))
+        ("_" (sp-wrap-with-pair "(")))))
   
   (defun sp-reindent-toplevel ()
     (interactive)

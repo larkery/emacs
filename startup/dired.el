@@ -1,3 +1,11 @@
+(defvar diredfl-ignore-compressed-flag nil)
+
+(use-package diredfl
+  :commands diredfl-mode
+  :config
+  (setq diredfl-ignore-compressed-flag nil
+        diredfl-compressed-extensions nil))
+
 (use-package dired
   :defer t
   :bind (:map dired-mode-map
@@ -16,13 +24,17 @@
          dired-bind-man nil
          dired-dwim-target t
          dired-isearch-filenames 'dwim
-         dired-listing-switches "-lah"
+         dired-listing-switches "-lahgG"
          dired-omit-files "^\\.[^\\.]"
          dired-omit-verbose nil
          dired-subtree-line-prefix
          (lambda (d)
            (concat (make-string (* 3 d) ? ) (propertize ">"
-                                                        'face 'error
+                                                        'face (intern
+                                                               (concat "outline-"
+                                                                       (number-to-string (mod d 9))
+                                                                       )
+                                                               )
                                                         ))
            )
          dired-subtree-use-backgrounds nil
@@ -32,6 +44,8 @@
   (require 'dired-parent-links)
   
   (add-hook 'dired-mode-hook 'auto-revert-mode)
+
+  (add-hook 'dired-mode-hook 'diredfl-mode)
   
   (defun dired-C-x-C-f ()
     (interactive)
