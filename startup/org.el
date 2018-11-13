@@ -1,6 +1,11 @@
 (use-package org
-  :bind (("C-c a" . org-agenda))
+  :bind (("C-c a" . org-agenda)
+         :map org-mode-map
+         ("M-p" . outline-previous-heading)
+         ("M-n" . outline-next-heading))
+  
   :config
+  
   (setq org-refile-use-outline-path t
         org-goto-interface 'outline
         org-outline-path-complete-in-steps nil
