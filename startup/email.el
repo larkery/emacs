@@ -308,7 +308,7 @@
       (goto-char (point-max))
       (when-let ((dir (file-name-directory file)))
         (setq default-directory dir))
-      (apply o args)))
+      (apply o file args)))
 
   (advice-add 'mml-attach-file :around 'message-attach-at-end)
   
