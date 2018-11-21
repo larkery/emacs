@@ -13,6 +13,7 @@
               ("M-p" . dired-prev-subdir)
               ("^" . dired-up-directory-here)
               ("I" . dired-replace-subdir)
+              ("<tab>" . dired-maybe-replace-subdir)
               ("K" . dired-remove-subdir)
               ("e" . dired-xdg-open)
               ("C-x C-f" . dired-C-x-C-f)
@@ -46,6 +47,8 @@
   (add-hook 'dired-mode-hook 'auto-revert-mode)
 
   (add-hook 'dired-mode-hook 'diredfl-mode)
+
+  (add-hook 'dired-mode-hook 'dired-omit-mode)
   
   (defun dired-C-x-C-f ()
     (interactive)
@@ -74,6 +77,18 @@
              (progn (dired-do-kill-lines 1)
                     (dired-goto-file here))))))
 
+  (defun dired-maybe-replace-subdir ()
+    "Insert the subdirectory, replacing this directory unless this is the root."
+    (interactive)
+    (if (cdr dired-subdir-alist)
+        (let ((here (dired-current-directory)))
+
+          (call-interactively #'dired-maybe-insert-subdir)
+          (save-excursion
+            (and (dired-goto-subdir here)
+                 (dired-do-kill-lines 1))))
+      (call-interactively #'dired-maybe-insert-subdir)))
+  
   (defun dired-replace-subdir ()
     "Insert the subdirectory, replacing this directory if possible"
     (interactive)
@@ -111,8 +126,28 @@
   :bind (:map dired-mode-map
               (")" . dired-omit-mode)))
 
-(use-package dired-subtree
+(use-package dired-rsync
+  :ensure t
   :bind (:map dired-mode-map
-              ("<tab>" . dired-subtree-toggle)
-              )
-  )
+              ("r" . dired-rsync)))
+
+(defun dired-here-please ()
+  (interactive)
+  (if (eq major-mode 'dired-mode) (quit-window)
+    (let* ((projectile-require-project-root nil)
+           (file (or (buffer-file-name) default-directory))
+           (pr (projectile-project-root))
+           (here (if (file-directory-p file) file (file-name-directory file)))
+           (there (or pr (if (file-directory-p here)
+                             here
+                           (file-name-directory here))))
+           (dired-buffer (save-window-excursion (dired there))))
+      (pop-to-buffer dired-buffer)
+      (dolist (dir
+               (cl-loop until (string= here there)
+                        collect here
+                        do (setq here (file-name-directory (directory-file-name here)))))
+        (dired-maybe-insert-subdir dir))
+      (dired-goto-file file))))
+
+(bind-key "<f7>" 'dired-here-please)

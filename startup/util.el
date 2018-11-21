@@ -125,7 +125,7 @@
   (setq projectile-completion-system 'ivy
         projectile-switch-project-action 'projectile-dired)
   (defun projectile-or-global-ibuffer (prefix)
-    (interactive "p")
+    (interactive "P")
     (if (projectile-project-p)
         (projectile-ibuffer prefix)
       (ibuffer))))
@@ -388,14 +388,13 @@
   :defer t
   :commands yas/minor-mode
   :init
-  (add-hook 'prog-mode-hook #'yas/minor-mode)
-  )
-
-(use-package hydra
-  :ensure t
-  :defer t)
+  (add-hook 'prog-mode-hook #'yas/minor-mode))
 
 (use-package comment-dwim-2
   :ensure t
   :bind ("M-;" . comment-dwim-2))
+
+(use-package goto-chg
+  :ensure t
+  :bind ("C-=" . goto-last-change))
 
