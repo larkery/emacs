@@ -24,6 +24,9 @@
  '(rainbow-delimiters-depth-8-face ((t (:inherit rainbow-delimiters-depth-2-face :foreground nil))))
  '(rainbow-delimiters-depth-9-face ((t (:inherit rainbow-delimiters-depth-3-face :foreground nil))))
 
+ '(rainbow-delimiters-unmatched-face ((t (:background "red" :foreground "white"))))
+ '(rainbow-delimiters-mismatched-face ((t (:background "red" :foreground "white"))))
+
  '(diredfl-read-priv ((t (:inherit default))))
  '(diredfl-write-priv ((t (:inherit default))))
  '(diredfl-exec-priv ((t (:inherit default))))

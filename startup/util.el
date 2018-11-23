@@ -6,17 +6,7 @@
 (use-package rainbow-delimiters
   :commands rainbow-delimiters-mode
   :init
-  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-  (set-face-attribute
-   'rainbow-delimiters-unmatched-face
-   nil :foreground "white"
-   )
-
-  (set-face-attribute
-   'rainbow-delimiters-unmatched-face
-   nil :background "red"
-   )
-  )
+  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
 
 (use-package smartparens
   :diminish smartparens-mode
@@ -213,17 +203,99 @@
 
 
 (use-package ibuffer
+  :bind (:map ibuffer-mode-map
+              ("/" . hydra-ibuffer-filter/body))
   :config
   (setq ibuffer-formats
-        '(
-          (mark modified read-only
+        '((mark modified read-only
                 " "
                 (name 32 32 :left :elide)
                 " "
                 (mode 16 16 :left :elide)
                 " "
-                filename-and-process))))
+                filename-and-process)))
 
+  (define-ibuffer-filter project
+      "Toggle current view to buffers with projectile root dir QUALIFIER."
+    (:description "project root dir"
+                  :reader (read-regexp "Filter to project (regexp): "))
+    (ibuffer-awhen (with-current-buffer buf
+                     (let ((projectile-require-project-root nil))
+                       (projectile-project-root)))
+      (string-match-p qualifier it)))
+
+  (define-ibuffer-filter host
+      "Toggle current view to buffers with tramp host QUALIFIER."
+    (:description "remote host"
+                  :reader (read-regexp "Filter to host (regexp): "))
+    (ibuffer-awhen (with-current-buffer buf
+                     (let ((f (or (buffer-file-name)
+                                  default-directory)))
+                       (if (file-remote-p f)
+                           (tramp-file-name-host (tramp-dissect-file-name f))
+                         "local")))
+      (string-match-p qualifier it)))
+
+  (defun ibuffer-group-by-project ()
+    (interactive)
+    (setq ibuffer-filter-groups
+          (let ((projects
+                 (ibuffer-remove-duplicates
+                  (cl-loop for b being the buffers
+                           collect (with-current-buffer b
+                                     (let ((projectile-require-project-root nil))
+                                       (projectile-project-root)))))))
+            (cl-loop for p in projects
+                     when p
+                     collect
+                     (cons p
+                           `((project . ,(regexp-quote p)))))))
+    (ibuffer-update nil))
+
+  (defun ibuffer-group-by-host ()
+    (interactive)
+    (setq ibuffer-filter-groups
+          (let ((projects
+                 (ibuffer-remove-duplicates
+                  (cl-loop for b being the buffers
+                           collect (with-current-buffer b
+                                     (let ((f (or (buffer-file-name)
+                                                  default-directory)))
+                                       (if (file-remote-p f)
+                                           (tramp-file-name-host (tramp-dissect-file-name f))
+                                         "local")))))))
+            (cl-loop for p in projects
+                     when p
+                     collect
+                     (cons p
+                           `((project . ,(regexp-quote p)))))))
+    (ibuffer-update nil)))
+
+(use-package hydra
+  :commands hydra-ibuffer-filter/body
+  :config
+
+  (defhydra hydra-ibuffer-group (:color amaranth :columns 4 :exit t)
+    "Group by"
+    ("p" ibuffer-group-by-project "project")
+    ("h" ibuffer-group-by-host "host")
+    ("/" ibuffer-clear-filter-groups "clear"))
+ 
+    
+  (defhydra hydra-ibuffer-filter (:color amaranth :columns 4 :exit t)
+    "Filter"
+    ("m" ibuffer-filter-by-used-mode "mode")
+    ("M" ibuffer-filter-by-derived-mode "derived mode")
+    ("n" ibuffer-filter-by-name "name")
+    ("c" ibuffer-filter-by-content "content")
+    ("e" ibuffer-filter-by-predicate "predicate")
+    ("p" ibuffer-filter-by-project "project")
+    ("h" ibuffer-filter-by-host "host")
+    ("f" ibuffer-filter-by-filename "filename")
+    (">" ibuffer-filter-by-size-gt "size")
+    ("<" ibuffer-filter-by-size-lt "size")
+    ("/" ibuffer-filter-disable "disable")
+    ("g" hydra-ibuffer-group/body "group")))
 
 (use-package rcirc-notify
   :defer t
