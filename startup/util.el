@@ -3,6 +3,11 @@
   :ensure t
   :commands magit-status)
 
+(use-package vc
+  :defer t
+  :config
+  (add-hook 'vc-annotate-mode-hook 'vc-annotate-toggle-annotation-visibility))
+
 (use-package rainbow-delimiters
   :commands rainbow-delimiters-mode
   :init
