@@ -22,6 +22,11 @@
   
   (setq gnus-dired-mail-mode 'notmuch-user-agent))
 
+(use-package org-mime
+  :bind
+  (:map notmuch-message-mode-map
+        ("C-c h" . org-mime-htmlize)))
+
 (use-package notmuch
   :commands notmuch
   :bind
@@ -97,7 +102,7 @@
 
           ("sent")
           ("replied" "→")
-          ("attachment" "att")
+          ("attachment" "@")
           ("inbox" "%")
 
           )
