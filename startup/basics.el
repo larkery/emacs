@@ -244,7 +244,7 @@
         
         savehist-additional-variables
         '(kill-ring))
-  (savehist-mode 1))
+  (savehist-mode t))
 
 (use-package calendar
   :defer t
