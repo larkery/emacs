@@ -23,6 +23,7 @@
   (setq gnus-dired-mail-mode 'notmuch-user-agent))
 
 (use-package org-mime
+  :ensure t
   :bind
   (:map notmuch-message-mode-map
         ("C-c h" . org-mime-htmlize)))
@@ -39,12 +40,27 @@
         :map notmuch-message-mode-map
         ("C-c f" . notmuch-switch-identity)
         :map notmuch-show-mode-map
-        ("C-o" . browse-url-at-point)
-        ("d" . notmuch-show-delete)
-        )
-  
+        ("C-o" . open-url-at-point)
+        ("d" . notmuch-show-delete))
   :config
 
+  (defun open-url-at-point (prefix)
+    (interactive "P")
+    (let* ((shr-url (get-text-property (point) 'shr-url))
+           (the-url (or shr-url
+                        (thing-at-point 'url)
+                        (thing-at-point 'filename)
+                        (browse-url-url-at-point)))
+           
+           (the-url (if prefix
+                        (progn
+                          (message "%s" the-url)
+                          (string-match "\\(.*\\)[\\/]" the-url)
+                          (match-string 1 the-url))
+                      the-url)))
+      (browse-url the-url)))
+  
+  
   (defvar counsel-notmuch-history nil)
 
   (defun notmuch-search-person ()
@@ -311,8 +327,8 @@
   (defun message-attach-at-end (o file &rest args)
     (save-excursion
       (goto-char (point-max))
-      (when-let ((dir (file-name-directory file)))
-        (setq default-directory dir))
+      (let ((dir (file-name-directory file)))
+        (when dir (setq default-directory dir)))
       (apply o file args)))
 
   (advice-add 'mml-attach-file :around 'message-attach-at-end)

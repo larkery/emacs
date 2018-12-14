@@ -9,6 +9,7 @@
   (add-hook 'vc-annotate-mode-hook 'vc-annotate-toggle-annotation-visibility))
 
 (use-package rainbow-delimiters
+  :ensure t
   :commands rainbow-delimiters-mode
   :init
   (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
@@ -114,7 +115,9 @@
    :map projectile-mode-map
    ("C-c p s s" . counsel-ag)
    ("C-c p s a" . projectile-ag)
-   ("C-x C-b" . projectile-or-global-ibuffer))
+   ("C-x C-b" . projectile-or-global-ibuffer)
+   ("M-s p" . projectile-ag))
+  
   ;; (define-key projectile-mode-map (kbd projectile-keymap-prefix) 'projectile-command-map)
 
   (setq projectile-completion-system 'ivy
@@ -474,4 +477,10 @@
 (use-package goto-chg
   :ensure t
   :bind ("C-=" . goto-last-change))
+
+(use-package ag
+  :ensure t
+  :config
+  (setq ag-arguments '("--smart-case")
+        ag-highlight-search t))
 

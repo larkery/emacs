@@ -1,6 +1,7 @@
 (defvar diredfl-ignore-compressed-flag nil)
 
 (use-package diredfl
+  :ensure t
   :commands diredfl-mode
   :config
   (setq diredfl-ignore-compressed-flag nil

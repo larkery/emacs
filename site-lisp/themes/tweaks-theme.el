@@ -41,6 +41,7 @@
  '(diredfl-compressed-file-name ((t (:inherit default))))
  '(diredfl-compressed-file-suffix ((t (:inherit warning))))
  '(diredfl-deletion ((t (:inherit error))))
+ '(ag-match-face ((t (:inherit match))))
  )
 
 

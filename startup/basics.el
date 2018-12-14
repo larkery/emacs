@@ -273,21 +273,4 @@
         (emacs-lisp-docstring-fill-column t))
     (fill-paragraph nil region)))
 
-(defun fill-or-unfill-paragraph (&optional region)
-  (interactive (progn (barf-if-buffer-read-only) '(t)))
-  (let* ((bounds (bounds-of-thing-at-point 'paragraph))
-         (beg (car bounds))
-         (end (cdr bounds))
-         (has-nl (save-excursion
-                   (goto-char (1+ beg))
-                   (search-forward "\n" (- end 1) t))))
-    
-    (if has-nl
-        (progn
-          (message "Unfill")
-          (unfill-paragraph region))
-      (progn
-        (message "Fill")
-        (fill-paragraph nil region)))))
-
-(bind-key "M-q" 'fill-or-unfill-paragraph)
+(bind-key "M-S-Q" 'unfill-paragraph)
