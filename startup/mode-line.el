@@ -27,15 +27,24 @@
 
 (setq-default
  frame-title-format
- '(dired-directory dired-directory (buffer-file-name buffer-file-name "%b"))
-
+ '(dired-directory dired-directory
+                   
+                   (buffer-file-name
+                    (:eval
+                    (if (projectile-project-p)
+                        (list "["(projectile-project-name)"]"
+                              " %b")
+                      buffer-file-name))
+                    "%b"))
+ 
  mode-line-format
  '("%5l "
    "%* %b"
    (:eval (mode-line-get-project))
    (:eval (mode-line-get-host))
    (:eval (mode-line-pad-right
-           `(,mode-line-misc-info " " ,mode-line-modes))))
+           `(,mode-line-misc-info " " ,mode-line-modes)))))
 
- )
 
+
+(setq-default icon-title-format frame-title-format)

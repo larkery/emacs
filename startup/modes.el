@@ -4,7 +4,7 @@
   :defer t
   :commands pdf-view-mode pdf-view-word-document
   :config
-  (setq pdf-info-epdfinfo-program "~/.nix-profile/bin/epdfinfo")
+  
   (defun pdf-view-word-document ()
     (let ((tempfile (make-temp-file "word-pdf" nil ".doc")))
       (write-region (point-min) (point-max) tempfile)

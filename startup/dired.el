@@ -1,10 +1,18 @@
 (defvar diredfl-ignore-compressed-flag nil)
 
 (use-package diredfl
+  :ensure t
   :commands diredfl-mode
   :config
   (setq diredfl-ignore-compressed-flag nil
         diredfl-compressed-extensions nil))
+
+(use-package wdired
+  :defer t
+  :bind (:map dired-mode-map
+              ("<f2>" . wdired-change-to-wdired-mode))
+  :config
+  (setq wdired-allow-to-change-permissions t))
 
 (use-package dired
   :defer t
