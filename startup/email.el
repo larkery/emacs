@@ -24,9 +24,59 @@
 
 (use-package org-mime
   :ensure t
+  :commands org-mime-htmlize
   :bind
   (:map notmuch-message-mode-map
-        ("C-c h" . org-mime-htmlize)))
+        ("C-c h" . org-mime-htmlize)
+        ("C-c C-c" . maybe-htmlize-send-and-exit))
+
+  :config
+  (setq org-mime-default-header
+        "#+OPTIONS: latex:t toc:nil H:3 ^:{}
+")
+
+  (defun org-mime-maybe-htmlize ()
+    (interactive)
+    
+    (let ((inhibit-redisplay t))
+      (save-match-data
+        (save-excursion
+          (message-goto-body)
+          (save-restriction
+            (narrow-to-region
+             (point)
+             (save-excursion
+               (point)
+               (or (and (search-forward "<#part" nil t)
+                        (point))
+                   (point-max))))
+            (when (search-forward-regexp
+                   (rx bol (| (: (* blank) (+ digit) "." blank)
+                              (: (+ "*") blank)
+                              (: (* blank) (any "-+") blank alphanumeric)
+                              (: (* blank) "|" (* nonl) "|" eol)))
+                   nil t)
+              (when (y-or-n-p "Send HTML email?")
+                (goto-char (point-min))
+                (set-mark (point))
+                (goto-char (point-max))
+                (org-mime-htmlize))
+              ))))))
+
+  (defun org-mime--escaping-quote (args)
+    (let ((text (car args))
+          (rest (cdr args)))
+      ;; transform the text
+      (cons text rest)))
+
+  (advice-add 'org-mime--export-string :filter-args #'org-mime--escaping-quote)
+
+
+  (defun maybe-htmlize-send-and-exit ()
+    (interactive)
+    (org-mime-maybe-htmlize)
+    (notmuch-mua-send-and-exit)))
+
 
 (use-package notmuch
   :commands notmuch
@@ -59,7 +109,6 @@
                           (match-string 1 the-url))
                       the-url)))
       (browse-url the-url)))
-  
   
   (defvar counsel-notmuch-history nil)
 
@@ -105,7 +154,10 @@
         notmuch-saved-searches
         '((:name "inbox" :query "tag:inbox or tag:flagged" :key "i")
           (:name "unread" :query "tag:unread" :key "u")
-          (:name "drafts" :query "tag:draft" :key "d"))
+          (:name "drafts" :query "tag:draft" :key "d")
+          (:name "sent" :query "tag:sent" :key "s")
+          (:name "NHM" :query "from:nhm.support@cse.org.uk" :key "N")
+          )
 
         notmuch-tag-formats
         '(("unread" (propertize "•" 'face 'notmuch-tag-unread))
@@ -116,6 +168,8 @@
           ("normal-importance")
           ("medium-importance")
 
+          ("home")
+          ("work")
           ("sent")
           ("replied" "→")
           ("attachment" "@")
@@ -150,8 +204,7 @@
         (lambda
           (prompt collection initial-input)
           (completing-read prompt collection nil nil nil
-                           (quote notmuch-address-history)))
-	)
+                           (quote notmuch-address-history))))
 
   (defun notmuch-search-buffer-title (query)
     "Returns the title for a buffer with notmuch search results."
@@ -389,4 +442,16 @@
       result))
 
   (advice-add 'shr-insert-document :around 'disabling-gc))
+
+(use-package bbdb
+  :defer t
+  :ensure t
+  :commands bbdb
+  :config
+  (setq bbdb-file "~/notes/bbdb"
+        bbdb-default-country nil)
+  (defun bbdb-use-completing-read-default ()
+    (setq-local completing-read-function 'completing-read-default))
+  
+  (add-hook 'bbdb-mode-hook 'bbdb-use-completing-read-default))
 
