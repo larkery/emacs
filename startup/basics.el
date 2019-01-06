@@ -34,6 +34,8 @@
       initial-major-mode 'text-mode
 
       enable-recursive-minibuffers t
+
+      scroll-step 10
       )
 
 (custom-set-variables '(calendar-date-style 'european))
@@ -186,15 +188,10 @@
               (theme-to-xresources)
               (set-fringe-mode '(0 . 8)))))
 
-(use-package base16-theme
+(use-package kaolin-themes
   :ensure t
-  :config
-
-  (setq base16-highlight-mode-line 'contrast)
-  
-  (setq dark-theme 'base16-gruvbox-dark-hard)
-  (setq light-theme 'base16-google-light)
-  
+  :config (setq dark-theme 'kaolin-eclipse
+                light-theme 'kaolin-light)
   (load-theme light-theme t)
   (add-to-list 'custom-theme-load-path
                (concat user-emacs-directory "site-lisp/themes"))
@@ -211,6 +208,8 @@
   (load-theme 'tweaks t))
 
 (bind-key "<f6>" 'switch-theme)
+
+(setq-default line-spacing nil)
 
 (use-package visual-line
   :commands visual-line-mode
