@@ -163,27 +163,28 @@
 (defvar notmuch-agenda-capturing-event nil)
 
 (defun notmuch-agenda-store-link ()
-  (when-let ((event notmuch-agenda-capturing-event))
-    (let ((zone-map (icalendar--convert-all-timezones (list event)))
-          (props (mapcan
-                  (lambda (prop)
-                    (let* ((val (icalendar--get-event-property event prop))
-                           (val (and val (icalendar--convert-string-for-import val))))
-                      (list
-                       (intern (concat ":event-" (downcase (symbol-name prop))))
-                       (or val ""))))
-                  
-                  (list 'LOCATION 'SEQUENCE 'UID 'SUMMARY 'COMMENT 'ORGANIZER))))
-      (apply 'org-store-link-props
-             :type "event"
-             :link "nope://nope"
-             :event-timestamp (notmuch-agenda-org-date
-                               (notmuch-agenda-event-time event zone-map 'DTSTART)
-                               (notmuch-agenda-event-time event zone-map 'DTEND)
-                               (icalendar--get-event-property event 'RRULE)
-                               (icalendar--get-event-property event 'RDATE)
-                               (icalendar--get-event-property event 'DURATION))
-             props))
+  (when notmuch-agenda-capturing-event
+    (let ((event notmuch-agenda-capturing-event))
+      (let ((zone-map (icalendar--convert-all-timezones (list event)))
+            (props (mapcan
+                    (lambda (prop)
+                      (let* ((val (icalendar--get-event-property event prop))
+                             (val (and val (icalendar--convert-string-for-import val))))
+                        (list
+                         (intern (concat ":event-" (downcase (symbol-name prop))))
+                         (or val ""))))
+                    
+                    (list 'LOCATION 'SEQUENCE 'UID 'SUMMARY 'COMMENT 'ORGANIZER))))
+        (apply 'org-store-link-props
+               :type "event"
+               :link "nope://nope"
+               :event-timestamp (notmuch-agenda-org-date
+                                 (notmuch-agenda-event-time event zone-map 'DTSTART)
+                                 (notmuch-agenda-event-time event zone-map 'DTEND)
+                                 (icalendar--get-event-property event 'RRULE)
+                                 (icalendar--get-event-property event 'RDATE)
+                                 (icalendar--get-event-property event 'DURATION))
+               props)))
     t))
 
 (defun notmuch-agenda-org-capture-or-update (event)
@@ -212,24 +213,23 @@
           
           (set-marker existing-event nil nil))
       
-        (let* ((notmuch-agenda-capturing-event event)
+      (let* ((notmuch-agenda-capturing-event event)
 
-               (org-link-parameters
-                '(("nope" :store notmuch-agenda-store-link))
-                )
+             (org-link-parameters
+              '(("nope" :store notmuch-agenda-store-link)))
 
-               (org-overriding-default-time
-                (apply 'encode-time
-                       (notmuch-agenda-event-time event
-                                                  (icalendar--convert-all-timezones (list event))
-                                                  'DTSTART)))
-               
-               (org-capture-templates
-                `(("e" "Capture an event from email invitation"
-                   entry
-                   ,notmuch-agenda-capture-target
-                   ,notmuch-agenda-capture-template))))
-          (org-capture t "e")))))
+             (org-overriding-default-time
+              (apply 'encode-time
+                     (notmuch-agenda-event-time event
+                                                (icalendar--convert-all-timezones (list event))
+                                                'DTSTART)))
+             
+             (org-capture-templates
+              `(("e" "Capture an event from email invitation"
+                 entry
+                 ,notmuch-agenda-capture-target
+                 ,notmuch-agenda-capture-template))))
+        (org-capture t "e")))))
 
 (defun notmuch-agenda-do-capture (event)
   (let ((calendar-event (plist-get (overlay-properties event) 'calendar-event)))

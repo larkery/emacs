@@ -384,16 +384,13 @@
       (insert
        (with-current-buffer
            (window-buffer (minibuffer-selected-window))
-         (when-let ((b (bounds-of-thing-at-point 'symbol)))
-           (buffer-substring-no-properties
-            (car b) (cdr b))
-           )
-         ))
-    (when-let ((b (bounds-of-thing-at-point 'symbol)))
-      (set-mark (car b))
-      (goto-char (cdr b)))
-    )
-  )
+         (let ((b (bounds-of-thing-at-point 'symbol)))
+           (when b
+             (buffer-substring-no-properties (car b) (cdr b))))))
+    (let ((b (bounds-of-thing-at-point 'symbol)))
+      (when b
+        (set-mark (car b))
+        (goto-char (cdr b))))))
 
 (bind-key "C-'" 'mark-symbol-or-minibuffer-it)
 
