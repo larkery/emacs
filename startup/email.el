@@ -78,7 +78,6 @@
     (notmuch-mua-send-and-exit)))
 
 (use-package notmuch
-  :requires org-mime
   :commands notmuch
   :bind
   (("C-c m" . counsel-notmuch)
@@ -93,7 +92,7 @@
         ("C-o" . open-url-at-point)
         ("d" . notmuch-show-delete))
   :config
-
+  (require 'org-mime)
   (defun open-url-at-point (prefix)
     (interactive "P")
     (let* ((shr-url (get-text-property (point) 'shr-url))
