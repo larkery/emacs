@@ -13,6 +13,8 @@
 
  '(line-spacing ((t nil)))
 
+ '(hl-line ((((background dark) ) (:background "maroon4"))))
+ 
  '(notmuch-search-unread-face ((t (:foreground "white" :distant-foreground "black" :weight bold))))
  '(symbol-overlay-default-face ((t (:underline "grey50"))))
 
