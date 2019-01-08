@@ -77,8 +77,8 @@
     (org-mime-maybe-htmlize)
     (notmuch-mua-send-and-exit)))
 
-
 (use-package notmuch
+  :requires org-mime
   :commands notmuch
   :bind
   (("C-c m" . counsel-notmuch)
