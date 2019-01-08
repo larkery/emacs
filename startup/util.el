@@ -481,3 +481,14 @@
   (setq ag-arguments '("--smart-case")
         ag-highlight-search t))
 
+(use-package executable
+  :ensure nil
+  :hook
+  ((after-save . executable-make-buffer-file-executable-if-script-p)))
+
+(use-package smart-hungry-delete
+  :ensure t
+  :bind (("<backspace>" . smart-hungry-delete-backward-char)
+		 ("C-d" . smart-hungry-delete-forward-char))
+  :defer nil ;; dont defer so we can add our functions to hooks 
+  :config (smart-hungry-delete-add-default-hooks))
