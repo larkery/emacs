@@ -2,3 +2,15 @@ auto-save-list/
 elpa/
 projectile-bookmarks.eld
 recentf
+.mc-lists.el
+.org-id-locations
+bookmarks
+eclipse.jdt.ls/
+eshell/
+network-security.data
+projectile.cache
+savehist
+tramp
+tutorial/
+url/
+workspace/
