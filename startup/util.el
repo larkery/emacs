@@ -491,3 +491,24 @@
   :bind (("C-<backspace>" . smart-hungry-delete-backward-char))
   :defer nil ;; dont defer so we can add our functions to hooks 
   :config (smart-hungry-delete-add-default-hooks))
+
+(defun terminal-here ()
+  (interactive)
+  (let* ((file-name-at-point (thing-at-point 'filename))
+         (directory (cond
+                     ((and file-name-at-point
+                           (file-exists-p file-name-at-point))
+                      (if (file-directory-p file-name-at-point)
+                          file-name-at-point
+                        (file-name-directory file-name-at-point)))
+                     
+                     (buffer-file-name
+                      (file-name-directory buffer-file-name))
+                     
+                     ((eq major-mode 'dired-mode)
+                      (dired-current-directory))
+                     
+                     (t default-directory))))
+    (when (and directory
+               (not (file-remote-p directory)))
+      (start-process "" nil "env" "-C" directory "urxvt"))))
