@@ -273,3 +273,14 @@
     (fill-paragraph nil region)))
 
 (bind-key "M-S-Q" 'unfill-paragraph)
+
+(setq ring-bell-function
+      (lambda ()
+        (let ((remap (face-remap-add-relative 'mode-line
+                                              :background "darkorange")))
+          (run-with-idle-timer 0.1 nil
+                               (lambda (remap) (face-remap-remove-relative remap))
+                               remap))))
+
+
+(diminish 'defining-kbd-macro (propertize " M" 'face '(error bold)))
