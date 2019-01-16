@@ -35,11 +35,13 @@
            ((and (< abs-days 2)
                  (= reference-day timestamp-day))
             "today")
-           ((< abs-days 2) (if past "yesterday" "tomorrow"))
-           ((< abs-days 8) (concat (if past "last" "next")
+           ((and (< abs-days 2)
+                 (< (abs (- reference-day timestamp-day)) 1))
+            (if past "yesterday" "tomorrow"))
+           ((< abs-days 8) (concat (if past "last" "this")
                                    (format-time-string " %A" encoded-timestamp)))
            ((and (not past) (< abs-days 15))
-            (concat "a week next"
+            (concat "a week on"
                     (format-time-string " %A" encoded-timestamp)
                     ))
            (t (format "%s, %d week%s %s" (format-time-string "%A %e %B %Y" encoded-timestamp)
@@ -292,9 +294,7 @@
           (insert-button "[ Update agenda ]"
                          :type 'notmuch-show-part-button-type
                          'action 'notmuch-agenda-do-capture
-                         'calendar-event event
-                         )
-          )
+                         'calendar-event event))
         t))))
 
 (defun notmuch-agenda-reply-advice (o &rest args)
@@ -322,8 +322,7 @@
         (let ((content-type (plist-get head :content-type)))
           (cond
            ((string= content-type "multipart/alternative")
-            (setq body (append body (plist-get head :content)))
-            )
+            (setq body (append body (plist-get head :content))))
            ((and (string= content-type "text/calendar")
                  (string-match-p "^METHOD:REQUEST$" (plist-get head :content)))
             (setq requires-response (plist-get head :content)
@@ -339,7 +338,7 @@
 
     (when (and response (not (string= "Ignore" response)))
       (notmuch-show-tag-message (concat "+" (downcase response))))
-    
+
     (apply o args)
     
     (when (and requires-response
@@ -375,7 +374,13 @@
                               (upcase response)))
 
                (buffer-string))))))
-        ))))
+        )
+
+      ;; need to find the event
+      ;; (when (and response (member response '("Accepted" "Tentative")))
+      ;;   (notmuch-agenda-org-capture-or-update (car requires-response)))
+
+      )))
 
 (advice-add 'notmuch-mua-reply :around 'notmuch-agenda-reply-advice)
 

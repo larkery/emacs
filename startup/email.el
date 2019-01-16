@@ -251,8 +251,9 @@
   (defun notmuch-show-delete ()
     (interactive)
     (notmuch-show-add-tag (list "+deleted"))
-    (unless (notmuch-show-next-open-message)
-      (notmuch-show-next-thread t)))
+    ;; (unless (notmuch-show-next-open-message)
+    ;;   (notmuch-show-next-thread t))
+    )
 
   (defun notmuch-expand-calendar-parts (o msg part depth &optional hide)
     (funcall o
