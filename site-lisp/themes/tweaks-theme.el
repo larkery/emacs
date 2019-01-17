@@ -38,7 +38,7 @@
  '(diredfl-ignored-file-name ((t (:inherit dired-ignored))))
  '(diredfl-number ((t (:inherit default))))
  '(diredfl-file-name ((t (:inherit default))))
- '(diredfl-date-time ((t (:inherit org-agenda-date))))
+ '(diredfl-date-time ((t (:inherit bold))))
  '(diredfl-symlink ((t (:inherit link))))
  '(diredfl-file-suffix ((t (:inherit bold))))
  '(diredfl-dir-name ((t (:inherit (dired-directory bold)))))

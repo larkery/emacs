@@ -190,8 +190,8 @@
 
 (use-package kaolin-themes
   :ensure t
-  :config (setq dark-theme 'kaolin-eclipse
-                light-theme 'kaolin-light)
+  :config (setq dark-theme 'wombat
+                light-theme 'whiteboard)
   (load-theme light-theme t)
   (add-to-list 'custom-theme-load-path
                (concat user-emacs-directory "site-lisp/themes"))
