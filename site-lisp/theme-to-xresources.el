@@ -9,6 +9,13 @@
         result
         ))))
 
+(defun emacs-color-to-hex (color)
+  (let ((float-rgb (color-name-to-rgb color)))
+    (color-rgb-to-hex
+     (nth 0 float-rgb)
+     (nth 1 float-rgb)
+     (nth 2 float-rgb) 2)))
+
 (defun theme-to-xresources (&rest _blah)
   "Generate and update xresources from current theme"
   (interactive)
@@ -57,6 +64,13 @@
       ;; (insert (format "*Foreground: %s\n*Background: %s\n"
       ;;                 (face-attribute 'default :foreground)
       ;;                 (face-attribute 'default :background)))
+
+      (insert
+       "i3wm.background: " (emacs-color-to-hex (face-attribute 'default :background nil t)) "\n"
+       "i3wm.foreground: " (emacs-color-to-hex (face-attribute 'default :foreground nil t)) "\n"
+       "i3wm.border: "     (emacs-color-to-hex (face-attribute 'hl-line :background nil t)) "\n"
+       "i3wm.border_con: " (emacs-color-to-hex (face-attribute 'hl-line :foreground nil t)) "\n"
+       )
 
       (let ((weight (face-attribute 'default :weight)))
         (when weight

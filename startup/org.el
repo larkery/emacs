@@ -52,7 +52,29 @@
 
   (advice-add 'org-read-date-analyze :around
               'org-read-date-analyze-no-stupid-endian)
-  
+
+  (defvar org-table-copy-down-timestamp-today t)
+
+  (defun org-table-copy-down-set-timestamp-today (n)
+    (when org-table-copy-down-timestamp-today
+      (message "a")
+      (let* ((colpos (org-table-current-column))
+	     (col (current-column))
+	     (field (save-excursion (org-table-get-field)))
+             (datelike-field (and
+                              (string-match "^@" field)
+                              (string-match org-ts-regexp3 field))))
+        (when datelike-field
+          (message "%s" field)
+          (let ((org-table-may-need-update nil)) (org-table-next-row))
+          (org-table-blank-field)
+          (org-insert-time-stamp (current-time) nil t)
+          (org-table-maybe-recalculate-line)
+          (org-table-align)
+          (org-move-to-column col)
+          t))))
+
+  (advice-add 'org-table-copy-down :before-until #'org-table-copy-down-set-timestamp-today)
   )
 
 
