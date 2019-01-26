@@ -125,7 +125,14 @@
                      (error nil))))
           (progn (find-alternate-file up)
                  (dired-goto-file here)))))
-  
+
+  (defun dired-kill-before-delete (file &rest rest)
+    (if-let ((buf (get-file-buffer file)))
+        (kill-buffer buf)
+      (dolist (dired-buf (dired-buffers-for-dir file))
+        (kill-buffer dired-buf))))
+
+  (advice-add 'dired-delete-file :before 'dired-kill-before-delete)
   )
 
 (use-package dired-x
