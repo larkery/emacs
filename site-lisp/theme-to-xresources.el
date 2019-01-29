@@ -68,8 +68,8 @@
       (insert
        "i3wm.background: " (emacs-color-to-hex (face-attribute 'default :background nil t)) "\n"
        "i3wm.foreground: " (emacs-color-to-hex (face-attribute 'default :foreground nil t)) "\n"
-       "i3wm.border: "     (emacs-color-to-hex (face-attribute 'hl-line :background nil t)) "\n"
-       "i3wm.border_con: " (emacs-color-to-hex (face-attribute 'hl-line :foreground nil t)) "\n"
+       "i3wm.border: "     (emacs-color-to-hex (face-attribute 'mode-line :background nil t)) "\n"
+       "i3wm.border_con: " (emacs-color-to-hex (face-attribute 'mode-line :foreground nil t)) "\n"
        )
 
       (let ((weight (face-attribute 'default :weight)))
