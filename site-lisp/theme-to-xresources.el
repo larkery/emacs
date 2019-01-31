@@ -65,18 +65,16 @@
       ;;                 (face-attribute 'default :foreground)
       ;;                 (face-attribute 'default :background)))
 
-      (insert
-       "i3wm.background: " (emacs-color-to-hex (face-attribute 'default :background nil t)) "\n"
-       "i3wm.foreground: " (emacs-color-to-hex (face-attribute 'default :foreground nil t)) "\n"
-       "i3wm.border: "     (emacs-color-to-hex (face-attribute 'mode-line :background nil t)) "\n"
-       "i3wm.border_con: " (emacs-color-to-hex (face-attribute 'mode-line :foreground nil t)) "\n"
-       )
+      (if (eq 'light (frame-parameter nil 'background-mode))
+          (insert "#include \".Xresources_i3_light\"\n")
+        (insert "#include \".Xresources_i3_dark\"\n"))
 
       (let ((weight (face-attribute 'default :weight)))
         (when weight
           (insert (format "URxvt.font: xft:Monospace:size=12:weight=%s\n" weight))
           (insert (format "URxvt.boldFont: xft:Monospace:size=12:weight=bold"))))
-
+      (insert "\n")
+      
       (goto-char (point-min))
       (unless (search-forward "unspecified" nil t)
         (call-process-region

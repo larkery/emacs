@@ -186,15 +186,23 @@
   (add-hook 'custom-theme-load-hook
             (lambda ()
               (theme-to-xresources)
-              (set-fringe-mode '(0 . 8)))))
+              (set-fringe-mode '(0 . 8))
+              (call-process "i3" nil nil nil "reload"))))
 
-(use-package custom
-  :config (setq dark-theme 'wombat light-theme 'adwaita)
-  (load-theme light-theme t)
-  (add-to-list 'custom-theme-load-path
+(defvar dark-theme 'wombat)
+(defvar light-theme 'adwaita)
+
+(add-to-list 'custom-theme-load-path
                (concat user-emacs-directory "site-lisp/themes"))
 
-  (load-theme 'tweaks t))
+(use-package gruvbox-theme :ensure t)
+(use-package solarized-theme :ensure t)
+
+(setq dark-theme 'gruvbox)
+(setq light-theme 'solarized-light)
+
+(load-theme light-theme t)
+(load-theme 'tweaks t)
 
 (defun switch-theme ()
   (interactive)
@@ -272,13 +280,11 @@
 
 (bind-key "M-S-Q" 'unfill-paragraph)
 
-(setq ring-bell-function
-      (lambda ()
-        (let ((remap (face-remap-add-relative 'mode-line
-                                              :background "darkorange")))
-          (run-with-idle-timer 0.1 nil
-                               (lambda (remap) (face-remap-remove-relative remap))
-                               remap))))
-
+(setq visible-bell t)
 
 (diminish 'defining-kbd-macro (propertize " M" 'face '(error bold)))
+
+(use-package so-long
+  :config
+  (so-long-enable))
+

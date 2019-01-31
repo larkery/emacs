@@ -5,6 +5,7 @@
       custom-file (concat user-emacs-directory "custom.el"))
 
 (add-to-list 'load-path (concat user-emacs-directory "site-lisp/"))
+(load custom-file)
 
 (require 'package)
 
@@ -34,7 +35,5 @@
   (load (concat startup-directory "clojure.el"))
   (load (concat startup-directory "modes.el"))
   (load (concat startup-directory "org.el")))
-
-(load custom-file)
 
 (setq gc-cons-threshold (/ gc-cons-threshold 100))
