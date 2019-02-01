@@ -77,12 +77,13 @@
       
       (goto-char (point-min))
       (unless (search-forward "unspecified" nil t)
-        (call-process-region
-         (point-min)
-         (point-max)
-         "xrdb"
-         nil nil nil
-         "-merge")
+        (let ((default-directory (getenv "HOME")))
+          (call-process-region
+           (point-min)
+           (point-max)
+           "xrdb"
+           nil nil nil
+           "-merge"))
         (write-region (point-min) (point-max) "~/.Xresources_emacs")
         (remove-hook 'window-configuration-change-hook 'theme->xresources))
       (kill-buffer)))
