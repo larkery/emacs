@@ -4,12 +4,10 @@
 (defalias 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
 (transient-mark-mode 1)
-(window-divider-mode 1)
 
 (setq window-divider-default-places t 
       window-divider-default-bottom-width 1
       window-divider-default-right-width 1
-      
       default-frame-scroll-bars nil
       default-frame-alist '((scroll-bar-width . 8)
                             (right-divider-width . 3))
@@ -41,6 +39,8 @@
 
       scroll-step 10
       )
+
+(window-divider-mode 1)
 
 (custom-set-variables '(calendar-date-style 'european))
 
@@ -284,11 +284,13 @@
 
 (bind-key "M-S-Q" 'unfill-paragraph)
 
-(setq visible-bell t)
-
 (diminish 'defining-kbd-macro (propertize " M" 'face '(error bold)))
 
 (use-package so-long
   :config
   (so-long-enable))
 
+(use-package mode-line-bell
+  :ensure t
+  :config
+  (mode-line-bell-mode 1))

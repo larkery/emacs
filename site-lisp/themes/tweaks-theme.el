@@ -29,6 +29,7 @@
  '(rainbow-delimiters-unmatched-face ((t (:background "red" :foreground "white"))))
  '(rainbow-delimiters-mismatched-face ((t (:background "red" :foreground "white"))))
 
+ '(diredfl-dir-heading ((t (:inherit match))))
  '(diredfl-read-priv ((t (:inherit default))))
  '(diredfl-write-priv ((t (:inherit default))))
  '(diredfl-exec-priv ((t (:inherit default))))
