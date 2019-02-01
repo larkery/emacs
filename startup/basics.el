@@ -6,7 +6,11 @@
 (transient-mark-mode 1)
 (window-divider-mode 1)
 
-(setq default-frame-scroll-bars nil
+(setq window-divider-default-places t 
+      window-divider-default-bottom-width 1
+      window-divider-default-right-width 1
+      
+      default-frame-scroll-bars nil
       default-frame-alist '((scroll-bar-width . 8)
                             (right-divider-width . 3))
       focus-follows-mouse t

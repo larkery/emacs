@@ -44,6 +44,8 @@
  '(diredfl-compressed-file-suffix ((t (:inherit warning))))
  '(diredfl-deletion ((t (:inherit error))))
  '(ag-match-face ((t (:inherit match))))
+ '(mode-line ((t (:overline nil :underline nil :box nil))))
+ '(mode-line-inactive ((t (:overline nil :underline nil :box nil))))
  )
 
 
