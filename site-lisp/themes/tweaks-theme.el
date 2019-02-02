@@ -13,8 +13,6 @@
 
  '(line-spacing ((t nil)))
 
- '(hl-line ((((background dark) ) (:background "#3E153E"))))
- 
  '(notmuch-search-unread-face ((t (:foreground "white" :distant-foreground "black" :weight bold))))
  '(symbol-overlay-default-face ((t (:underline "grey50"))))
 
@@ -31,6 +29,7 @@
  '(rainbow-delimiters-unmatched-face ((t (:background "red" :foreground "white"))))
  '(rainbow-delimiters-mismatched-face ((t (:background "red" :foreground "white"))))
 
+ '(diredfl-dir-heading ((t (:inherit match))))
  '(diredfl-read-priv ((t (:inherit default))))
  '(diredfl-write-priv ((t (:inherit default))))
  '(diredfl-exec-priv ((t (:inherit default))))
@@ -46,6 +45,8 @@
  '(diredfl-compressed-file-suffix ((t (:inherit warning))))
  '(diredfl-deletion ((t (:inherit error))))
  '(ag-match-face ((t (:inherit match))))
+ '(mode-line ((t (:overline nil :underline nil :box nil))))
+ '(mode-line-inactive ((t (:overline nil :underline nil :box nil))))
  )
 
 

@@ -23,7 +23,9 @@
   "Return empty space using FACE and leaving RESERVE space on the right."
   (let* ((the-rhs (format-mode-line rhs))
          (reserve (length the-rhs)))
-    (list (propertize " " 'display `((space :align-to (- right ,reserve)))) rhs)))
+    (list
+     (propertize " " 'display `((space :align-to (- right ,reserve)))) rhs)
+    ))
 
 (setq-default
  frame-title-format
@@ -44,7 +46,5 @@
    (:eval (mode-line-get-host))
    (:eval (mode-line-pad-right
            `(,mode-line-misc-info " " ,mode-line-modes)))))
-
-
 
 (setq-default icon-title-format frame-title-format)

@@ -1,6 +1,7 @@
 (use-package nix-mode :ensure t :defer t)
 
 (use-package pdf-tools
+  :ensure t
   :defer t
   :commands pdf-view-mode pdf-view-word-document
   :config
