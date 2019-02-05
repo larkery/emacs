@@ -133,6 +133,33 @@
         (kill-buffer dired-buf))))
 
   (advice-add 'dired-delete-file :before 'dired-kill-before-delete)
+
+  (defun dired-click (event)
+    (interactive "e")
+
+    (let (window pos file)
+      (save-excursion
+        (setq window (posn-window (event-end event))
+	      pos (posn-point (event-end event)))
+        (if (not (windowp window))
+	    (error "No file chosen"))
+        (set-buffer (window-buffer window))
+        (goto-char pos)
+        (setq file (dired-get-file-for-visit)))
+      (if (file-directory-p file)
+          (progn
+            (select-window window)
+            ;; TODO handle .. and . in some way, and the header lines
+            (call-interactively 'dired-maybe-replace-subdir))
+
+        (select-window window)
+        (find-file-other-window (file-name-sans-versions file t))))
+    )
+
+
+  (bind-key [mouse-2] 'dired-click dired-mode-map)          
+        
+
   )
 
 (use-package dired-x

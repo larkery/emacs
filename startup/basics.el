@@ -202,8 +202,8 @@
 (use-package gruvbox-theme :ensure t)
 (use-package solarized-theme :ensure t)
 
-(setq dark-theme 'gruvbox)
-(setq light-theme 'solarized-light)
+(setq dark-theme 'gruvbox-dark-soft)
+(setq light-theme 'gruvbox-light-soft)
 
 (load-theme light-theme t)
 (load-theme 'tweaks t)
@@ -294,3 +294,15 @@
   :ensure t
   :config
   (mode-line-bell-mode 1))
+
+(defun change-buffer-display-window ()
+  (interactive)
+  (let* ((the-windows (window-list))
+         (this-window (selected-window))
+         (this-buffer (window-buffer))
+         (next-win (next-window this-window)))
+    (set-window-buffer next-win this-buffer)
+    (switch-to-prev-buffer this-window)
+    (select-window next-win)))
+
+(bind-key "M-O" 'change-buffer-display-window)
