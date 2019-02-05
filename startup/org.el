@@ -77,6 +77,22 @@
           t))))
 
   (advice-add 'org-table-copy-down :before-until #'org-table-copy-down-set-timestamp-today)
+
+  (defun  org-agenda-insert-diary-make-new-entry-with-location (o text)
+    (let* ((location (string-match (rx "@ " (group (+ any)) eos) text))
+           (location-string (and location (match-string 1 text)))
+           (text (if location (substring text 0 location) text))
+           (rv (funcall o text)))
+      
+      (when location
+        (org-set-property "LOCATION" location-string)
+        )
+      rv))
+
+  (advice-add 'org-agenda-insert-diary-make-new-entry
+              :around
+              #'org-agenda-insert-diary-make-new-entry-with-location)
+
   )
 
 
