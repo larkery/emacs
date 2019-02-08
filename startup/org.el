@@ -1,3 +1,6 @@
+(use-package htmlize
+  :ensure t)
+
 (use-package org
   :bind (("C-c a" . org-agenda)
          :map org-mode-map

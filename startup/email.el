@@ -22,6 +22,18 @@
   
   (setq gnus-dired-mail-mode 'notmuch-user-agent))
 
+(use-package org-add-font-lock-defaults
+  :commands org-add-font-lock-defaults
+  :init
+  (add-hook 'notmuch-message-mode-hook 'org-add-font-lock-defaults))
+
+(use-package org
+  :commands orgstruct-mode orgtbl-mode
+  :init
+  (add-hook 'notmuch-message-mode-hook 'orgstruct-mode)
+  (add-hook 'notmuch-message-mode-hook 'orgtbl-mode)
+  )
+
 (use-package org-mime
   :ensure t
   :commands org-mime-htmlize
