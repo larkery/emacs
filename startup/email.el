@@ -404,6 +404,7 @@
    message-sendmail-envelope-from 'header
    message-fill-column nil
    mm-coding-system-priorities '(utf-8)
+   mm-inline-override-types '("image/tiff")
    mm-inline-large-images 'resize
    mm-inline-large-images-proportion 0.9
    mm-inline-text-html-with-images t
@@ -466,4 +467,3 @@
     (setq-local completing-read-function 'completing-read-default))
   
   (add-hook 'bbdb-mode-hook 'bbdb-use-completing-read-default))
-
