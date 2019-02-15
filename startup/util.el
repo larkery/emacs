@@ -115,7 +115,6 @@
    :map projectile-mode-map
    ("C-c p s s" . counsel-ag)
    ("C-c p s a" . projectile-ag)
-   ("C-x C-b" . projectile-or-global-ibuffer)
    ("M-s p" . projectile-ag))
   
   ;; (define-key projectile-mode-map (kbd projectile-keymap-prefix) 'projectile-command-map)
@@ -127,6 +126,10 @@
     (if (projectile-project-p)
         (projectile-ibuffer prefix)
       (ibuffer))))
+
+(use-package bs-projectile
+  :bind (:map projectile-mode-map
+              "C-x C-b" . bs-projectile))
 
 (use-package pcre2el
   :diminish pcre-mode
@@ -486,12 +489,6 @@
   :hook
   ((after-save . executable-make-buffer-file-executable-if-script-p)))
 
-(use-package smart-hungry-delete
-  :ensure t
-  :bind (("C-<backspace>" . smart-hungry-delete-backward-char))
-  :defer nil ;; dont defer so we can add our functions to hooks 
-  :config (smart-hungry-delete-add-default-hooks))
-
 (defun terminal-here ()
   (interactive)
   (let* ((file-name-at-point (thing-at-point 'filename))
@@ -512,3 +509,11 @@
     (when (and directory
                (not (file-remote-p directory)))
       (start-process "" nil "env" "-C" directory "urxvt"))))
+
+;; (use-package company
+;;   :commands company-mode
+;;   :init (add-hook 'prog-mode-hook 'company-mode)
+;;   :config
+;;   (setq company-idle-delay nil)
+;;   (bind-key "C-M-i" 'company-complete-common company-mode-map))
+
