@@ -128,8 +128,11 @@
       (ibuffer))))
 
 (use-package bs-projectile
-  :bind (:map projectile-mode-map
-              "C-x C-b" . bs-projectile))
+  :commands bs-projectile
+  :config
+  (bind-keys
+   :map projectile-mode-map
+   ("C-x C-b" . bs-projectile)))
 
 (use-package pcre2el
   :diminish pcre-mode

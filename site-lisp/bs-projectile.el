@@ -1,3 +1,6 @@
+(require 'bs)
+(require 'projectile)
+
 (defvar bs-projectile-project nil)
 
 (bind-key "C-x C-b" 'bs-projectile projectile-mode-map)

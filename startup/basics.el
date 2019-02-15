@@ -96,15 +96,9 @@
     (swiper (when (region-active-p)
               (buffer-substring-no-properties (region-beginning) (region-end)))))
 
-  (defvar ivy--switch-buffer-format "%s %-50s%10s")
+  
+  
 
-  (defun ivy--switch-buffer-mb-width (orig)
-    (let* ((mb-width (window-width (minibuffer-window)))
-           (ivy--switch-buffer-format
-            (format "%%s %%-%ds%%%ds" (- mb-width 40) 38)))
-      (funcall orig)))
-
-  (advice-add 'ivy-switch-buffer :around 'ivy--switch-buffer-mb-width)
   
   (defun ivy-switch-buffer-transformer (str)
     (let ((b (get-buffer str)))
@@ -119,19 +113,26 @@
                                       (tramp-dissect-file-name
                                        (or buffer-file-name dired-directory))))
                            "")))
-              (cond
-               (dired-directory
-                (format ivy--switch-buffer-format ":" str (or proj host)))
+              str
+              (concat
+               (cond (dired-directory "d ")
+                     (buffer-file-name "f ")
+                     (t "% "))
                
-               (buffer-file-name
-                (format ivy--switch-buffer-format "." str (or proj host)))
+               
+               str
 
-               (t (format ivy--switch-buffer-format "%" str (or proj host)))
+               (propertize
+                " " 'display
+                `((space :align-to
+                         ,(- (window-width (minibuffer-window))
+                            40))))
                
+               (or proj host)
                )))
-        (format ivy--switch-buffer-format "v" str "")
-        )))
-    )
+
+        (concat "v " str)
+        ))))
 
 (use-package recentf
   :config
