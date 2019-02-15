@@ -43,7 +43,43 @@
 
   (advice-add 'cider-eldoc-info :filter-return 'cider-eldoc-info-add-specs)
   (advice-add 'cider-eldoc-format-function :around 'cider-eldoc-format-function-with-spec)
-  )
+
+  (require 'quick-peek)
+
+  (defun cider-doc-quick-peek ()
+    (interactive)
+
+    (let ((s (thing-at-point 'symbol)))
+      (when s
+        (let ((b (cider-create-doc-buffer s)))
+          (when b
+            (let ((bc (with-current-buffer b (buffer-string))))
+              (quick-peek-show bc)
+              (set-transient-map nil nil #'quick-peek-hide)
+              ))))))
+
+  (bind-key "C-c d" #'cider-doc-quick-peek cider-mode-map)
+  
+  (define-clojure-indent
+    (defroutes 'defun)
+    (GET 2)
+    (POST 2)
+    (PUT 2)
+    (DELETE 2)
+    (HEAD 2)
+    (ANY 2)
+    (OPTIONS 2)
+    (PATCH 2)
+    (rfn 2)
+    (let-routes 1)
+    (context 2)))
+
+
+(use-package quick-peek
+  :ensure t
+  :defer t
+  :commands quick-peek-show quick-peek-hide)
+
 
 (use-package clj-refactor
   :ensure t
