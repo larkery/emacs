@@ -127,10 +127,11 @@
                  (dired-goto-file here)))))
 
   (defun dired-kill-before-delete (file &rest rest)
-    (if-let ((buf (get-file-buffer file)))
+    (let ((buf (get-file-buffer file)))
+      (when buf
         (kill-buffer buf)
-      (dolist (dired-buf (dired-buffers-for-dir file))
-        (kill-buffer dired-buf))))
+        (dolist (dired-buf (dired-buffers-for-dir file))
+          (kill-buffer dired-buf)))))
 
   (advice-add 'dired-delete-file :before 'dired-kill-before-delete)
 
