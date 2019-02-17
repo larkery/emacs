@@ -66,6 +66,10 @@
                    (rx bol (| (: (* blank) (+ digit) "." blank)
                               (: (+ "*") blank)
                               (: (* blank) (any "-+") blank alphanumeric)
+                              (: (group-n 1 (any "*/_~"))
+                                 (+ alphanumeric)
+                                 (backref 1))
+                              
                               (: (* blank) "|" (* nonl) "|" eol)))
                    nil t)
               (when (y-or-n-p "Send HTML email?")
