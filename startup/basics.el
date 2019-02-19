@@ -38,6 +38,9 @@
       enable-recursive-minibuffers t
 
       scroll-step 10
+
+      auto-hscroll-mode 'current-line
+      mouse-drag-and-drop-region t
       )
 
 (window-divider-mode 1)
