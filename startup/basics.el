@@ -98,44 +98,23 @@
     (interactive)
     (swiper (when (region-active-p)
               (buffer-substring-no-properties (region-beginning) (region-end)))))
-
-  
-  
-
-  
+            
   (defun ivy-switch-buffer-transformer (str)
-    (let ((b (get-buffer str)))
-      (if b
-          (with-current-buffer b
-            (let* ((proj (if (projectile-project-p)
-                             (projectile-project-name)))
-                   (file (or buffer-file-name dired-directory))
-                   (host (if (and file (file-remote-p file))
-                             (concat "@"
-                                     (tramp-file-name-host
-                                      (tramp-dissect-file-name
-                                       (or buffer-file-name dired-directory))))
-                           "")))
-              str
-              (concat
-               (cond (dired-directory "d ")
-                     (buffer-file-name "f ")
-                     (t "% "))
-               
-               
-               str
+    (if (< (window-width (minibuffer-window)) 75) str
+      (let* ((b (get-buffer str))
+             (typ (if b
+                      (with-current-buffer b
+                        (cond (dired-directory "/")
+                              ((file-remote-p (or buffer-file-name default-directory)) "@")
+                              (buffer-file-name "f")
+                              (t "%")))
+                    "v"))
+             (pname (or (and b (with-current-buffer b (projectile-project-name))) "-")))
 
-               (propertize
-                " " 'display
-                `((space :align-to
-                         ,(- (window-width (minibuffer-window))
-                            40))))
-               
-               (or proj host)
-               )))
-
-        (concat "v " str)
-        ))))
+        (format
+         "%s %10s  %s"
+         (propertize typ 'face 'error)
+         (propertize pname 'face 'shadow) str)))))
 
 (use-package recentf
   :config

@@ -51,4 +51,10 @@
 
 (bind-key "TAB" 'bs-projectile-next bs-mode-map)
 
+(defun bs--get-projectile-file-name (_start-buffer _all-buffers)
+  (let ((out (bs--get-file-name _start-buffer _all-buffers)))
+    (if bs-projectile-project
+        (file-relative-name out bs-projectile-project)
+        out)))
+
 (provide 'bs-projectile)
