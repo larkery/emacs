@@ -60,8 +60,10 @@
              (save-excursion
                (point)
                (or (and (search-forward "<#part" nil t)
+                        (beginning-of-line)
                         (point))
                    (point-max))))
+            (goto-char (point-min))
             (when (search-forward-regexp
                    (rx bol (| (: (* blank) (+ digit) "." blank)
                               (: (+ "*") blank)
