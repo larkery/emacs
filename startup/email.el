@@ -47,39 +47,43 @@
         "#+OPTIONS: latex:t toc:nil H:3 ^:{}
 ")
 
-  (defun org-mime-maybe-htmlize ()
+  (defun narrow-to-message ()
     (interactive)
-    
-    (let ((inhibit-redisplay t))
-      (save-match-data
-        (save-excursion
-          (message-goto-body)
-          (save-restriction
-            (narrow-to-region
-             (point)
-             (save-excursion
-               (point)
-               (or (and (search-forward "<#part" nil t)
-                        (beginning-of-line)
-                        (point))
-                   (point-max))))
-            (goto-char (point-min))
-            (when (search-forward-regexp
-                   (rx bol (| (: (* blank) (+ digit) "." blank)
-                              (: (+ "*") blank)
-                              (: (* blank) (any "-+") blank alphanumeric)
-                              (: (group-n 1 (any "*/_~"))
-                                 (+ alphanumeric)
-                                 (backref 1))
-                              
-                              (: (* blank) "|" (* nonl) "|" eol)))
-                   nil t)
-              (when (y-or-n-p "Send HTML email?")
-                (goto-char (point-min))
-                (set-mark (point))
-                (goto-char (point-max))
-                (org-mime-htmlize))
-              ))))))
+    (message-goto-body)
+    (narrow-to-region
+     (point)
+     (save-excursion
+       (point)
+       (or (and (search-forward "<#part" nil t)
+                (progn (beginning-of-line) t)
+                (point))
+           (point-max))))
+    (goto-char (point-min)))
+
+  (defun message-styled-p ()
+    (save-excursion
+      (goto-char (point-min))
+      (search-forward-regexp
+       (rx bol (| (: (* blank) (+ digit) "." blank)
+                  (: (+ "*") blank)
+                  (: (* blank) (any "-+") blank alphanumeric)
+                  (: (group-n 1 (any "*/_~"))
+                     (+ alphanumeric)
+                     (backref 1))
+                  (: (* blank) "|" (* nonl) "|" eol)
+                  (: "[[/" (+ any) (| ".jpg" ".png" ".gif")"]]")
+                  ))
+       nil t)))
+
+  (defun org-mime-maybe-htmlize ()
+    (save-match-data
+      (save-excursion
+        (save-restriction
+          (narrow-to-message)
+          (mark-whole-buffer)
+          (when (message-styled-p)
+            (message "Sending as HTML")
+            (org-mime-htmlize))))))
 
   (defun org-mime--escaping-quote (args)
     (let ((text (car args))
@@ -88,7 +92,6 @@
       (cons text rest)))
 
   (advice-add 'org-mime--export-string :filter-args #'org-mime--escaping-quote)
-
 
   (defun maybe-htmlize-send-and-exit ()
     (interactive)

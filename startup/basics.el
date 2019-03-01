@@ -289,3 +289,5 @@
     (select-window next-win)))
 
 (bind-key "M-O" 'change-buffer-display-window)
+
+(bind-key "C-x C-b" 'buffer-menu)

@@ -122,11 +122,6 @@
   (setq projectile-completion-system 'ivy
         projectile-switch-project-action 'projectile-dired))
 
-(use-package bs-projectile
-  :bind ("C-x C-b" . bs-projectile)
-  :config
-  (setq bs-default-sort-name "by mode"))
-
 (use-package pcre2el
   :diminish pcre-mode
   :ensure t
@@ -219,17 +214,6 @@
   :defer t
   :config
   (require 'rcirc-notify)
-  (setq rcirc-server-alist
-        `(("larkery.com"
-           :port 7778
-           :user-name "hinton"
-           :nick "TomHinton"
-           :encryption tls
-           :password ,(funcall (plist-get (car
-                                           (auth-source-search :host "larkery.com"  :port "7778")) :secret))
-           ))
-
-        rcirc-fill-flag nil)
 
   (add-hook 'rcirc-mode-hook 'visual-line-mode)
   (add-hook 'rcirc-mode-hook (lambda () (setq wrap-prefix "      "))))
@@ -266,9 +250,7 @@
           (and god-local-mode " G ")))
   
   (add-hook 'god-local-mode-hook
-            'god-local-mode-lighter)
-  
-  )
+            'god-local-mode-lighter))
 
 (use-package editorconfig
   :ensure t
@@ -357,9 +339,11 @@
   (push-mark)
   (let ((path (read-file-name "Insert path: ")))
     (when path
-      (insert "\"")
+      (when (derived-mode-p 'prog-mode)
+        (insert "\""))
       (insert path)
-      (insert "\""))))
+      (when (derived-mode-p 'prog-mode)
+        (insert "\"")))))
 
 (bind-key "C-c f" #'insert-file-path)
 
