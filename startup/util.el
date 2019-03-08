@@ -184,7 +184,11 @@
   :ensure t
   :defer t
   :bind (("C-." . dumb-jump-go) ;; Go to Symbol, ish
-         ("C-," . dumb-jump-back)))
+         ("C-," . dumb-jump-back))
+  :config
+  (setq dumb-jump-git-grep-cmd
+        "git grep --no-recurse-submodules"))
+
 
 (use-package which-key
   :diminish ""
@@ -216,7 +220,11 @@
   (require 'rcirc-notify)
 
   (add-hook 'rcirc-mode-hook 'visual-line-mode)
-  (add-hook 'rcirc-mode-hook (lambda () (setq wrap-prefix "      "))))
+  (add-hook 'rcirc-mode-hook (lambda () (setq wrap-prefix "      ")))
+  (setq rcirc-server-alist
+        '(("irc.freenode.net" :nick "tomhinton" :channels ("#cse-bristol")
+           :encryption tls :server-alias "freenode" :port 6697
+           ))))
 
 (use-package auth-source-pass
   :ensure t

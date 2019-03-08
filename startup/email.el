@@ -45,7 +45,8 @@
   :config
   (setq org-mime-default-header
         "#+OPTIONS: latex:t toc:nil H:3 ^:{}
-")
+"
+        org-mime-beautify-quoted-mail nil)
 
   (defun narrow-to-message ()
     (interactive)
@@ -81,7 +82,9 @@
         (save-restriction
           (narrow-to-message)
           (mark-whole-buffer)
-          (when (message-styled-p)
+          (when (or (message-styled-p)
+                    (y-or-n-p "Send as HTML?"))
+            
             (message "Sending as HTML")
             (org-mime-htmlize))))))
 
@@ -96,7 +99,59 @@
   (defun maybe-htmlize-send-and-exit ()
     (interactive)
     (org-mime-maybe-htmlize)
-    (notmuch-mua-send-and-exit)))
+    (notmuch-mua-send-and-exit))
+
+  
+  (defun org-mime-pre-quotify ()
+    ;; TODO strip out the arrows
+    ;; TODO make this run when I do stuff
+    ;; TODO add nice styles to blockquotes
+    (save-excursion
+      (goto-char (point-min))
+      (let ((qdepth 0)
+            (qdepth* 0)
+            last-qlstart)
+        (while (not (eobp))
+          (cond
+           ((looking-at "^ *>+")
+            (setq qdepth* (progn (search-forward-regexp "^ *(>+)" nil t)
+                                 (length (match-string 0)))
+                  last-qlstart (point)))
+           
+           ((looking-at "^\\s-*$")
+            (setq qdepth* qdepth))
+           
+           (t (setq qdepth* 0)))
+
+          (cond
+           ((> qdepth* qdepth)
+            (dotimes (_ (- qdepth* qdepth))
+              (insert "#+BEGIN_QUOTE\n")))
+           ((< qdepth* qdepth)
+            (save-excursion
+              (goto-char last-qlstart)
+              (forward-line)
+              (dotimes (_ (- qdepth qdepth*))
+                (insert "#+END_QUOTE\n")))))
+          
+          (setq qdepth qdepth*)
+          (forward-line))
+        (when (and (> qdepth 0)
+                   (not (looking-at "^$")))
+          (insert "\n"))
+        (save-excursion
+          (goto-char last-qlstart)
+          (forward-line)
+          (dotimes (_ qdepth)
+            (insert "#+END_QUOTE\n")))
+        )))
+
+  
+  
+  )
+
+
+
 
 (use-package notmuch
   :commands notmuch
@@ -129,6 +184,16 @@
                           (match-string 1 the-url))
                       the-url)))
       (browse-url the-url)))
+
+  (defun notmuch-avoid-tag (query)
+    (let ((bad-tag (if (member (system-name) '("limiting-factor"))
+                       "tag:home"
+                     "tag:work")))
+      (unless (and
+               (not (eq this-command 'notmuch-search))
+               query
+               (string-match-p bad-tag query))
+        (concat "not " bad-tag " and "))))
   
   (defvar counsel-notmuch-history nil)
 
@@ -155,10 +220,11 @@
                       :caller 'counsel-notmuch-blah))
            (match (car (remove-if-not (lambda (x)
                                         (string= (plist-get x :name) search))
-                                      notmuch-saved-searches))))
-      (if match
-          (notmuch-search (plist-get match :query))
-        (notmuch-search search))))
+                                      notmuch-saved-searches)))
+           (search (if match (plist-get match :query) search)))
+      
+      
+      (notmuch-search (concat (notmuch-avoid-tag search) "(" search ")"))))
   
   (require 'notmuch-switch-identity)
   (fset 'notmuch-show-insert-part-text/calendar #'notmuch-agenda-insert-part)
@@ -271,11 +337,8 @@
 
   (defun notmuch-show-delete ()
     (interactive)
-    (notmuch-show-add-tag (list "+deleted"))
-    ;; (unless (notmuch-show-next-open-message)
-    ;;   (notmuch-show-next-thread t))
-    )
-
+    (notmuch-show-add-tag (list "+deleted")))
+  
   (defun notmuch-expand-calendar-parts (o msg part depth &optional hide)
     (funcall o
              msg part depth (and hide
@@ -374,8 +437,30 @@
           (setq in nil)
           (funcall o last (point) line-tag-list)))))
 
-  (advice-add 'notmuch-search-color-line :around #'notmuch-search-color-line-partially))
+  (advice-add 'notmuch-search-color-line :around #'notmuch-search-color-line-partially)
 
+  (defun notmuch-read-query-suggest-tag (nrq prompt)
+    (let* ((tag-to-hide
+            (notmuch-avoid-tag (case major-mode
+			         (notmuch-search-mode (notmuch-search-get-query))
+			         (notmuch-show-mode (notmuch-show-get-query))
+			         (notmuch-tree-mode (notmuch-tree-get-query))))))
+      
+      (if tag-to-hide
+          (let ((do-read-from-minibuffer (symbol-function 'read-from-minibuffer)))
+            (cl-letf (((symbol-function 'read-from-minibuffer)
+                       (lambda (prompt &optional initial-contents keymap read
+                                       hist default-value inherit-input-method)
+                         (funcall do-read-from-minibuffer
+                                  prompt
+                                  (concat tag-to-hide initial-contents)
+                                  keymap read hist default-value inherit-input-method))))
+              (funcall nrq prompt)))
+        (funcall nrq prompt))))
+
+  (advice-add 'notmuch-read-query :around #'notmuch-read-query-suggest-tag)
+  
+  )
 
 (use-package message
   :defer t
@@ -425,7 +510,7 @@
    message-default-charset 'utf-8
    user-full-name "Tom Hinton"
    message-signature 'message-signature-select-by-from
-
+   
    message-citation-line-function 'message-insert-formatted-citation-line
 
    message-yank-empty-prefix ""))

@@ -41,7 +41,9 @@
 
       auto-hscroll-mode 'current-line
       mouse-drag-and-drop-region t
-      )
+
+      locate-dominating-stop-dir-regexp
+      (purecopy (rx bos "/net/" (* (not (any "/"))) "/" (* (not (any "/"))) eos)))
 
 (window-divider-mode 1)
 
@@ -290,4 +292,6 @@
 
 (bind-key "M-O" 'change-buffer-display-window)
 
-(bind-key "C-x C-b" 'buffer-menu)
+(use-package buffer-table
+  :bind ("C-x C-b" . buffer-table))
+
