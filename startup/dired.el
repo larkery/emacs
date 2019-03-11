@@ -3,16 +3,16 @@
 (use-package diredfl
   :ensure t
   :commands diredfl-mode
-  :config
-  (setq diredfl-ignore-compressed-flag nil
-        diredfl-compressed-extensions nil))
+  :custom
+  (diredfl-ignore-compressed-flag nil)
+  (diredfl-compressed-extensions nil))
 
 (use-package wdired
   :defer t
   :bind (:map dired-mode-map
               ("<f2>" . wdired-change-to-wdired-mode))
-  :config
-  (setq wdired-allow-to-change-permissions t))
+  :custom
+  (wdired-allow-to-change-permissions t))
 
 (use-package dired
   :defer t
@@ -26,30 +26,25 @@
               ("e" . dired-xdg-open)
               ("C-x C-f" . dired-C-x-C-f)
               )
+  :custom
+  (dired-auto-revert-buffer t)
+  (dired-bind-info nil)
+  (dired-bind-jump nil)
+  (dired-bind-man nil)
+  (dired-dwim-target t)
+  (dired-isearch-filenames 'dwim)
+  (dired-listing-switches "-lahgG")
+  (dired-omit-files "^\\.[^\\.]")
+  (dired-omit-verbose nil)
+  (dired-subtree-line-prefix 'dired-subtree-indented-arrow-prefix)
+  (dired-subtree-use-backgrounds nil)
+  (dired-subtree-line-prefix-face 'subtree)
   :config
-  (setq  dired-auto-revert-buffer t
-         dired-bind-info nil
-         dired-bind-jump nil
-         dired-bind-man nil
-         dired-dwim-target t
-         dired-isearch-filenames 'dwim
-         dired-listing-switches "-lahgG"
-         dired-omit-files "^\\.[^\\.]"
-         dired-omit-verbose nil
-         dired-subtree-line-prefix
-         (lambda (d)
-           (concat (make-string (* 3 d) ? ) (propertize ">"
-                                                        'face (intern
-                                                               (concat "outline-"
-                                                                       (number-to-string (mod d 9))
-                                                                       )
-                                                               )
-                                                        ))
-           )
-         dired-subtree-use-backgrounds nil
-         dired-subtree-line-prefix-face 'subtree
-         )
 
+  (defun dired-subtree-indent-arrow-prefix (d)
+      (concat (make-string (* 3 d) ? )
+              (propertize ">" 'face (intern (concat "outline-" (number-to-string (mod d 9)))))))
+    
   (require 'dired-parent-links)
   
   (add-hook 'dired-mode-hook 'auto-revert-mode)
@@ -194,3 +189,10 @@
       (dired-goto-file file))))
 
 (bind-key "<f7>" 'dired-here-please)
+
+(use-package all-the-icons-dired
+  :ensure t
+  :defer t
+  :hook
+  (dired-mode . all-the-icons-dired-mode))
+

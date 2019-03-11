@@ -106,21 +106,19 @@
   :diminish
   :ensure t
   :demand t
-  :init
-  (setq projectile-keymap-prefix (kbd "C-c p"))
-  :config
+  :custom
+  (projectile-keymap-prefix (kbd "C-c p"))
   (projectile-global-mode 1)
-
+  (projectile-completion-system 'ivy)
+  (projectile-switch-project-action 'projectile-dired)
+  :config
   (bind-keys
    :map projectile-mode-map
    ("C-c p s s" . counsel-ag)
    ("C-c p s a" . projectile-ag)
    ("M-s p" . projectile-ag))
-  
-  ;; (define-key projectile-mode-map (kbd projectile-keymap-prefix) 'projectile-command-map)
 
-  (setq projectile-completion-system 'ivy
-        projectile-switch-project-action 'projectile-dired))
+)
 
 (use-package pcre2el
   :diminish pcre-mode
@@ -185,34 +183,35 @@
   :defer t
   :bind (("C-." . dumb-jump-go) ;; Go to Symbol, ish
          ("C-," . dumb-jump-back))
-  :config
-  (setq dumb-jump-git-grep-cmd
-        "git grep --no-recurse-submodules"))
+  :custom
+  (dumb-jump-git-grep-cmd "git grep --no-recurse-submodules"))
 
 
 (use-package which-key
   :diminish ""
   :ensure t
+  :custom
+  (which-key-idle-delay 0.75)
   :config
-  (which-key-mode 1)
-  (setq which-key-idle-delay 0.75))
+  (which-key-mode 1))
 
 (use-package hippie-exp
   :bind ("M-/" . hippie-expand)
-  :config
-  (setq hippie-expand-try-functions-list
-        '(try-complete-file-name
-          try-complete-file-name-partially
-          try-expand-dabbrev
-          try-expand-dabbrev-all-buffers
-          try-expand-dabbrev-from-kill)))
+  :custom
+  (hippie-expand-try-functions-list
+   '(try-complete-file-name
+     try-complete-file-name-partially
+     try-expand-dabbrev
+     try-expand-dabbrev-all-buffers
+     try-expand-dabbrev-from-kill)))
 
 (use-package rcirc-notify
   :defer t
   :ensure t
+  :custom
+  (rcirc-notify-keywords '("tom" "tomhinton" "hinton"))
   :config
-  (rcirc-notify-add-hooks)
-  (setq rcirc-notify-keywords '("tom" "tomhinton" "hinton")))
+  (rcirc-notify-add-hooks))
 
 (use-package rcirc
   :defer t
@@ -268,8 +267,8 @@
 
 (use-package ediff
   :defer t
-  :config
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain))
+  :custom
+  (ediff-window-setup-function 'ediff-setup-windows-plain))
 
 (defun mark-symbol-or-minibuffer-it ()
   (interactive)
@@ -323,24 +322,16 @@
               ("M-p" . symbol-overlay-jump-prev)
               ("M-n" . symbol-overlay-jump-next))
   :commands symbol-overlay-mode
-  :config
-  (setq symbol-overlay-idle-time 0.75)
+  :custom
+  (symbol-overlay-idle-time 0.75)
   :init
   (add-hook 'prog-mode-hook 'symbol-overlay-mode))
 
 
 (use-package browse-url
-  :config
-  (setq browse-url-generic-program "xdg-open"
-        browse-url-browser-function 'browse-url-generic))
-
-;; (use-package composable
-;;   :diminish
-;;   :config
-;;   (composable-mode 1)
-;;   (composable-mark-mode 1)
-;;   (bind-key "M-;" nil composable-mode-map))
-
+  :custom
+  (browse-url-generic-program "xdg-open")
+  (browse-url-browser-function 'browse-url-generic))
 
 (defun insert-file-path ()
   (interactive)
@@ -401,11 +392,3 @@
     (when (and directory
                (not (file-remote-p directory)))
       (start-process "" nil "env" "-C" directory "urxvt"))))
-
-;; (use-package company
-;;   :commands company-mode
-;;   :init (add-hook 'prog-mode-hook 'company-mode)
-;;   :config
-;;   (setq company-idle-delay nil)
-;;   (bind-key "C-M-i" 'company-complete-common company-mode-map))
-

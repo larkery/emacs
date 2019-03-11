@@ -88,9 +88,9 @@
   :ensure t
   :defer nil
   :bind (("M-s M-s" . swiper-at-point))
-  
+  :custom
+  (ivy-use-virtual-buffers t)
   :config (ivy-mode)
-  (setq ivy-use-virtual-buffers t)
 
   (with-eval-after-load
       'swiper 
@@ -126,11 +126,12 @@
     (unless (file-remote-p fi)
       (not (file-exists-p fi))))
   (run-with-idle-timer 600 t 'recentf-save-list)
-  (setq recentf-max-saved-items 100
-        recentf-exclude '("^/home/hinton/notes/" "^/nix/store"
-                          recentf-exclude-deleted-local-files))
-  (custom-set-variables
-   '(recentf-auto-cleanup 300)))
+
+  :custom
+  (recentf-auto-cleanup 300)
+  (recentf-max-saved-items 100)
+  (recentf-exclude '("^/home/hinton/notes/" "^/nix/store"
+                     recentf-exclude-deleted-local-files)))
 
 (use-package counsel
   :diminish
@@ -141,12 +142,12 @@
          ([remap yank-pop] . nil))
   :config
   (counsel-mode 1)
-  (setq counsel-find-file-ignore-regexp "\\`\\."))
-
+  :custom
+  (counsel-find-file-ignore-regexp "\\`\\."))
 
 (use-package uniquify
-  :config
-  (setq uniquify-buffer-name-style 'forward))
+  :custom
+  (uniquify-buffer-name-style 'forward))
 
 (use-package paren
   :config
@@ -210,8 +211,8 @@
   :commands visual-line-mode
   :init
   (add-hook 'text-mode-hook 'visual-line-mode)
-  :config
-  (setq visual-line-fringe-indicators '(nil right-curly-arrow)))
+  :custom
+  (visual-line-fringe-indicators '(nil right-curly-arrow)))
 
 (use-package browse-kill-ring
   :commands browse-kill-ring
@@ -226,9 +227,10 @@
       (barf-if-buffer-read-only)
       ad-do-it))
   (ad-activate 'yank-pop)
+  :custom
+  (browse-kill-ring-show-preview nil)
+  (counsel-yank-pop-preselect-last t)
   :config
-  (setq browse-kill-ring-show-preview nil)
-  (setq counsel-yank-pop-preselect-last t)
   (bind-key "M-y" 'browse-kill-ring-forward browse-kill-ring-mode-map))
 
 (use-package savehist
@@ -295,3 +297,6 @@
 (use-package buffer-table
   :bind ("C-x C-b" . buffer-table))
 
+;; this is here to store custom settings
+;; that aren't in another package.
+(use-package custom)

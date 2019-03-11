@@ -6,14 +6,13 @@
 (use-package cider
   :ensure t
   :commands (cider cider-connect cider-jack-in)
-
+  :custom
+  (cider-mode-line-show-connection nil)
   :config
   (add-to-list 'display-buffer-alist
         `(,(rx "cider")
           (display-buffer-reuse-window display-buffer-pop-up-window)
           (reusable-frames . nil)))
-
-  (setq cider-mode-line-show-connection nil)
 
   (defun cider-unaliased-keyword (sym)
     (if (string-match (rx bos "::" (group (+ any)) "/" (group (+ any)) eos) sym)

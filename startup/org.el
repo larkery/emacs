@@ -6,26 +6,26 @@
          :map org-mode-map
          ("M-p" . outline-previous-heading)
          ("M-n" . outline-next-heading))
+  :custom
+  (org-refile-use-outline-path t)
+  (org-goto-interface 'outline)
+  (org-outline-path-complete-in-steps nil)
+  (org-use-speed-commands t)
+  (org-speed-commands-user
+   '(("P" . org-set-property)))
+  (org-agenda-files '("~/notes/agenda"))
+  (org-agenda-diary-file "~/notes/agenda/calendar.org")
+  (org-id-locations-file "~/notes/.metadata/org-id-locations")
+  (org-agenda-insert-diary-extract-time t)
+  (org-adapt-indentation nil)
+  
+  (org-babel-load-languages '((emacs-lisp . t) (dot . t) (ditaa . t)))
+
+  (org-latex-pdf-process
+   '("xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f"))
+  (org-refile-targets '((nil . (:maxlevel . 3))))
   
   :config
-  
-  (setq org-refile-use-outline-path t
-        org-goto-interface 'outline
-        org-outline-path-complete-in-steps nil
-        org-use-speed-commands t
-        org-speed-commands-user
-        '(("P" . org-set-property))
-        org-agenda-files '("~/notes/agenda")
-        org-agenda-diary-file "~/notes/agenda/calendar.org"
-        org-id-locations-file "~/notes/.metadata/org-id-locations"
-        org-agenda-insert-diary-extract-time t
-        org-adapt-indentation nil
-        
-        org-babel-load-languages '((emacs-lisp . t) (dot . t) (ditaa . t))
-
-        org-latex-pdf-process
-        '("xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f")
-        org-refile-targets '((nil . (:maxlevel . 3))))
 
   (defun org-refile-to-datetree ()
     (interactive)
@@ -50,7 +50,7 @@
 
                  (replace-regexp-in-string "/" "." ans)
 
-                 ans)
+               ans)
 
              org-def org-defdecode)
     )
@@ -104,8 +104,8 @@
   :bind ("C-c j" . org-log-goto)
   :config
   (setq org-log-location
-  '("~/notes/journal/%Y/%B.org"
-    "[%Y-%m-%d %a]")))
+        '("~/notes/journal/%Y/%B.org"
+          "[%Y-%m-%d %a]")))
 
 (use-package date-at-point
   :ensure t

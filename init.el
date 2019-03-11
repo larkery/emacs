@@ -7,6 +7,7 @@
 (add-to-list 'load-path (concat user-emacs-directory "site-lisp/"))
 (load custom-file)
 
+(require 'use-package-save-custom)
 (require 'package)
 
 (setq package-enable-at-startup nil)

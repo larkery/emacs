@@ -26,9 +26,9 @@
          ("\\.html\\'" . web-mode)
          ("\\.json\\'" . web-mode))
   :commands web-mode
-  :config
-  (setq-default web-mode-markup-indent-offset 2
-                web-mode-code-indent-offset 2
-                web-mode-enable-auto-quoting nil
-                web-mode-auto-close-style 2)
-  )
+  :custom
+  (web-mode-markup-indent-offset 2)
+  (web-mode-code-indent-offset 2)
+  (web-mode-enable-auto-quoting nil)
+  (web-mode-auto-close-style 2))
+

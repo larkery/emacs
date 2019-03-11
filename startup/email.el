@@ -6,6 +6,8 @@
   :commands turn-on-gnus-dired-mode
   :init
   (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
+  :custom
+  (gnus-dired-mail-mode 'notmuch-user-agent)
   :config
   (defun gnus-dired-mail-buffers ()
     "Return a list of active message buffers."
@@ -18,9 +20,7 @@
             (push (buffer-name buffer) buffers))))
       (nreverse buffers)))
 
-  (bind-key "," 'gnus-dired-attach gnus-dired-mode-map)
-  
-  (setq gnus-dired-mail-mode 'notmuch-user-agent))
+  (bind-key "," 'gnus-dired-attach gnus-dired-mode-map))
 
 (use-package org-add-font-lock-defaults
   :commands org-add-font-lock-defaults
@@ -41,12 +41,13 @@
   (:map notmuch-message-mode-map
         ("C-c h" . org-mime-htmlize)
         ("C-c C-c" . maybe-htmlize-send-and-exit))
-
+  :custom
+  (org-mime-default-header
+   "#+OPTIONS: latex:t toc:nil H:3 ^:{}
+")
+  (org-mime-beautify-quoted-mail nil)
   :config
-  (setq org-mime-default-header
-        "#+OPTIONS: latex:t toc:nil H:3 ^:{}
-"
-        org-mime-beautify-quoted-mail nil)
+  
 
   (defun narrow-to-message ()
     (interactive)
@@ -158,15 +159,73 @@
   :bind
   (("C-c m" . counsel-notmuch)
    :map notmuch-search-mode-map
-	("f" . notmuch-search-flag)
-	("d" . notmuch-search-delete)
-	("g" . notmuch-refresh-this-buffer)
-        ("@" . notmuch-search-person)
-        :map notmuch-message-mode-map
-        ("C-c f" . notmuch-switch-identity)
-        :map notmuch-show-mode-map
-        ("C-o" . open-url-at-point)
-        ("d" . notmuch-show-delete))
+   ("f" . notmuch-search-flag)
+   ("d" . notmuch-search-delete)
+   ("g" . notmuch-refresh-this-buffer)
+   ("@" . notmuch-search-person)
+   :map notmuch-message-mode-map
+   ("C-c f" . notmuch-switch-identity)
+   :map notmuch-show-mode-map
+   ("C-o" . open-url-at-point)
+   ("d" . notmuch-show-delete))
+  :custom
+  (notmuch-multipart/alternative-discouraged '("text/plain")) ;; prefer html?
+
+  (notmuch-saved-searches
+   '((:name "inbox" :query "tag:inbox or tag:flagged" :key "i")
+     (:name "unread" :query "tag:unread" :key "u")
+     (:name "drafts" :query "tag:draft" :key "d")
+     (:name "sent" :query "tag:sent" :key "s")
+     (:name "NHM" :query "from:nhm.support@cse.org.uk" :key "N")
+     ))
+
+  (notmuch-tag-formats
+   '(("unread" (propertize "•" 'face 'notmuch-tag-unread))
+     ("flagged" (propertize tag 'face 'notmuch-tag-flagged)
+      (notmuch-tag-format-image-data tag (notmuch-tag-star-icon)))
+     ("low-importance" (propertize "_" 'face 'shadow))
+     ("high-importance" (propertize "^" 'face 'error))
+     ("normal-importance")
+     ("medium-importance")
+
+     ("home")
+     ("work")
+     ("sent")
+     ("replied" "→")
+     ("attachment" "@")
+     ("inbox" "%")
+
+     ))
+
+  (notmuch-search-line-faces
+   '(("unread" . notmuch-search-unread-face)
+     ("deleted" . (:strike-through "red"))
+     ("flagged" . notmuch-search-flagged-face)
+     ))
+  
+  (notmuch-search-result-format
+   '(("date" . "%12s  ")
+     ("count" . "%-7s ")
+     ("authors" . "%-20s ")
+     ("subject" . "%s ")
+     ("tags" . "%s")))
+  
+  (notmuch-search-oldest-first nil)
+  (notmuch-fcc-dirs
+   '(("tom\\.hinton@cse\\.org\\.uk" . "\"cse/Sent Items\" +sent -inbox")
+     ("larkery\\.com" . "\"fastmail/Sent Items\" +sent -inbox")))
+  (notmuch-identities
+   '("Tom Hinton <tom.hinton@cse.org.uk>" "Tom Hinton <t@larkery.com>"))
+  (notmuch-draft-folders
+   '(("tom\\.hinton@cse\\.org\\.uk" . "cse/Drafts")
+     ("larkery\\.com" . "fastmail/Drafts")))
+
+  (notmuch-address-selection-function
+   (lambda
+     (prompt collection initial-input)
+     (completing-read prompt collection nil nil nil
+                      (quote notmuch-address-history))))
+  
   :config
   (require 'org-mime)
   (defun open-url-at-point (prefix)
@@ -234,63 +293,6 @@
       (apply o args)))
 
   (advice-add 'notmuch :around 'in-home-directory)
-  
-  (setq notmuch-multipart/alternative-discouraged '("text/plain") ;; prefer html?
-
-        notmuch-saved-searches
-        '((:name "inbox" :query "tag:inbox or tag:flagged" :key "i")
-          (:name "unread" :query "tag:unread" :key "u")
-          (:name "drafts" :query "tag:draft" :key "d")
-          (:name "sent" :query "tag:sent" :key "s")
-          (:name "NHM" :query "from:nhm.support@cse.org.uk" :key "N")
-          )
-
-        notmuch-tag-formats
-        '(("unread" (propertize "•" 'face 'notmuch-tag-unread))
-          ("flagged" (propertize tag 'face 'notmuch-tag-flagged)
-           (notmuch-tag-format-image-data tag (notmuch-tag-star-icon)))
-          ("low-importance" (propertize "_" 'face 'shadow))
-          ("high-importance" (propertize "^" 'face 'error))
-          ("normal-importance")
-          ("medium-importance")
-
-          ("home")
-          ("work")
-          ("sent")
-          ("replied" "→")
-          ("attachment" "@")
-          ("inbox" "%")
-
-          )
-
-        notmuch-search-line-faces
-        '(("unread" . notmuch-search-unread-face)
-          ("deleted" . (:strike-through "red"))
-          ("flagged" . notmuch-search-flagged-face)
-          )
-        
-        notmuch-search-result-format
-        '(("date" . "%12s  ")
-          ("count" . "%-7s ")
-          ("authors" . "%-20s ")
-          ("subject" . "%s ")
-          ("tags" . "%s"))
-        
-        notmuch-search-oldest-first nil
-	notmuch-fcc-dirs
-	'(("tom\\.hinton@cse\\.org\\.uk" . "\"cse/Sent Items\" +sent -inbox")
-	  ("larkery\\.com" . "\"fastmail/Sent Items\" +sent -inbox"))
-	notmuch-identities
-	'("Tom Hinton <tom.hinton@cse.org.uk>" "Tom Hinton <t@larkery.com>")
-        notmuch-draft-folders
-        '(("tom\\.hinton@cse\\.org\\.uk" . "cse/Drafts")
-	  ("larkery\\.com" . "fastmail/Drafts"))
-
-        notmuch-address-selection-function
-        (lambda
-          (prompt collection initial-input)
-          (completing-read prompt collection nil nil nil
-                           (quote notmuch-address-history))))
 
   (defun notmuch-search-buffer-title (query)
     "Returns the title for a buffer with notmuch search results."
@@ -367,10 +369,10 @@
 
   (defun notmuch-show-skip-to-unread ()
     (interactive)
-     (while (and (not (member "unread" (notmuch-show-get-tags)))
-                 (notmuch-show-goto-message-next)))
-     (notmuch-show-message-visible (notmuch-show-get-message-properties) t)
-     (recenter-top-bottom 0))
+    (while (and (not (member "unread" (notmuch-show-get-tags)))
+                (notmuch-show-goto-message-next)))
+    (notmuch-show-message-visible (notmuch-show-get-message-properties) t)
+    (recenter-top-bottom 0))
 
   (bind-key "u" 'notmuch-show-skip-to-unread 'notmuch-show-mode-map)
 
@@ -464,6 +466,26 @@
 
 (use-package message
   :defer t
+  :custom
+  (mml-enable-flowed nil)
+  (message-send-mail-function 'message-send-mail-with-sendmail)
+  (message-sendmail-envelope-from 'header)
+  (message-fill-column nil)
+  (mm-coding-system-priorities '(utf-8))
+  (mm-inline-override-types '("image/tiff"))
+  (mm-inline-large-images 'resize)
+  (mm-inline-large-images-proportion 0.9)
+  (mm-inline-text-html-with-images t)
+  (sendmail-program "msmtpq-quiet")
+  (user-mail-address "tom.hinton@cse.org.uk")
+  (message-auto-save-directory nil)
+  (message-interactive nil)
+  (message-kill-buffer-on-exit t)
+  (message-default-charset 'utf-8)
+  (user-full-name "Tom Hinton")
+  (message-signature 'message-signature-select-by-from)
+  (message-citation-line-function 'message-insert-formatted-citation-line)
+  (message-yank-empty-prefix "")
   :config
 
   (defvar message-signatures-alist
@@ -492,28 +514,7 @@
 
   (advice-add 'mml-attach-file :around 'message-attach-at-end)
   
-  (setq
-   mml-enable-flowed nil
-   message-send-mail-function 'message-send-mail-with-sendmail
-   message-sendmail-envelope-from 'header
-   message-fill-column nil
-   mm-coding-system-priorities '(utf-8)
-   mm-inline-override-types '("image/tiff")
-   mm-inline-large-images 'resize
-   mm-inline-large-images-proportion 0.9
-   mm-inline-text-html-with-images t
-   sendmail-program "msmtpq-quiet"
-   user-mail-address "tom.hinton@cse.org.uk"
-   message-auto-save-directory nil
-   message-interactive nil
-   message-kill-buffer-on-exit t
-   message-default-charset 'utf-8
-   user-full-name "Tom Hinton"
-   message-signature 'message-signature-select-by-from
-   
-   message-citation-line-function 'message-insert-formatted-citation-line
-
-   message-yank-empty-prefix ""))
+  )
 
 (use-package mailcap
   :defer t
@@ -526,9 +527,10 @@
 
 (use-package shr
   :defer t
+  :custom
+  (shr-color-visible-luminance-min 75)
+  (shr-use-fonts nil)
   :config
-  (setq shr-color-visible-luminance-min 75
-        shr-use-fonts nil)
 
   (defun shr-colorise-region-ignore-bg
       (shr-colorise-region start end fg &optional bg)
@@ -554,9 +556,11 @@
   :defer t
   :ensure t
   :commands bbdb
+  :custom
+  (bbdb-file "~/notes/bbdb")
+  (bbdb-default-country nil)
   :config
-  (setq bbdb-file "~/notes/bbdb"
-        bbdb-default-country nil)
+  
   (defun bbdb-use-completing-read-default ()
     (setq-local completing-read-function 'completing-read-default))
   
