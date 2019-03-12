@@ -250,14 +250,14 @@
       (browse-url the-url)))
 
   (defun notmuch-avoid-tag (query)
-    (let ((bad-tag (if (member (system-name) '("limiting-factor"))
-                       "tag:home"
-                     "tag:work")))
+    (let ((req-tag (if (member (system-name) '("limiting-factor"))
+                       "tag:work"
+                     "tag:home")))
       (unless (and
                (not (eq this-command 'notmuch-search))
                query
-               (string-match-p bad-tag query))
-        (concat "not " bad-tag " and "))))
+               (string-match-p req-tag query))
+        (concat req-tag " and "))))
   
   (defvar counsel-notmuch-history nil)
 
