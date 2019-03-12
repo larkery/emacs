@@ -168,6 +168,7 @@
    ("d" . notmuch-search-delete)
    ("g" . notmuch-refresh-this-buffer)
    ("@" . notmuch-search-person)
+   ("z" . notmuch-tree-from-search-thread)
    :map notmuch-message-mode-map
    ("C-c f" . notmuch-switch-identity)
    :map notmuch-show-mode-map
