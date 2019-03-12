@@ -102,22 +102,24 @@
     (org-mime-maybe-htmlize)
     (notmuch-mua-send-and-exit))
 
-  
-  (defun org-mime-pre-quotify ()
-    ;; TODO strip out the arrows
-    ;; TODO make this run when I do stuff
-    ;; TODO add nice styles to blockquotes
+  (defun org-mime-pre-quotify (&rest _)
     (save-excursion
       (goto-char (point-min))
       (let ((qdepth 0)
             (qdepth* 0)
-            last-qlstart)
+            (last-qlstart (make-marker)))
+        (set-marker-insertion-type last-qlstart t)
         (while (not (eobp))
           (cond
            ((looking-at "^ *>+")
-            (setq qdepth* (progn (search-forward-regexp "^ *(>+)" nil t)
-                                 (length (match-string 0)))
-                  last-qlstart (point)))
+            (setq qdepth*
+                  (progn (search-forward-regexp "^ *\\(>+\\)\s-?" nil t)
+                         (length (match-string 1))))
+            
+            (goto-char (match-beginning 0))
+            (set-marker last-qlstart (point))
+            (delete-forward-char (- (match-end 0) (point)))
+            (when (looking-at "^\\*") (insert " ")))
            
            ((looking-at "^\\s-*$")
             (setq qdepth* qdepth))
@@ -140,19 +142,22 @@
         (when (and (> qdepth 0)
                    (not (looking-at "^$")))
           (insert "\n"))
-        (save-excursion
-          (goto-char last-qlstart)
-          (forward-line)
-          (dotimes (_ qdepth)
-            (insert "#+END_QUOTE\n")))
+        (when last-qlstart
+          (save-excursion
+            (goto-char last-qlstart)
+            (forward-line)
+            (dotimes (_ qdepth)
+              (insert "#+END_QUOTE\n")))
+          (set-marker last-qlstart nil))
         )))
 
-  
-  
-  )
+  (defun org-mime-style-blockquote ()
+    (org-mime-change-element-style
+     "blockquote"
+     "margin:0 0 0 .8ex;border-left:1px orange solid;padding-left:1ex"))
 
-
-
+  (advice-add 'org-mime-htmlize :before 'org-mime-pre-quotify)
+  (add-hook 'org-mime-html-hook 'org-mime-style-blockquote))
 
 (use-package notmuch
   :commands notmuch

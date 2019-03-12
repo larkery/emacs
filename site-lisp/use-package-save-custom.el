@@ -1,19 +1,9 @@
-;; this fails because autoloading does not require but does provide.
-;; I could advise provide, but a feature can be in many files.
-;; there is package-alist instead
-;; this says path -> package
+;; this fails because autoloading does not require but does provide. I
+;; could advise provide, but a feature can be in many files. it looks
+;; like basically only regexes can work, and there is no easy way to
+;; otherwise associate a custom variable with a package.
 
 (require 'cl)
-
-(defun defcustom-record-load-file (symbol &rest args)
-  ;; (let ((a nil))
-  ;;   (mapbacktrace (lambda (evald func args flags) (push func a)))
-  ;;   (message "%s %s" symbol a))
-
-  ;; (push (cons symbol load-file-name) defcustom-load-file)
-  )
-
-(advice-add 'custom-declare-variable :before #'defcustom-record-load-file)
 
 (defvar use-package-locations nil)
 
@@ -23,6 +13,8 @@
 (advice-add 'use-package :before 'use-package-record-location)
 
 (defun use-package-format-custom-for (symbols &optional quoted)
+  "Given a list of `SYMBOLS', output `custom-set-variables' stuff for them.
+If `QUOTED' quote each thing, else don't"
   (with-temp-buffer
     (let ((standard-output (current-buffer)))
       (dolist (symbol symbols)
@@ -43,17 +35,6 @@
           (when (or (and spec (eq (car spec) 'user))
 		    comment
 		    (and (null spec) (get symbol 'saved-value)))
-	    ;; Output an element for this variable.
-	    ;; It has the form (SYMBOL VALUE-FORM NOW REQUESTS COMMENT).
-	    ;; SYMBOL is the variable name.
-	    ;; VALUE-FORM is an expression to return the customized value.
-	    ;; NOW if non-nil means always set the variable immediately
-	    ;; when the customizations are reloaded.  This is used
-	    ;; for rogue variables
-	    ;; REQUESTS is a list of packages to load before setting the
-	    ;; variable.  Each element of it will be passed to `require'.
-	    ;; COMMENT is whatever comment the user has specified
-	    ;; with the customize facility.
 	    (unless (bolp)
 	      (princ "\n"))
 	    (if quoted
@@ -97,74 +78,62 @@ statement, write a :custom for it."
       (goto-char (point-min))
       (forward-sexp)
       (backward-char)
-      (insert ":custom\n"))
-    (insert custom-block)))
-
-;; (defun use-package-package-for-custom-variable (symbol)
-;;   (let ((file (alist-get symbol custom-load-file)))
-;;     (when file
-;;       (cl-loop
-;;        for package in package-alist
-;;        ;; so we can ask for the install directory of a package
-;;        ;; but built-in packages have no install directory
-;;        ;; so this also doesn't cut it. ARGH
-;;        unless (package-)
-;;        )
-;;       )
-;;     )
-;;   )
-
+      (insert "\n:custom\n"))
+    (insert custom-block))
+  (indent-region (point-min) (point-max)))
 
 (defun use-package-save-custom ()
   (interactive)
-  (let ((saved-list (make-list 0 1))
-        (remaining-list (make-list 0 1)))
+  (let ((package-symbols (make-list 0 1))
+        (other-symbols (make-list 0 1))
+
+        (prefix-match
+         (rx-to-string `(: bos (|
+                                ,@(cl-loop
+                                   for p in use-package-locations
+                                   collect (symbol-name (car p))))))))
     (mapatoms
      (lambda (symbol)
        (when (and (get symbol 'saved-value)
 	          ;; ignore theme values
 	          (or (null (get symbol 'theme-value))
 		      (eq 'user (caar (get symbol 'theme-value)))))
-         (let* ((symbol-feature (alist-get symbol feature-by-custom-variable))
-                (feature-symbols (alist-get symbol-feature saved-list)))
-           (if feature-symbols
-               (push symbol (cdr feature-symbols))
-             (push (list symbol-feature symbol) saved-list))))))
-    ;; now we have symbols to save grouped by feature they are sort of inside.
+         (let* ((sn (symbol-name symbol))
+                (matches (string-match prefix-match sn)))
+           (if matches
+               (let* ((package (intern (match-string 0 sn)))
+                      (this-package-symbols (alist-get package package-symbols)))
+                 (if this-package-symbols
+                     (push symbol (cdr this-package-symbols))
+                   (push (list package symbol) package-symbols)))
+             (push symbol other-symbols))))))
     
-    (dolist (feature-symbols saved-list)
-      (let* ((feature (car feature-symbols))
-             (symbols (cdr feature-symbols))
-             (init-file (alist-get feature use-package-locations))
-             ;; if we didn't get an init-file this way, can we find
-             ;; one with a prefix?
-             (init-file (or init-file
-                            (and feature
-                                 (cl-loop
-                                  for cell in use-package-locations
-                                  until (string-match-p
-                                         (concat"^" (regexp-quote (symbol-name (car cell))))
-                                         (symbol-name feature))
-                                  return (cdr cell))))))
-        (message "init file for %s: %s" feature init-file)
-        (unless (and init-file
-                     (with-current-buffer (find-file-noselect init-file t)
-                       (when (search-forward-regexp
-                              (concat "(use-package[[:blank:]]+" (regexp-quote (symbol-name feature)))
-                              nil t)
-                         (save-restriction
-                           (narrow-to-defun)
-                           (goto-char (point-min))
-                           (use-package-save-custom-for symbols)
-                           t))))
-          ;; this is the fallback for symbols that didn't have a place to go
-          (setq remaining-list (nconc remaining-list symbols)))))
+    ;; now we have symbols to save grouped by package they are sort of inside.
+    
+    (dolist (this-package-symbols package-symbols)
+      (let* ((package (car this-package-symbols))
+             (symbols (cdr this-package-symbols))
+             (init-file (alist-get package use-package-locations)))
+        (message "init file for %s: %s" package init-file)
+        (when init-file
+          (with-current-buffer (find-file-noselect init-file t)
+            (when (search-forward-regexp
+                   (concat "(use-package[[:blank:]]+" (regexp-quote (symbol-name package)))
+                   nil t)
+              (save-restriction
+                (narrow-to-defun)
+                (goto-char (point-min))
+                (use-package-save-custom-for symbols)))))))
+    
     (with-current-buffer (find-file-noselect custom-file t)
-      (erase-buffer)
-      (insert "(custom-set-variables\n")
-      (insert (use-package-format-custom-for remaining-list t))
-      (insert ")")
-      )
-    ))
+      (save-restriction
+        (goto-char (point-min))
+        (if (search-forward "(custom-set-variables")
+            (progn (narrow-to-defun)
+                   (delete-region (point-min) (point-max)))
+          (goto-char (point-max)))
+        (insert "(custom-set-variables\n")
+        (insert (use-package-format-custom-for other-symbols t))
+        (insert ")\n")))))
 
 (provide 'use-package-save-custom)

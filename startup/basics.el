@@ -148,7 +148,7 @@
 
 (use-package uniquify
   :custom
-  (uniquify-buffer-name-style 'forward))
+  (uniquify-buffer-name-style (quote forward) nil (uniquify)))
 
 (use-package paren
   :config
@@ -238,7 +238,6 @@
   :config
   (setq savehist-file
         (concat user-emacs-directory "savehist")
-        
         savehist-additional-variables
         '(kill-ring))
   (savehist-mode t))
@@ -246,7 +245,9 @@
 (use-package calendar
   :defer t
   :config
-  (add-hook 'calendar-today-visible-hook 'calendar-mark-today))
+  (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
+  :custom
+  (calendar-date-style (quote european)))
 
 (defun update-dbus-session-bus-address ()
   (interactive)

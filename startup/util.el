@@ -223,14 +223,15 @@
   (setq rcirc-server-alist
         '(("irc.freenode.net" :nick "tomhinton" :channels ("#cse-bristol")
            :encryption tls :server-alias "freenode" :port 6697
-           ))))
+           )))
+  :custom
+  (rcirc-track-minor-mode t))
 
 (use-package auth-source-pass
   :ensure t
   :after auth-source
   :config
-  (auth-source-pass-enable)
-  )
+  (auth-source-pass-enable))
 
 (use-package god-mode
   :ensure t
