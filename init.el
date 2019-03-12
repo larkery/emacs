@@ -1,13 +1,14 @@
+(setq messages-buffer-max-lines 100000)
+(add-to-list 'load-path (concat user-emacs-directory "site-lisp/"))
+(require 'use-package-save-custom)
 (setq gc-cons-threshold 16000000)
 
 (setq gc-cons-threshold (* 100 gc-cons-threshold)
       make-backup-files nil
       custom-file (concat user-emacs-directory "custom.el"))
 
-(add-to-list 'load-path (concat user-emacs-directory "site-lisp/"))
 (load custom-file)
 
-(require 'use-package-save-custom)
 (require 'package)
 
 (setq package-enable-at-startup nil)

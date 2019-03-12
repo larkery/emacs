@@ -128,10 +128,11 @@
   (run-with-idle-timer 600 t 'recentf-save-list)
 
   :custom
-  (recentf-auto-cleanup 300)
+  (recentf-exclude
+   (quote
+   ("^/home/hinton/notes/" "^/nix/store" recentf-exclude-deleted-local-files)))
   (recentf-max-saved-items 100)
-  (recentf-exclude '("^/home/hinton/notes/" "^/nix/store"
-                     recentf-exclude-deleted-local-files)))
+  (recentf-auto-cleanup 300))
 
 (use-package counsel
   :diminish
@@ -296,7 +297,3 @@
 
 (use-package buffer-table
   :bind ("C-x C-b" . buffer-table))
-
-;; this is here to store custom settings
-;; that aren't in another package.
-(use-package custom)
