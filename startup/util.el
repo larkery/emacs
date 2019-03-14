@@ -108,10 +108,11 @@
   :demand t
   :custom
   (projectile-keymap-prefix (kbd "C-c p"))
-  (projectile-global-mode 1)
   (projectile-completion-system 'ivy)
   (projectile-switch-project-action 'projectile-dired)
   :config
+  (projectile-global-mode 1)
+  (setq projectile-keymap-prefix (kbd "C-c p"))
   (bind-keys
    :map projectile-mode-map
    ("C-c p s s" . counsel-ag)

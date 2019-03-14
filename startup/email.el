@@ -142,7 +142,7 @@
         (when (and (> qdepth 0)
                    (not (looking-at "^$")))
           (insert "\n"))
-        (when last-qlstart
+        (when (and last-qlstart (> qdepth 0))
           (save-excursion
             (goto-char last-qlstart)
             (forward-line)
@@ -169,11 +169,14 @@
    ("g" . notmuch-refresh-this-buffer)
    ("@" . notmuch-search-person)
    ("z" . notmuch-tree-from-search-thread)
+   ("RET" . notmuch-search-show-or-tree)
    :map notmuch-message-mode-map
    ("C-c f" . notmuch-switch-identity)
    :map notmuch-show-mode-map
    ("C-o" . open-url-at-point)
-   ("d" . notmuch-show-delete))
+   ("d" . notmuch-show-delete)
+   :map notmuch-tree-mode-map
+   ("q" . notmuch-tree-quit-harder))
   :custom
   (notmuch-multipart/alternative-discouraged '("text/plain")) ;; prefer html?
 
@@ -234,6 +237,21 @@
   
   :config
   (require 'org-mime)
+
+  (defun notmuch-search-show-or-tree ()
+    (interactive)
+    (let* ((thread-id (notmuch-search-find-thread-id))
+           (messages (notmuch-query-get-message-ids thread-id)))
+      (if (> (length messages) 5)
+          (notmuch-tree-from-search-thread)
+        (notmuch-search-show-thread))))
+
+  (defun notmuch-tree-quit-harder ()
+    (interactive)
+    (notmuch-tree-close-message-window)
+    (kill-buffer (current-buffer)))
+  
+  
   (defun open-url-at-point (prefix)
     (interactive "P")
     (let* ((shr-url (get-text-property (point) 'shr-url))

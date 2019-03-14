@@ -1,6 +1,8 @@
 (require 'tabulated-list)
 (require 'projectile)
 
+(defvar buffer-table-group-col 2)
+
 (defvar buffer-table-filters nil)
 (make-variable-buffer-local 'buffer-table-filters)
 
@@ -22,8 +24,9 @@
 (define-derived-mode buffer-table-mode tabulated-list-mode "Buffer Table"
   "Major mode for listing buffers"
   (setq tabulated-list-format
-        `[("Name" 25 buffer-table-sort-filename)
-          ("Group" 14 (lambda (a b) (buffer-table-sort-other 1 a b)))
+        `[("%" 2 t)
+          ("Name" 25 buffer-table-sort-filename)
+          ("Group" 14 (lambda (a b) (buffer-table-sort-other buffer-table-group-col a b)))
           ("Mode" 12 t)
           ("Filename" 0 t)]
         tabulated-list-padding 2
@@ -36,10 +39,10 @@
          (name-b (car b))
          (name-a (progn (string-match (rx bos (? (: (+ any) "/"))  (group (+ any)))
                                       name-a)
-                        (match-string 1 name-a)))
+                        (match-string buffer-table-group-col name-a)))
          (name-b (progn (string-match (rx bos (? (: (+ any) "/")) (group (+ any)))
                                       name-b)
-                        (match-string 1 name-b))))
+                        (match-string buffer-table-group-col name-b))))
     (string< name-a name-b)))
 
 (defun buffer-table-sort-other (n b a)
@@ -91,7 +94,7 @@
                                             '(notmuch-show-mode
                                               notmuch-search-mode
                                               notmuch-message-mode))
-                                      "email")
+                                      "mail")
 
                                      ((memq major-mode
                                             '(rcirc-mode)
@@ -105,7 +108,11 @@
                                   (substring buf-path (length (expand-file-name proj-root)))
                                 (or buf-path ""))))
                         (list buf-name
-                              `[,(propertize buf-name
+                              `[,(cond
+                                  ((buffer-modified-p) "%")
+                                  (t ""))
+                                
+                                ,(propertize buf-name
                                              'face
                                              (cond
                                               (buffer-file-name 'bold)
@@ -129,7 +136,7 @@
       (while (not (string= (tabulated-list-get-id)
                            from))
         (forward-line))
-      (hl-line-mode 1))
+      (hl-line-mode buffer-table-group-col))
     (switch-to-buffer buf)))
 
 (defun buffer-table-switch-to-buffer ()
@@ -150,23 +157,92 @@
             (tabulated-list-put-tag tag t))))
     (tabulated-list-put-tag tag next-line)))
 
+(defun tabulated-list-put-tag-all (tag)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (tabulated-list-put-tag tag t))))
+
+(defun tabulated-list-put-tag-similar (group tag)
+  (let ((this-group (elt (tabulated-list-get-entry) buffer-table-group-col)))
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (if (string= (elt (tabulated-list-get-entry) buffer-table-group-col) this-group)
+            (tabulated-list-put-tag tag t)
+          (forward-line))))))
+
+(defun buffer-table-mark-kill ()
+  (interactive)
+  (tabulated-list-put-tag-region "d" t))
+
+(defun buffer-table-mark-save ()
+  (interactive)
+  (tabulated-list-put-tag-region "s" t))
+
 (define-key buffer-table-mode-map
-  (kbd "d")
-  (lambda () (interactive)
-    (tabulated-list-put-tag-region "d" t)))
+  (kbd "d") 'buffer-table-mark-kill)
+
+(define-key buffer-table-mode-map
+  (kbd "s") 'buffer-table-mark-save)
+
+(defun buffer-table-kill-group ()
+  (interactive)
+  (tabulated-list-put-tag-similar buffer-table-group-col "d"))
+
+(defun buffer-table-save-group ()
+  (interactive)
+  (tabulated-list-put-tag-similar buffer-table-group-col "s"))
+
+(define-key buffer-table-mode-map
+  (kbd "D g")
+  'buffer-table-kill-group)
+
+(define-key buffer-table-mode-map
+  (kbd "S g")
+  'buffer-table-save-group)
+
+(defun buffer-table-kill-mode ()
+  (interactive)
+  (tabulated-list-put-tag-similar 2 "d"))
+
+(define-key buffer-table-mode-map
+  (kbd "D m")
+  'buffer-table-kill-mode)
+
+(defun buffer-table-unmark-all ()
+  (interactive)
+  (tabulated-list-put-tag-all ""))
+
+(define-key buffer-table-mode-map
+  (kbd "U")
+  'buffer-table-unmark-all)
+
+(defun buffer-table-unmark ()
+  (interactive)
+  (tabulated-list-put-tag "" t))
+
+(define-key buffer-table-mode-map
+  (kbd "u") 'buffer-table-unmark)
 
 (defun buffer-table-execute ()
   (interactive)
-  (let ((delete-buffers nil))
+  (let ((delete-buffers nil)
+        (save   -buffers nil))
     (save-excursion
       (goto-char (point-min))
       (while (not (eobp))
         (case (char-after)
           (?d (push (get-buffer (tabulated-list-get-id))
-                    delete-buffers)))
+                    delete-buffers))
+          (?s (push (get-buffer (tabulated-list-get-id))
+                    save-buffers)))
         (forward-line)))
     (dolist (b delete-buffers)
-      (kill-buffer b)))
+      (kill-buffer b))
+    
+    (dolist (b save-buffers)
+      (with-current-buffer b (save-buffer))))
   
   (tabulated-list-revert))
 
@@ -174,24 +250,33 @@
   (kbd "x")
   'buffer-table-execute)
 
+(defun buffer-table-sort-by-group ()
+  (interactive) (tabulated-list-sort buffer-table-group-col))
+
 (define-key buffer-table-mode-map
-  (kbd "s g")
-  (lambda () (interactive) (tabulated-list-sort 1)))
+  (kbd "o g")
+  'buffer-table-sort-by-group)
 
 (defun buffer-table-filter-like-this (n)
   (buffer-table-add-filter
    n (concat "^" (regexp-quote (elt (tabulated-list-get-entry) n)) "$")))
 
+(defun buffer-table-filter-group ()
+  (interactive)
+  (buffer-table-filter-like-this buffer-table-group-col)
+  (tabulated-list-revert))
+
 (define-key buffer-table-mode-map
   (kbd "= g")
-  (lambda () (interactive)
-    (buffer-table-filter-like-this 1)
-    (tabulated-list-revert)))
+  'buffer-table-filter-group)
+
+(defun buffer-table-un-filter ()
+  (interactive)
+  (setq buffer-table-filters nil)
+  (tabulated-list-revert))
 
 (define-key buffer-table-mode-map
   (kbd "= =")
-  (lambda () (interactive)
-    (setq buffer-table-filters nil)
-    (tabulated-list-revert)))
+  'buffer-table-un-filter)
 
 (provide 'buffer-table)
