@@ -43,7 +43,7 @@
         ("C-c C-c" . maybe-htmlize-send-and-exit))
   :custom
   (org-mime-default-header
-   "#+OPTIONS: latex:t toc:nil H:3 ^:{}
+   "#+OPTIONS: latex:t toc:nil H:3 ^:{} broken-links:t
 ")
   (org-mime-beautify-quoted-mail nil)
   :config
@@ -237,6 +237,7 @@
   
   :config
   (require 'org-mime)
+  (require 'notmuch-fancy-html)
 
   (defun notmuch-search-show-or-tree ()
     (interactive)
@@ -251,7 +252,6 @@
     (notmuch-tree-close-message-window)
     (kill-buffer (current-buffer)))
   
-  
   (defun open-url-at-point (prefix)
     (interactive "P")
     (let* ((shr-url (get-text-property (point) 'shr-url))
@@ -262,7 +262,6 @@
            
            (the-url (if prefix
                         (progn
-                          (message "%s" the-url)
                           (string-match "\\(.*\\)[\\/]" the-url)
                           (match-string 1 the-url))
                       the-url)))
@@ -373,23 +372,6 @@
   
   (advice-add 'notmuch-show-insert-bodypart :around #'notmuch-expand-calendar-parts)
 
-  (defun replace-notmuch-insert-part-text/html (msg part content-type nth depth button)
-    (let* ((shr-blocked-images notmuch-show-text/html-blocked-images)
-           (shr-width (- (window-width) 1 (* depth notmuch-show-indent-messages-width)))
-           (start (if button (button-start button) (point)))
-           (result (notmuch-show--insert-part-text/html-shr msg part))
-           )
-      (save-excursion
-        (save-restriction
-          (narrow-to-region start (point-max))
-          (delete-trailing-whitespace (point-min) (point-max))
-          (goto-char (point-min))
-          (notmuch-wash-excerpt-citations msg depth)
-          ))
-      result))
-  
-  (advice-add 'notmuch-show-insert-part-text/html
-              :override 'replace-notmuch-insert-part-text/html)
 
   (defun notmuch-show-skip-to-unread ()
     (interactive)
@@ -422,10 +404,6 @@
                               )
                              (to (apply #'nconc to))
                              (case-fold-search t))
-                        (message "guess sender in %s with %s"
-                                 notmuch-reply-sender-regexes
-                                 to
-                                 )
                         ;; TODO check notmuch filing rules as well?
                         (cl-loop for a in to
                                  thereis
@@ -523,7 +501,6 @@
           result
           (choices message-signatures-alist))
       (while (and (not result) choices)
-        (message "%s %s" (caar choices) (cdar choices))
         (when (string-match-p (caar choices) from)
           (setq result (cdar choices)))
         (setq choices (cdr choices)))
