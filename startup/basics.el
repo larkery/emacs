@@ -284,17 +284,5 @@
   :config
   (mode-line-bell-mode 1))
 
-(defun change-buffer-display-window ()
-  (interactive)
-  (let* ((the-windows (window-list))
-         (this-window (selected-window))
-         (this-buffer (window-buffer))
-         (next-win (next-window this-window)))
-    (set-window-buffer next-win this-buffer)
-    (switch-to-prev-buffer this-window)
-    (select-window next-win)))
-
-(bind-key "M-O" 'change-buffer-display-window)
-
 (use-package buffer-table
   :bind ("C-x C-b" . buffer-table))
