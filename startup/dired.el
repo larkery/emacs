@@ -41,7 +41,7 @@
   (dired-subtree-line-prefix-face 'subtree)
   :config
 
-  (defun dired-subtree-indent-arrow-prefix (d)
+  (defun dired-subtree-indented-arrow-prefix (d)
       (concat (make-string (* 3 d) ? )
               (propertize ">" 'face (intern (concat "outline-" (number-to-string (mod d 9)))))))
     
@@ -169,26 +169,31 @@
   :bind (:map dired-mode-map
               ("r" . dired-rsync)))
 
-(defun dired-here-please ()
-  (interactive)
-  (if (eq major-mode 'dired-mode) (quit-window)
-    (let* ((projectile-require-project-root nil)
-           (file (or (buffer-file-name) default-directory))
-           (pr (projectile-project-root))
-           (here (if (file-directory-p file) file (file-name-directory file)))
-           (there (or pr (if (file-directory-p here)
-                             here
-                           (file-name-directory here))))
-           (dired-buffer (save-window-excursion (dired there))))
-      (pop-to-buffer dired-buffer)
-      (dolist (dir
-               (cl-loop until (string= here there)
-                        collect here
-                        do (setq here (file-name-directory (directory-file-name here)))))
-        (dired-maybe-insert-subdir dir))
-      (dired-goto-file file))))
+;; (defun dired-here-please ()
+;;   (interactive)
+;;   (if (eq major-mode 'dired-mode) (quit-window)
+;;     (let* ((projectile-require-project-root nil)
+;;            (file (or (buffer-file-name) default-directory))
+;;            (pr (projectile-project-root))
+;;            (here (if (file-directory-p file) file (file-name-directory file)))
+;;            (there (or pr (if (file-directory-p here)
+;;                              here
+;;                            (file-name-directory here))))
+;;            (dired-buffer (save-window-excursion (dired there))))
+;;       (pop-to-buffer dired-buffer)
+;;       (dolist (dir
+;;                (cl-loop until (string= here there)
+;;                         collect here
+;;                         do (setq here (file-name-directory (directory-file-name here)))))
+;;         (dired-maybe-insert-subdir dir))
+;;       (dired-goto-file file))))
 
-(bind-key "<f7>" 'dired-here-please)
+
+;; (bind-key "<f7>" 'dired-here-please)
+
+
+(use-package dired-sidebar
+  :bind ("<f7>" . dired-sidebar-toggle-sidebar))
 
 (use-package all-the-icons-dired
   :ensure t
