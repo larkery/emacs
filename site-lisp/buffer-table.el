@@ -228,7 +228,7 @@
 (defun buffer-table-execute ()
   (interactive)
   (let ((delete-buffers nil)
-        (save   -buffers nil))
+        (save-buffers nil))
     (save-excursion
       (goto-char (point-min))
       (while (not (eobp))

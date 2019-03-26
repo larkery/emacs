@@ -30,8 +30,8 @@
               ("C-(" . sp-wrap-with-paren) ;; barf/slurp
               ("C-\"" . sp-forward-slurp-sexp)
               ("C-)" . sp-forward-barf-sexp)
-              ("C-~" . sp-convolute-sexp)
-              ("C-&" . sp-rewrap-cycle)
+              ("C-&" . sp-convolute-sexp)
+              ("C-~" . sp-rewrap-cycle)
               ("C-|" . sp-split-sexp) ;; misc
               ("C-M-;" . sp-comment-or-uncomment-sexp)
               ("C-#" . sp-reindent-toplevel)
@@ -78,9 +78,9 @@
     (comment-or-uncomment-region
      (point)
      (save-mark-and-excursion
-      (sp-forward-sexp)
-      (unless (looking-at ".") (insert "\n"))
-      (point))))
+       (sp-forward-sexp)
+       (unless (looking-at ".") (insert "\n"))
+       (point))))
   
   (require 'smartparens-config)
   (setq-default sp-autoskip-closing-pair 'always-end))

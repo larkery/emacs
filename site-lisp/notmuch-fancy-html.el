@@ -11,22 +11,40 @@
 (defun notmuch-fancy-html-insert-part-text/html (msg part content-type nth depth button)
   (if notmuch-fancy-html-is-replying
       (when (string= content-type "text/html")
-        (insert "#+BEGIN_QUOTE\n")
-        ;; this leaves in invalid cid: links which we should kill
         (save-restriction
           (narrow-to-region (point) (point))
-          (insert (notmuch-get-bodypart-text msg part t))
-          (call-process-region
-           (point-min) (point-max)
-           "pandoc"
-           t t
-           nil
-           "-f" "html" "-t" "org"))
-        (insert "#+END_QUOTE\n")
-        (goto-char (point-min))
-        (replace-string "#+BEGIN_QUOTE" "#+HTML: <blockquote>")
-        (goto-char (point-min))
-        (replace-string "#+END_QUOTE" "#+HTML: </blockquote>")
+          (insert "#+BEGIN_QUOTE\n")
+          (save-restriction
+            (narrow-to-region (point) (point))
+            (insert (notmuch-get-bodypart-text msg part t))
+            (call-process-region
+             (point-min) (point-max)
+             "pandoc"
+             t t
+             nil
+             "-f" "html" "-t" "org" "--wrap=none"))
+          (insert "#+END_QUOTE\n")
+          ;; (goto-char (point-min))
+
+          ;; (let ((qd -1))
+          ;;   (while (not (eobp))
+          ;;     (cond
+          ;;      ((looking-at (rx bol "#+BEGIN_QUOTE"))
+          ;;       (setq qd (+ qd 1))
+          ;;       (kill-line 1))
+          ;;      ((looking-at (rx bol "#+END_QUOTE"))
+          ;;       (setq qd (- qd 1))
+          ;;       (kill-line 1))
+          ;;      ((>= qd 0)
+          ;;       (insert (make-string qd ?>) " ")))
+          
+          ;;     (forward-line)))
+
+          (goto-char (point-min))
+          (replace-string "#+BEGIN_QUOTE" "#+HTML: <blockquote>")
+          (goto-char (point-min))
+          (replace-string "#+END_QUOTE" "#+HTML: </blockquote>")
+          (delete-trailing-whitespace (point-min) (point-max)))
         t)
     (let* ((shr-blocked-images notmuch-show-text/html-blocked-images)
            (shr-width (- (window-width) 1 (* depth notmuch-show-indent-messages-width)))

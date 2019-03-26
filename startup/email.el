@@ -113,7 +113,7 @@
           (cond
            ((looking-at "^ *>+")
             (setq qdepth*
-                  (progn (search-forward-regexp "^ *\\(>+\\)\s-?" nil t)
+                  (progn (search-forward-regexp "^ *\\(>+\\)\\s-*" nil t)
                          (length (match-string 1))))
             
             (goto-char (match-beginning 0))
@@ -129,13 +129,13 @@
           (cond
            ((> qdepth* qdepth)
             (dotimes (_ (- qdepth* qdepth))
-              (insert "#+BEGIN_QUOTE\n")))
+              (insert "#+HTML: <blockquote>\n")))
            ((< qdepth* qdepth)
             (save-excursion
               (goto-char last-qlstart)
               (forward-line)
               (dotimes (_ (- qdepth qdepth*))
-                (insert "#+END_QUOTE\n")))))
+                (insert "#+HTML: </blockquote>\n")))))
           
           (setq qdepth qdepth*)
           (forward-line))
@@ -154,7 +154,7 @@
   (defun org-mime-style-blockquote ()
     (org-mime-change-element-style
      "blockquote"
-     "margin:0 0 0 .8ex;border-left:1px orange solid;padding-left:1ex"))
+     "margin:0 0 0 .8ex;border-left:3px #ccc solid;padding-left:1ex"))
 
   (advice-add 'org-mime-htmlize :before 'org-mime-pre-quotify)
   (add-hook 'org-mime-html-hook 'org-mime-style-blockquote))
