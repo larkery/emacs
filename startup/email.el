@@ -159,11 +159,20 @@
   (advice-add 'org-mime-htmlize :before 'org-mime-pre-quotify)
   (add-hook 'org-mime-html-hook 'org-mime-style-blockquote))
 
+(use-package notmuch-attachment-list
+  :bind (:map notmuch-search-mode-map
+         ("A" . notmuch-list-attachments)
+         :map notmuch-show-mode-map
+         ("A" . notmuch-list-attachments)
+         :map notmuch-tree-mode-map
+         ("A" . notmuch-list-attachments)))
+
 (use-package notmuch
   :commands notmuch
   :bind
   (("C-c m" . counsel-notmuch)
    :map notmuch-search-mode-map
+   ("O" . notmuch-search-other-place)
    ("f" . notmuch-search-flag)
    ("d" . notmuch-search-delete)
    ("g" . notmuch-refresh-this-buffer)
@@ -267,10 +276,18 @@
                       the-url)))
       (browse-url the-url)))
 
+  (defun notmuch-system-tag ()
+    (if (member (system-name) '("limiting-factor"))
+        "tag:work"
+      "tag:home"))
+
+  (defun notmuch-non-system-tag ()
+    (if (member (system-name) '("limiting-factor"))
+        "tag:home"
+      "tag:work"))
+  
   (defun notmuch-avoid-tag (query)
-    (let ((req-tag (if (member (system-name) '("limiting-factor"))
-                       "tag:work"
-                     "tag:home")))
+    (let ((req-tag (notmuch-system-tag)))
       (unless (and
                (not (eq this-command 'notmuch-search))
                query
@@ -463,8 +480,22 @@
         (funcall nrq prompt))))
 
   (advice-add 'notmuch-read-query :around #'notmuch-read-query-suggest-tag)
-  
-  )
+
+  (defun notmuch-search-other-place ()
+    (interactive)
+    (let ((search (notmuch-search-get-query))
+          (here (notmuch-system-tag))
+          (there (notmuch-non-system-tag)))
+      
+      (notmuch-search
+       (cond
+        ((string-match-p (regexp-quote here) search)
+         (replace-regexp-in-string (regexp-quote here) there search))
+        ((string-match-p (regexp-quote there) search)
+         (replace-regexp-in-string (regexp-quote there) here search))
+        (t
+         (concat here " AND (" search ")")))))))
+
 
 (use-package message
   :defer t
