@@ -2,6 +2,7 @@
 
 (require 'notmuch)
 (require 'tabulated-list)
+(require 'gnus-dired)
 
 (define-derived-mode notmuch-attachment-list-mode
   tabulated-list-mode
@@ -139,10 +140,39 @@
 
 (defun notmuch-attachment-list-view ()
   (interactive)
-  ;; make a temp dir, save everything and then xdg-open it all?
-
   (dolist (attachment (notmuch-attachment-list-marked))
     (notmuch-attachment-list-view-attachment attachment)))
+
+(defun notmuch-attachment-list-attach ()
+  (interactive)
+  (when-let ((attachments (notmuch-attachment-list-marked)))
+    (let* ((message-buffers (mapcar 'buffer-name (gnus-dired-mail-buffers)))
+           
+           (the-buffer (if message-buffers
+                           (completing-read
+                            "Attach to: "
+                            (cons "New message"
+                                  message-buffers))
+                         "New message"))
+           (the-buffer (if (string= "New message" the-buffer)
+                           (progn (compose-mail)
+                                  (current-buffer))
+                         (get-buffer the-buffer)))
+
+           (tempdir (make-temp-file "attachments" t)))
+
+      (set-buffer the-buffer)
+      (add-hook 'kill-buffer-hook
+                (lambda ()
+                  (delete-directory tempdir t))
+                nil t)
+      
+      (goto-char (point-max))
+      (dolist (attachment attachments)
+        (let ((target (concat tempdir "/" (plist-get attachment :filename))))
+          (notmuch-attachment-list-save-attachment attachment target)
+          (mml-attach-file target (or (mm-default-file-encoding target)
+                                      "application/octet-stream")))))))
 
 (defun notmuch-attachment-list-mark ()
   (interactive)

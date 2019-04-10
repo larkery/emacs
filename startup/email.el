@@ -28,11 +28,15 @@
   (add-hook 'notmuch-message-mode-hook 'org-add-font-lock-defaults))
 
 (use-package org
-  :commands orgstruct-mode orgtbl-mode
+  :commands orgtbl-mode
   :init
-  (add-hook 'notmuch-message-mode-hook 'orgstruct-mode)
-  (add-hook 'notmuch-message-mode-hook 'orgtbl-mode)
-  )
+  (add-hook 'notmuch-message-mode-hook 'orgtbl-mode))
+
+(use-package orgalist
+  :ensure t
+  :commands orgalist-mode
+  :init
+  (add-hook 'notmuch-message-mode-hook 'orgalist-mode))
 
 (use-package org-mime
   :ensure t
@@ -158,14 +162,6 @@
 
   (advice-add 'org-mime-htmlize :before 'org-mime-pre-quotify)
   (add-hook 'org-mime-html-hook 'org-mime-style-blockquote))
-
-(use-package notmuch-attachment-list
-  :bind (:map notmuch-search-mode-map
-         ("A" . notmuch-list-attachments)
-         :map notmuch-show-mode-map
-         ("A" . notmuch-list-attachments)
-         :map notmuch-tree-mode-map
-         ("A" . notmuch-list-attachments)))
 
 (use-package notmuch
   :commands notmuch
@@ -496,6 +492,14 @@
         (t
          (concat here " AND (" search ")")))))))
 
+(use-package notmuch-attachment-list
+  :after notmuch
+  :bind (:map notmuch-search-mode-map
+         ("A" . notmuch-list-attachments)
+         :map notmuch-show-mode-map
+         ("A" . notmuch-list-attachments)
+         :map notmuch-tree-mode-map
+         ("A" . notmuch-list-attachments)))
 
 (use-package message
   :defer t

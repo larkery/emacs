@@ -61,6 +61,7 @@
   
   (define-clojure-indent
     (defroutes 'defun)
+    (jdbc.core/atomic 1)
     (GET 2)
     (POST 2)
     (PUT 2)

@@ -47,6 +47,7 @@
  '(ag-match-face ((t (:inherit match))))
  '(mode-line ((t (:overline nil :underline nil :box nil))))
  '(mode-line-inactive ((t (:overline nil :underline nil :box nil))))
+ '(web-mode-json-key-face ((t (:inherit font-lock-variable-name-face))))
  )
 
 

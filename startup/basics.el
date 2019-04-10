@@ -186,11 +186,13 @@
 (add-to-list 'custom-theme-load-path
                (concat user-emacs-directory "site-lisp/themes"))
 
-(use-package gruvbox-theme :ensure t)
-(use-package solarized-theme :ensure t)
+(unless (package-installed-p 'spacemacs-theme)
+  (package-install 'spacemacs-theme t))
 
-(setq dark-theme 'gruvbox-dark-soft)
-(setq light-theme 'gruvbox-light-soft)
+(setq dark-theme 'spacemacs-dark)
+(setq light-theme 'spacemacs-light)
+(setq spacemacs-theme-org-height nil
+      spacemacs-theme-org-bold nil)
 
 (load-theme light-theme t)
 (load-theme 'tweaks t)
