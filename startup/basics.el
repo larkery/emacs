@@ -9,7 +9,7 @@
       window-divider-default-bottom-width 1
       window-divider-default-right-width 1
       default-frame-scroll-bars nil
-      default-frame-alist '((scroll-bar-width . 8)
+      default-frame-alist '((scroll-bar-width . 1)
                             (right-divider-width . 3))
       focus-follows-mouse t
       mouse-autoselect-window t
@@ -111,7 +111,9 @@
                               (buffer-file-name "f")
                               (t "%")))
                     "v"))
-             (pname (or (and b (with-current-buffer b (projectile-project-name))) "-")))
+             (pname (or (and b
+                             (not (string= typ "@"))
+                             (with-current-buffer b (projectile-project-name))) "-")))
 
         (format
          "%s %10s  %s"
