@@ -186,8 +186,8 @@
   (notmuch-multipart/alternative-discouraged '("text/plain")) ;; prefer html?
 
   (notmuch-saved-searches
-   '((:name "inbox" :query "tag:inbox or tag:flagged" :key "i")
-     (:name "unread" :query "tag:unread" :key "u")
+   '((:name "unread" :query "tag:unread" :key "u")
+     (:name "inbox" :query "tag:inbox or tag:flagged" :key "i")
      (:name "drafts" :query "tag:draft" :key "d")
      (:name "sent" :query "tag:sent" :key "s")
      (:name "NHM" :query "from:nhm.support@cse.org.uk" :key "N")

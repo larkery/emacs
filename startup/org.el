@@ -19,11 +19,6 @@
   (org-agenda-insert-diary-extract-time t)
   (org-adapt-indentation nil)
   (org-agenda-span 14)
-  (org-agenda-category-icon-alist
-   `(("calendar" (display ,(all-the-icons-faicon "calendar" :height 0.75)))
-     ("birthday" (display ,(all-the-icons-faicon "birthday-cake" :height 0.75)))
-     ("holiday" (display ,(all-the-icons-faicon "calendar-o" :height 0.75)))))
-  
   (org-babel-load-languages '((emacs-lisp . t) (dot . t) (ditaa . t)))
 
   (org-latex-pdf-process
@@ -32,6 +27,13 @@
   
   :config
 
+  (with-eval-after-load 'org-agenda
+    (require 'all-the-icons)
+    (setq org-agenda-category-icon-alist
+          `(("calendar" (display ,(all-the-icons-faicon "calendar" :height 0.75)))
+            ("birthday" (display ,(all-the-icons-faicon "birthday-cake" :height 0.75)))
+            ("holiday" (display ,(all-the-icons-faicon "calendar-o" :height 0.75))))))
+  
   (defun org-refile-to-datetree ()
     (interactive)
     (let* ((ts (org-entry-get nil "TIMESTAMP"))
