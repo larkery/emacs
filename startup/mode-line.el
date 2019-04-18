@@ -35,8 +35,9 @@
                    
                    (buffer-file-name
                     (:eval
-                    (if (projectile-project-p)
-                        (list "[" (projectile-project-name) "]" " %b")
+                     (if (and (not (file-remote-p buffer-file-name))
+                              (projectile-project-p))
+                         (list "[" (projectile-project-name) "]" " %b")
                       buffer-file-name))
                     "%b"))
  
