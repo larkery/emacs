@@ -112,8 +112,12 @@
                               (t "%")))
                     "v"))
              (pname (or (and b
-                             (not (string= typ "@"))
-                             (with-current-buffer b (projectile-project-name))) "-")))
+                             (with-current-buffer b
+                               (let ((fn (or buffer-file-name dired-directory)))
+                                 (and fn
+                                      (not (file-remote-p fn))
+                                      (projectile-project-name)))))
+                        "-")))
 
         (format
          "%s %10s  %s"
