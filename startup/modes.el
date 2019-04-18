@@ -1,4 +1,8 @@
-(use-package nix-mode :ensure t :defer t)
+(use-package nix-mode
+  :ensure t :defer t
+  :custom
+  (nix-indent-function 'nix-indent-line))
+
 
 (use-package pdf-tools
   :ensure t
