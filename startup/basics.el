@@ -294,3 +294,19 @@
 
 (use-package buffer-table
   :bind ("C-x C-b" . buffer-table))
+
+;; in lucid at least, emacs has a wobbly if it wants to display a
+;; window atop a fullscreen window.
+(defun i3-disable-fullscreen (&rest args)
+  ;; if any frame is fullscreen, unfullscreen it
+  (dolist (f (frame-list))
+    (let ((fullscreen (frame-parameter f 'fullscreen)))
+      (when (memq fullscreen '(fullscreen fullboth))
+        (let ((fullscreen-restore (frame-parameter nil 'fullscreen-restore)))
+	  (if (memq fullscreen-restore '(maximized fullheight fullwidth))
+	      (set-frame-parameter f 'fullscreen fullscreen-restore)
+	    (set-frame-parameter f 'fullscreen nil)))))))
+
+(advice-add 'x-popup-menu   :before 'i3-disable-fullscreen)
+(advice-add 'x-popup-dialog :before 'i3-disable-fullscreen)
+(advice-add 'x-create-frame :before 'i3-disable-fullscreen)

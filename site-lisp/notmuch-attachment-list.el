@@ -146,7 +146,7 @@
 (defun notmuch-attachment-list-attach ()
   (interactive)
   (when-let ((attachments (notmuch-attachment-list-marked)))
-    (let* ((message-buffers (mapcar 'buffer-name (gnus-dired-mail-buffers)))
+    (let* ((message-buffers (gnus-dired-mail-buffers))
            
            (the-buffer (if message-buffers
                            (completing-read

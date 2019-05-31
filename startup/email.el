@@ -169,8 +169,10 @@
   (("C-c m" . counsel-notmuch)
    :map notmuch-search-mode-map
    ("O" . notmuch-search-other-place)
-   ("f" . notmuch-search-flag)
-   ("d" . notmuch-search-delete)
+   ("f" . notmuch-flag)
+   ("d" . notmuch-delete)
+   ("u" . notmuch-mark-read)
+   
    ("g" . notmuch-refresh-this-buffer)
    ("@" . notmuch-search-person)
    ("z" . notmuch-tree-from-search-thread)
@@ -179,7 +181,10 @@
    ("C-c f" . notmuch-switch-identity)
    :map notmuch-show-mode-map
    ("C-o" . open-url-at-point)
-   ("d" . notmuch-show-delete)
+   ("d" . notmuch-delete)
+   ("f" . notmuch-flag)
+   ("u" . notmuch-mark-read)
+   ("U" . notmuch-show-skip-to-unread)
    :map notmuch-tree-mode-map
    ("q" . notmuch-tree-quit-harder))
   :custom
@@ -357,6 +362,26 @@
             (t
              (concat "*notmuch-search-" query "*"))
             )))
+
+
+  (defun notmuch-toggle-tag (tags advance)
+    (let* ((cur-tags
+            (cl-case major-mode
+              (notmuch-search-mode
+               (notmuch-search-get-tags))
+
+              (notmuch-show-mode
+               (notmuch-show-get-tags))))
+           (action (if (cl-intersection cur-tags tags :test 'string=) "-" "+"))
+	   (arg (mapcar (lambda (x) (concat action x)) tags)))
+      
+      (cl-case major-mode
+        (notmuch-search-mode
+         (notmuch-search-tag arg)
+         (when advance (notmuch-search-next-thread)))
+        (notmuch-show-mode
+         (notmuch-show-tag arg)
+         (when advance (notmuch-show-next-matching-message))))))
   
   (defun notmuch-search-toggle-tag (&rest tags)
     (let* ((cur-tags (notmuch-search-get-tags))
@@ -364,19 +389,18 @@
 	   (arg (mapcar (lambda (x) (concat action x)) tags)))
       (notmuch-search-tag arg)))
 
-  (defun notmuch-search-flag ()
+  (defun notmuch-flag ()
     (interactive)
-    (notmuch-search-toggle-tag "flagged"))
+    (notmuch-toggle-tag '("flagged") t))
   
-  (defun notmuch-search-delete ()
+  (defun notmuch-delete ()
     (interactive)
-    (notmuch-search-toggle-tag "deleted")
-    (notmuch-search-next-thread))
+    (notmuch-toggle-tag '("deleted") t))
 
-  (defun notmuch-show-delete ()
+  (defun notmuch-mark-read ()
     (interactive)
-    (notmuch-show-add-tag (list "+deleted")))
-  
+    (notmuch-toggle-tag '("unread") t))
+
   (defun notmuch-expand-calendar-parts (o msg part depth &optional hide)
     (funcall o
              msg part depth (and hide
@@ -392,8 +416,6 @@
                 (notmuch-show-goto-message-next)))
     (notmuch-show-message-visible (notmuch-show-get-message-properties) t)
     (recenter-top-bottom 0))
-
-  (bind-key "u" 'notmuch-show-skip-to-unread 'notmuch-show-mode-map)
 
   (defvar notmuch-reply-sender-regexes
     (list (cons (regexp-quote "tom.hinton@cse.org.uk") "Tom Hinton")

@@ -18,12 +18,14 @@
   (org-id-locations-file "~/notes/.metadata/org-id-locations")
   (org-agenda-insert-diary-extract-time t)
   (org-adapt-indentation nil)
-  (org-agenda-span 14)
-  (org-babel-load-languages '((emacs-lisp . t) (dot . t) (ditaa . t)))
+  (org-agenda-span 'week)
+  (org-babel-load-languages '((emacs-lisp . t) (dot . t) (ditaa . t) (gnuplot . t)))
 
   (org-latex-pdf-process
    '("xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f"))
-  (org-refile-targets '((nil . (:maxlevel . 3))))
+  (org-refile-targets '((nil :maxlevel . 3)
+                        (org-agenda-files :maxlevel . 2)))
+  (org-refile-use-outline-path 'file)
   
   :config
 
@@ -32,8 +34,11 @@
     (setq org-agenda-category-icon-alist
           `(("calendar" (display ,(all-the-icons-faicon "calendar" :height 0.75)))
             ("birthday" (display ,(all-the-icons-faicon "birthday-cake" :height 0.75)))
-            ("holiday" (display ,(all-the-icons-faicon "calendar-o" :height 0.75))))))
-  
+            ("holiday" (display ,(all-the-icons-faicon "calendar-o" :height 0.75)))
+            ("work" (display ,(all-the-icons-octicon "briefcase" :height 0.75)))
+            ("samba" (display ,(all-the-icons-faicon "child" :height 0.75)))
+            )))
+
   (defun org-refile-to-datetree ()
     (interactive)
     (let* ((ts (org-entry-get nil "TIMESTAMP"))
