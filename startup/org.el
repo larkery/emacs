@@ -26,6 +26,10 @@
   (org-refile-targets '((nil :maxlevel . 3)
                         (org-agenda-files :maxlevel . 2)))
   (org-refile-use-outline-path 'file)
+
+  (org-capture-templates
+   
+   )
   
   :config
 

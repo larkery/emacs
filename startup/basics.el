@@ -1,3 +1,9 @@
+(define-prefix-command 'leader-keys)
+(global-set-key (kbd "`") 'leader-keys)
+
+(bind-key "`" 'self-insert-command 'leader-keys)
+(bind-key "s" 'save-buffer leader-keys)
+
 (menu-bar-mode -1)
 (set-scroll-bar-mode nil)
 (set-fringe-mode '(0 . 8))

@@ -14,6 +14,9 @@
  '(line-spacing ((t nil)))
 
  '(notmuch-search-unread-face ((t (:foreground "white" :distant-foreground "black" :weight bold))))
+
+ '(notmuch-search-flagged-face ((t (:foreground "green4" :distant-foreground "cyan4" :weight bold))))
+ 
  '(symbol-overlay-default-face ((t (:underline "grey50"))))
 
  '(rainbow-delimiters-depth-1-face ((((background dark)) (:foreground "yellow"))))

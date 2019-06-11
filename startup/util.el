@@ -98,9 +98,21 @@
 (use-package winner
   :defer nil
   :bind (("C-<" . winner-undo)
-	 ("C->" . winner-redo))
+	 ("C->" . winner-redo)
+         :map
+         leader-keys
+         ("w u" . winner-undo)
+         ("w r" . winner-redo))
+  
   :config
   (winner-mode 1))
+
+(bind-keys
+ :map leader-keys
+ ("w o" . delete-other-windows)
+ ("w d" . delete-window)
+ ("w h" . split-window-below)
+ ("w v" . split-window-right))
 
 (use-package projectile
   :diminish
@@ -261,6 +273,7 @@
   (add-hook 'god-local-mode-hook
             'god-local-mode-lighter))
 
+
 (use-package editorconfig
   :ensure t
   :diminish
@@ -394,3 +407,24 @@
     (when (and directory
                (not (file-remote-p directory)))
       (start-process "" nil "env" "-C" directory "urxvt"))))
+
+(use-package calc
+  :defer t
+  :custom (calc-multiplication-has-precedence nil)
+  :bind (:map leader-keys
+              ("c c" . calc-eval-line))
+
+  :config
+  (defun calc-eval-line ()
+    (interactive)
+    (save-excursion
+      (beginning-of-line)
+      (let ((here (point)))
+        (search-forward-regexp (rx (| (: (* blank) "=>" (* blank)) eol)) nil t)
+        (goto-char (match-beginning 0))
+        (delete-region (point) (save-excursion (end-of-line) (point)))
+        (insert " => " (calc-eval (buffer-substring here (point))))))
+    (end-of-line))
+  
+  )
+
