@@ -51,7 +51,6 @@
 ")
   (org-mime-beautify-quoted-mail nil)
   :config
-  
 
   (defun narrow-to-message ()
     (interactive)
@@ -60,7 +59,9 @@
      (point)
      (save-excursion
        (point)
-       (or (and (search-forward "<#part" nil t)
+       (or (and (search-forward-regexp
+                 (rx "<#" (| "multipart" "part" "external" "mml"))
+                 nil t)
                 (progn (beginning-of-line) t)
                 (point))
            (point-max))))
@@ -186,7 +187,10 @@
    ("u" . notmuch-mark-read)
    ("U" . notmuch-show-skip-to-unread)
    :map notmuch-tree-mode-map
-   ("q" . notmuch-tree-quit-harder))
+   ("q" . notmuch-tree-quit-harder)
+   :map leader-keys
+   ("m m" . notmuch-inbox)
+   ("m n" . notmuch-mua-new-mail))
   :custom
   (notmuch-multipart/alternative-discouraged '("text/plain")) ;; prefer html?
 
@@ -249,6 +253,10 @@
   (require 'org-mime)
   (require 'notmuch-fancy-html)
 
+  (defun notmuch-inbox ()
+    (interactive)
+    (notmuch-search "tag:inbox or tag:flagged"))
+    
   (defun notmuch-search-show-or-tree ()
     (interactive)
     (let* ((thread-id (notmuch-search-find-thread-id))

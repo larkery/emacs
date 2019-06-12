@@ -28,7 +28,8 @@
   (org-refile-use-outline-path 'file)
 
   (org-capture-templates
-   
+   '(("c" "" entry (file "~/notes/agenda/calendar.org") "* %?
+%T"))
    )
   
   :config

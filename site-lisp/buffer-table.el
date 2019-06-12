@@ -1,4 +1,5 @@
 (require 'tabulated-list)
+(require 'tabulated-list-utils)
 (require 'projectile)
 
 (defvar buffer-table-group-col 2)
@@ -146,22 +147,6 @@
 (define-key buffer-table-mode-map
   (kbd "RET")
   'buffer-table-switch-to-buffer)
-
-(defun tabulated-list-put-tag-region (tag &optional next-line)
-  (if (region-active-p)
-      (save-excursion
-        (save-restriction
-          (narrow-to-region (region-beginning) (region-end))
-          (goto-char (point-min))
-          (while (not (eobp))
-            (tabulated-list-put-tag tag t))))
-    (tabulated-list-put-tag tag next-line)))
-
-(defun tabulated-list-put-tag-all (tag)
-  (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (tabulated-list-put-tag tag t))))
 
 (defun tabulated-list-put-tag-similar (group tag)
   (let ((this-group (elt (tabulated-list-get-entry) buffer-table-group-col)))

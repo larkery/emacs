@@ -107,13 +107,6 @@
   :config
   (winner-mode 1))
 
-(bind-keys
- :map leader-keys
- ("w o" . delete-other-windows)
- ("w d" . delete-window)
- ("w h" . split-window-below)
- ("w v" . split-window-right))
-
 (use-package projectile
   :diminish
   :ensure t
@@ -218,28 +211,6 @@
      try-expand-dabbrev-all-buffers
      try-expand-dabbrev-from-kill)))
 
-(use-package rcirc-notify
-  :defer t
-  :ensure t
-  :custom
-  (rcirc-notify-keywords '("tom" "tomhinton" "hinton"))
-  :config
-  (rcirc-notify-add-hooks))
-
-(use-package rcirc
-  :defer t
-  :config
-  (require 'rcirc-notify)
-
-  (add-hook 'rcirc-mode-hook 'visual-line-mode)
-  (add-hook 'rcirc-mode-hook (lambda () (setq wrap-prefix "      ")))
-  (setq rcirc-server-alist
-        '(("irc.freenode.net" :nick "tomhinton" :channels ("#cse-bristol")
-           :encryption tls :server-alias "freenode" :port 6697
-           )))
-  :custom
-  (rcirc-track-minor-mode t))
-
 (use-package auth-source-pass
   :ensure t
   :after auth-source
@@ -273,7 +244,6 @@
   (add-hook 'god-local-mode-hook
             'god-local-mode-lighter))
 
-
 (use-package editorconfig
   :ensure t
   :diminish
@@ -304,24 +274,7 @@
 (use-package multiple-cursors
   :defer t
   :bind (("C-/" . mc/mark-more-like-this-extended)
-         ("C-M-/" . mc/mark-all-dwim))
-  :config
-  ;; (defvar was-in-composable-mode nil)
-
-  ;; (make-variable-buffer-local 'was-in-composable-mode)
-
-  ;; (defun toggle-composable-mode ()
-  ;;   (if multiple-cursors-mode
-  ;;       (progn
-  ;;         (setq-local was-in-composable-mode composable-mode)
-  ;;         (composable-mode 0))
-  ;;     (when was-in-composable-mode
-  ;;       (composable-mode 1))))
-
-  
-  ;; (add-hook 'multiple-cursors-mode-hook
-  ;;           #'toggle-composable-mode)
-  )
+         ("C-M-/" . mc/mark-all-dwim)))
 
 (use-package edit-as-root
   :bind ("C-x C-a" . edit-as-root))
@@ -424,7 +377,5 @@
         (goto-char (match-beginning 0))
         (delete-region (point) (save-excursion (end-of-line) (point)))
         (insert " => " (calc-eval (buffer-substring here (point))))))
-    (end-of-line))
-  
-  )
+    (end-of-line)))
 

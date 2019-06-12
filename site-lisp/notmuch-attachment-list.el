@@ -2,6 +2,7 @@
 
 (require 'notmuch)
 (require 'tabulated-list)
+(require 'tabulated-list-utils)
 (require 'gnus-dired)
 
 (define-derived-mode notmuch-attachment-list-mode

@@ -29,6 +29,7 @@
   (require 'use-package))
 
 (let ((startup-directory (concat user-emacs-directory "startup/")))
+  (load (concat startup-directory "leader-keys.el"))
   (load (concat startup-directory "basics.el"))
   (load (concat startup-directory "dired.el"))
   (load (concat startup-directory "mode-line.el"))
