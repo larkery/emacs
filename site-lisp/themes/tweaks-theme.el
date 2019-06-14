@@ -13,7 +13,7 @@
 
  '(line-spacing ((t nil)))
 
- '(notmuch-search-unread-face ((t (:foreground "white" :distant-foreground "black" :weight bold))))
+ '(notmuch-search-unread-face ((t (:box nil :foreground "white" :distant-foreground "black" :weight bold))))
 
  '(notmuch-search-flagged-face ((t (:foreground "green4" :distant-foreground "cyan4" :weight bold))))
  

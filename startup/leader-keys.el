@@ -1,7 +1,7 @@
 (define-prefix-command 'leader-keys)
 
-(defvar leader-key (kbd "<tab>"))
-(defvar leader-key* (kbd "§"))
+(defvar leader-key "<tab>")
+(defvar leader-key* "§")
 
 (bind-keys
  :map leader-keys
@@ -12,7 +12,9 @@
  ("k" . kill-current-buffer)
  ("t s" . ispell-word)
  ("t r" . anzu-query-replace-regexp)
- ("s" . save-buffer))
+ ("s" . save-buffer)
+ ("f r" . counsel-recentf)
+ )
 
 (which-key-add-key-based-replacements
   (concat leader-key* " w") "windows"
@@ -21,14 +23,15 @@
 (defun leader-tab ()
   (interactive)
   (call-interactively (or
-                       (local-key-binding (kbd "TAB"))
+                       (local-key-binding  (kbd "TAB"))
                        (global-key-binding (kbd "TAB")))))
 
 (bind-key leader-key #'leader-tab leader-keys)
 
 (defun leader-keys* ()
   (interactive)
-  (setq unread-command-events (listify-key-sequence leader-key*)))
+  (setq unread-command-events (listify-key-sequence
+                               (kbd leader-key*))))
 
 
 (define-minor-mode leader-keys-mode "Enable my leader keys"
@@ -36,7 +39,7 @@
   (let ((m (make-sparse-keymap)))
     ;; TODO work out how to make tab do what tab would do if this map
     ;; was off
-    (define-key m leader-key* 'leader-keys)
-    (define-key m leader-key #'leader-keys*)
+    (define-key m (kbd leader-key*) 'leader-keys)
+    (define-key m (kbd leader-key) #'leader-keys*)
     m))
 
