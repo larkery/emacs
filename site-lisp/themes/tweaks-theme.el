@@ -10,6 +10,8 @@
  '(dired-subtree-depth-5-face ((t (:slant italic))))
  '(dired-subtree-depth-6-face ((t (:slant normal))))
  '(notmuch-message-summary-face ((t (:inherit hl-line))))
+ '(notmuch-tag-deleted ((t (:background "red" :foreground "white"))))
+ '(notmuch-tag-added ((t (:background "gold" :foreground "black"))))
 
  '(line-spacing ((t nil)))
 

@@ -114,6 +114,8 @@
              (file-directory-p x)
              (not (string-match-p (dired-omit-regexp) x)))))))
 
+  (make-directory target t)
+  
   (dolist (attachment (notmuch-attachment-list-marked))
     (notmuch-attachment-list-save-attachment
      attachment

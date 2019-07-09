@@ -55,4 +55,64 @@ The first will find a file, and the rest headings and subheadings and so on.")
       (insert (format-time-string "%H:%M "))
       )))
 
+(defvar org-notify-check-timer nil)
+(defvar org-notify-check-interval 600)
+
+(defun org-notify ()
+  "Turn on/off notification for org agenda events"
+  (interactive)
+
+  (if org-notify-check-timer
+      (progn
+        (cancel-timer org-notify-check-timer)
+        (setq org-notify-check-timer nil)
+        (mapc #'cancel-timer org-notify-extant-timers)
+        (message "Agenda notifications disabled"))
+    (progn
+      (require 'notifications)
+      (setq org-notify-check-timer
+            (run-with-timer 0 org-notify-check-interval #'org-notify-check))
+      
+      (message "Agenda notifications enabled"))))
+
+(defun org-notify-check ()
+  "Check for any events that are coming soon and schedule a beep for them"
+  (message "Checking for org notifications")
+  (mapc #'cancel-timer org-notify-extant-timers)
+  (org-map-entries
+   'org-notify-check-headline
+   "TIMESTAMP>=\"<now>\""
+   'agenda)
+  (org-map-entries
+   'org-notify-check-headline
+   "SCHEDULED>=\"<now>\""
+   'agenda)
+  )
+
+(defvar org-notify-extant-timers nil)
+
+(defun org-notify-check-headline ()
+  (let* ((heading (org-get-heading t t t t))
+         (time-string (or (org-entry-get (point) "SCHEDULED")
+                          (org-entry-get (point) "TIMESTAMP")))
+         (time-secs (org-time-string-to-seconds time-string))
+         (delta-t (- time-secs (time-to-seconds)))
+         (early-warning (- time-secs (* 60 5))))
+    (when (< delta-t org-notify-check-interval)
+      (message "Will notify for %s" heading)
+      (push
+       (run-at-time (seconds-to-time early-warning)
+                    nil
+                    'notifications-notify
+                    :title
+                    (format "%s (5 minutes)" heading))
+       org-notify-extant-timers)
+      (push (run-at-time (seconds-to-time time-secs)
+                         nil
+                         'notifications-notify
+                         :urgency 'critical
+                         :title
+                         (format "%s" heading))
+            org-notify-extant-timers))))
+
 (provide 'org-extras)

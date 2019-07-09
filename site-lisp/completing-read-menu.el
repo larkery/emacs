@@ -1,4 +1,6 @@
-(defun menu-to-alist (keymap &optional events root menu-alist)
+(require 'cl)
+
+(defun keymap-to-alist (keymap &optional events root menu-alist)
   (map-keymap
    (lambda (event binding)
      (let ((is-menu-item (eq 'menu-item (car-safe binding)))
@@ -45,44 +47,63 @@
        ((keymapp binding)
         ;; do a recursion
         (setq menu-alist
-              (menu-to-alist binding
-                             (cons event events)
-                             (concat root (and root " > ") item-name)
-                             menu-alist)))
+              (keymap-to-alist binding
+                               (cons event events)
+                               (concat root (and root " → ") item-name)
+                               menu-alist)))
        ((commandp binding)
         ;; add it in
         (push
-         (list (concat root (and root " > ") item-name)
+         (list (concat root (and root " → ") item-name)
                binding
-               (cons event events)
-               )
+               (cons event events))
          menu-alist)))
       menu-alist))
    keymap)
   menu-alist)
 
-(defun completing-read-popup-menu (position menu)
-  (when position
+(defun menu-to-alist (menu)
+  (let (result)
     (cond
      ((keymapp menu)
-      
-      (let* ((choices (nreverse (menu-to-alist menu)))
-             (choice
-              (completing-read
-               (concat (keymap-prompt menu) ": ")
-               choices))
-             )
-        (reverse (caddr (assoc choice choices)))))
+      (nreverse (keymap-to-alist menu)))
+
+     ((and (listp menu)
+           (cl-every #'keymapp menu))
+      (nreverse
+       (loop for keymap in menu
+             concat (keymap-to-alist menu))))
      
-     ((and (listp menu) (keymapp (car menu)))
-      (let* ((choices (nreverse (loop for keymap in menu
-                       concat (menu-to-alist keymap))))
-             (choice
-              (completing-read
-               "Menu: "
-               choices)))
-        (reverse (caddr (assoc choice choices))))))))
+     ((listp menu)
+      (let ((title (car menu)))
+        (cl-loop for pane in (cdr menu)
+                 when (listp (cdr pane))
+                 append
+                 (cl-loop for item in (cdr pane)
+                          when (consp item)
+                          collect
+                          (let ((pane-title (car pane)))
+                            (cons
+                             (concat title
+                                     (when (and title
+                                                (not (string= title "")))
+                                       " → ")
+                                     pane-title
+                                     (when (and pane-title
+                                                (not (string= pane-title "")))
+                                       " → ")
+                                     (car item))
+                             (cdr item))))))))))
+
+(defun completing-read-popup-menu (position menu)
+  (when position
+    (let* ((items (menu-to-alist menu))
+           (choice (progn
+                     ;; (select-window (minibuffer-window))
+
+                     (completing-read "Menu: " items))))
+      (reverse (caddr (assoc choice items))))))
 
 (advice-add 'x-popup-menu :override 'completing-read-popup-menu)
 
-;;(advice-remove 'x-popup-menu 'completing-read-popup-menu)
+(provide 'completing-read-menu)
