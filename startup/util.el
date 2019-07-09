@@ -101,11 +101,17 @@
 	 ("C->" . winner-redo)
          :map
          leader-keys
-         ("w u" . winner-undo)
-         ("w r" . winner-redo))
-  
+         ("w u" . winner-undo-repeat)
+         ("w r" . winner-redo-repeat))
+  :after (defrepeater)
   :config
-  (winner-mode 1))
+  (global-set-key [remap winner-redo] 'winner-redo-repeat)
+  (global-set-key [remap winner-undo] 'winner-undo-repeat)
+  
+  (winner-mode 1)
+  (defrepeater #'winner-undo)
+  (defrepeater #'winner-redo))
+
 
 (use-package projectile
   :diminish
@@ -122,9 +128,23 @@
    :map projectile-mode-map
    ("C-c p s s" . counsel-ag)
    ("C-c p s a" . projectile-ag)
-   ("M-s p" . projectile-ag))
+   ("M-s p" . projectile-ag)
+   ("C-c p d" . projectile-dired))
 
-)
+  (define-key projectile-mode-map
+    (leader-kbd "p")
+    'my-projectile-map)
+  (leader-name "p" "proj")
+  
+  (define-prefix-command 'my-projectile-map)
+  (bind-keys
+   :map my-projectile-map
+   ("d" . projectile-dired)
+   ("f" . projectile-find-file)
+   ("q" . projectile-kill-buffers)
+   ("s" . counsel-ag)
+   ("p" . projectile-switch-project)))
+
 
 (use-package pcre2el
   :diminish pcre-mode
@@ -219,11 +239,13 @@
 
 (use-package god-mode
   :ensure t
-  :bind ("<escape>" . god-local-mode)
+  :bind (:map leader-keys
+              ("SPC" . god-local-mode))
   :diminish god-local-mode
   :config
 
   (define-key god-local-mode-map (kbd ".") 'repeat)
+  (define-key god-local-mode-map (kbd "<escape>") 'god-local-mode)
   (add-to-list 'god-exempt-major-modes 'notmuch-search-mode)
   (add-to-list 'god-exempt-major-modes 'notmuch-show-mode)
 
@@ -247,8 +269,14 @@
 (use-package editorconfig
   :ensure t
   :diminish
+  :custom
+  (editorconfig-exclude-regexps
+   '("\\`\\(?:ftp\\|https?\\|rsync\\|sftp\\):"
+     "\\`/net/"))
+    
   :config
   (editorconfig-mode 1))
+
 
 (use-package ediff
   :defer t
@@ -312,14 +340,24 @@
       (when (derived-mode-p 'prog-mode)
         (insert "\"")))))
 
-(bind-key "C-c f" #'insert-file-path)
+(bind-leader "f i" #'insert-file-path)
 
 (use-package yasnippet
   :ensure t
   :defer t
-  :commands yas/minor-mode
+  :commands yas/expand
   :init
-  (add-hook 'prog-mode-hook #'yas/minor-mode))
+  (bind-leader "x" #'yas/expand yas-minor-mode-map)
+  :config
+  (require 'yasnippet-snippets)
+  (yas-reload-all)
+  (define-key yas-minor-mode-map [(tab)] nil)
+  (define-key yas-minor-mode-map (kbd "TAB") nil)
+  (yas-global-mode))
+
+(use-package yasnippet-snippets
+  :ensure t
+  :defer t)
 
 (use-package comment-dwim-2
   :ensure t
@@ -365,7 +403,7 @@
   :defer t
   :custom (calc-multiplication-has-precedence nil)
   :bind (:map leader-keys
-              ("c c" . calc-eval-line))
+              ("e c" . calc-eval-line))
 
   :config
   (defun calc-eval-line ()
@@ -379,3 +417,9 @@
         (insert " => " (calc-eval (buffer-substring here (point))))))
     (end-of-line)))
 
+(use-package dictionary
+  :ensure t
+  :bind (:map leader-keys
+              ("t d" . dictionary-lookup-definition)))
+
+(use-package completing-read-menu)

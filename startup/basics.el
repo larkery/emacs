@@ -80,6 +80,9 @@
 
 (global-auto-revert-mode 1)
 
+(use-package defrepeater
+  :ensure t)
+
 (use-package diminish
   :ensure t)
 
@@ -190,15 +193,11 @@
 (defvar light-theme 'adwaita)
 
 (add-to-list 'custom-theme-load-path
-               (concat user-emacs-directory "site-lisp/themes"))
+             (concat user-emacs-directory "site-lisp/themes"))
 
-(unless (package-installed-p 'spacemacs-theme)
-  (package-install 'spacemacs-theme t))
-
-(setq dark-theme 'spacemacs-dark)
-(setq light-theme 'spacemacs-light)
-(setq spacemacs-theme-org-height nil
-      spacemacs-theme-org-bold nil)
+(use-package gruvbox-theme :ensure t)
+(setq dark-theme 'gruvbox-dark-hard
+      light-theme 'gruvbox-light-hard)
 
 (load-theme light-theme t)
 (load-theme 'tweaks t)
@@ -285,7 +284,10 @@
 
 (use-package so-long
   :config
-  (so-long-enable))
+  (so-long-enable)
+
+  ;; (so-long-disable)
+  )
 
 (use-package mode-line-bell
   :ensure t

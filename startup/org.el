@@ -20,7 +20,9 @@
   (org-adapt-indentation nil)
   (org-agenda-span 'week)
   (org-babel-load-languages '((emacs-lisp . t) (dot . t) (ditaa . t) (gnuplot . t)))
-
+  (org-link-abbrev-alist
+   '(("nhm" . "https://support.deccnhm.org.uk/thread/"))
+   )
   (org-latex-pdf-process
    '("xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f"))
   (org-refile-targets '((nil :maxlevel . 3)
@@ -28,12 +30,10 @@
   (org-refile-use-outline-path 'file)
 
   (org-capture-templates
-   '(("c" "" entry (file "~/notes/agenda/calendar.org") "* %?
+   '(("c" "> Calendar" entry (file "~/notes/agenda/calendar.org") "* %?
 %T"))
    )
-  
   :config
-
   (with-eval-after-load 'org-agenda
     (require 'all-the-icons)
     (setq org-agenda-category-icon-alist
@@ -44,75 +44,19 @@
             ("samba" (display ,(all-the-icons-faicon "child" :height 0.75)))
             )))
 
-  (defun org-refile-to-datetree ()
-    (interactive)
-    (let* ((ts (org-entry-get nil "TIMESTAMP"))
-           (date (org-date-to-gregorian ts)))
-      
-      (save-excursion
-        (org-datetree-find-date-create date))
-      (save-excursion
-        (org-mark-subtree)
-        (org-datetree-file-entry-under
-         (buffer-substring (region-beginning) (region-end))
-         date))
-      (org-cut-subtree)))
-
-
   (defun org-read-date-analyze-no-stupid-endian (o ans org-def org-defdecode)
     (funcall o
              (if (string-match-p
                   "^ *\\(0?[1-9]\\|1[012]\\)/\\(0?[1-9]\\|[12][0-9]\\|3[01]\\)\\(/\\([0-9]+\\)\\)?\\([^/0-9]\\|$\\)"
                   ans)
-
                  (replace-regexp-in-string "/" "." ans)
-
                ans)
-
-             org-def org-defdecode)
-    )
+             org-def org-defdecode))
 
   (advice-add 'org-read-date-analyze :around
               'org-read-date-analyze-no-stupid-endian)
 
-  (defvar org-table-copy-down-timestamp-today t)
-
-  (defun org-table-copy-down-set-timestamp-today (n)
-    (when org-table-copy-down-timestamp-today
-      (message "a")
-      (let* ((colpos (org-table-current-column))
-	     (col (current-column))
-	     (field (save-excursion (org-table-get-field)))
-             (datelike-field (and
-                              (string-match "^@" field)
-                              (string-match org-ts-regexp3 field))))
-        (when datelike-field
-          (message "%s" field)
-          (let ((org-table-may-need-update nil)) (org-table-next-row))
-          (org-table-blank-field)
-          (org-insert-time-stamp (current-time) nil t)
-          (org-table-maybe-recalculate-line)
-          (org-table-align)
-          (org-move-to-column col)
-          t))))
-
-  (advice-add 'org-table-copy-down :before-until #'org-table-copy-down-set-timestamp-today)
-
-  (defun  org-agenda-insert-diary-make-new-entry-with-location (o text)
-    (let* ((location (string-match (rx "@ " (group (+ any)) eos) text))
-           (location-string (and location (match-string 1 text)))
-           (text (if location (substring text 0 location) text))
-           (rv (funcall o text)))
-      
-      (when location
-        (org-set-property "LOCATION" location-string)
-        )
-      rv))
-
-  (advice-add 'org-agenda-insert-diary-make-new-entry
-              :around
-              #'org-agenda-insert-diary-make-new-entry-with-location)
-
+  
   )
 
 

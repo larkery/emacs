@@ -191,6 +191,7 @@
    :map leader-keys
    ("m m" . notmuch-inbox)
    ("m n" . notmuch-mua-new-mail))
+  
   :custom
   (notmuch-multipart/alternative-discouraged '("text/plain")) ;; prefer html?
 
@@ -215,9 +216,8 @@
      ("work")
      ("sent")
      ("replied" "→")
-     ("attachment" "@")
+     ("attachment" "A")
      ("inbox" "%")
-
      ))
 
   (notmuch-search-line-faces
@@ -253,6 +253,14 @@
   (require 'org-mime)
   (require 'notmuch-fancy-html)
 
+  (bind-key (leader-kbd "i")
+            #'message-insert-or-toggle-importance
+            message-mode-map)
+
+  (bind-key (leader-kbd "F")
+            #'notmuch-switch-identity
+            message-mode-map)
+  
   (defun notmuch-inbox ()
     (interactive)
     (notmuch-search "tag:inbox or tag:flagged"))
