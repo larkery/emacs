@@ -173,7 +173,7 @@
    ("f" . notmuch-flag)
    ("d" . notmuch-delete)
    ("u" . notmuch-mark-read)
-   
+   ("i" . notmuch-mark-inbox)
    ("g" . notmuch-refresh-this-buffer)
    ("@" . notmuch-search-person)
    ("z" . notmuch-tree-from-search-thread)
@@ -184,10 +184,11 @@
    ("C-o" . open-url-at-point)
    ("d" . notmuch-delete)
    ("f" . notmuch-flag)
-   ("u" . notmuch-mark-read)
-   ("U" . notmuch-show-skip-to-unread)
+   ("U" . notmuch-mark-read)
+   ("u" . notmuch-skip-to-unread)
    :map notmuch-tree-mode-map
    ("q" . notmuch-tree-quit-harder)
+   ("u" . notmuch-skip-to-unread)
    :map leader-keys
    ("m m" . notmuch-inbox)
    ("m n" . notmuch-mua-new-mail))
@@ -264,7 +265,7 @@
   (defun notmuch-inbox ()
     (interactive)
     (notmuch-search "tag:inbox or tag:flagged"))
-    
+  
   (defun notmuch-search-show-or-tree ()
     (interactive)
     (let* ((thread-id (notmuch-search-find-thread-id))
@@ -413,6 +414,10 @@
     (interactive)
     (notmuch-toggle-tag '("deleted") t))
 
+  (defun notmuch-mark-inbox ()
+    (interactive)
+    (notmuch-toggle-tag '("inbox") t))
+
   (defun notmuch-mark-read ()
     (interactive)
     (notmuch-toggle-tag '("unread") t))
@@ -422,21 +427,30 @@
              msg part depth (and hide
                                  (not (string= (downcase (plist-get part :content-type))
                                                "text/calendar")))))
-  
+
   (advice-add 'notmuch-show-insert-bodypart :around #'notmuch-expand-calendar-parts)
 
 
-  (defun notmuch-show-skip-to-unread ()
+  (defun notmuch-skip-to-unread ()
     (interactive)
-    (while (and (not (member "unread" (notmuch-show-get-tags)))
-                (notmuch-show-goto-message-next)))
-    (notmuch-show-message-visible (notmuch-show-get-message-properties) t)
-    (recenter-top-bottom 0))
+    (cl-case major-mode
+      ;; todo find out if we are in a tree but in the show window
+      (notmuch-show-mode
+       (while (and (not (member "unread" (notmuch-show-get-tags)))
+                   (notmuch-show-goto-message-next)))
+       (notmuch-show-message-visible (notmuch-show-get-message-properties) t)
+       (recenter-top-bottom 0))
+      (notmuch-tree-mode
+       (while (and (not (member "unread" (notmuch-tree-get-tags)))
+                   (not (eobp)))
+         (forward-line))
+       (notmuch-tree-show-message nil))))
+  
 
   (defvar notmuch-reply-sender-regexes
     (list (cons (regexp-quote "tom.hinton@cse.org.uk") "Tom Hinton")
           (cons (regexp-quote "larkery.com") "Tom Hinton")))
-  
+
   (defun notmuch-mua-reply-guess-sender (o query-string &optional sender reply-all)
     (let ((sender (or sender
                       (let* ((to
@@ -533,11 +547,11 @@
 (use-package notmuch-attachment-list
   :after notmuch
   :bind (:map notmuch-search-mode-map
-         ("A" . notmuch-list-attachments)
-         :map notmuch-show-mode-map
-         ("A" . notmuch-list-attachments)
-         :map notmuch-tree-mode-map
-         ("A" . notmuch-list-attachments)))
+              ("A" . notmuch-list-attachments)
+              :map notmuch-show-mode-map
+              ("A" . notmuch-list-attachments)
+              :map notmuch-tree-mode-map
+              ("A" . notmuch-list-attachments)))
 
 (use-package message
   :defer t
@@ -586,18 +600,19 @@
         (when dir (setq default-directory dir)))
       (apply o file args)))
 
-  (advice-add 'mml-attach-file :around 'message-attach-at-end)
-  
-  )
+  (advice-add 'mml-attach-file :around 'message-attach-at-end))
 
 (use-package mailcap
   :defer t
   :config
-  (mailcap-add "application/pdf" 'pdf-view-mode)
-  (mailcap-add "application/msword" 'pdf-view-word-document)
-  (mailcap-add "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-               'pdf-view-word-document))
+  (setq mailcap-user-mime-data
+        '(((viewer . "xdg-open %s")
+           (type . ".+")))))
 
+(use-package dnd
+  :config
+  (setq dnd-protocol-alist nil)
+  (setq-default dnd-protocol-alist nil))
 
 (use-package shr
   :defer t

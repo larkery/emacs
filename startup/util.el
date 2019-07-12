@@ -344,13 +344,14 @@
 
 (use-package yasnippet
   :ensure t
-  :defer t
+  :defer nil
   :commands yas/expand
   :init
-  (bind-leader "x" #'yas/expand yas-minor-mode-map)
+  
   :config
   (require 'yasnippet-snippets)
   (yas-reload-all)
+  (bind-leader "x" #'yas/expand yas-minor-mode-map)
   (define-key yas-minor-mode-map [(tab)] nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
   (yas-global-mode))
