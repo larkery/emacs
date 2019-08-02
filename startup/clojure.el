@@ -59,14 +59,6 @@
 
   (bind-key "C-c d" #'cider-doc-quick-peek cider-mode-map)
 
-  (bind-key (concat leader-key* " e ;")
-            #'cider-pprint-eval-last-sexp-to-comment
-            cider-mode-map)
-
-  (bind-key (leader-kbd "e c")
-            #'cider-connect-clj&cljs
-            cider-mode-map)
-  
   (define-clojure-indent
     (defroutes 'defun)
     (jdbc.core/atomic 1)

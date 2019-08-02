@@ -1,9 +1,7 @@
 (setq messages-buffer-max-lines 100000)
 (add-to-list 'load-path (concat user-emacs-directory "site-lisp/"))
 (require 'use-package-save-custom)
-(setq gc-cons-threshold 16000000)
-
-(setq gc-cons-threshold (* 100 gc-cons-threshold)
+(setq gc-cons-threshold most-positive-fixnum
       make-backup-files nil
       custom-file (concat user-emacs-directory "custom.el"))
 
@@ -26,10 +24,10 @@
   (package-install 'use-package))
 
 (eval-when-compile
+
   (require 'use-package))
 
 (let ((startup-directory (concat user-emacs-directory "startup/")))
-  (load (concat startup-directory "leader-keys.el"))
   (load (concat startup-directory "basics.el"))
   (load (concat startup-directory "dired.el"))
   (load (concat startup-directory "mode-line.el"))
@@ -39,4 +37,13 @@
   (load (concat startup-directory "modes.el"))
   (load (concat startup-directory "org.el")))
 
-(setq gc-cons-threshold (/ gc-cons-threshold 100))
+(setq gc-cons-threshold 8000000)
+
+(defun my-minibuffer-setup-hook ()
+  (setq gc-cons-threshold most-positive-fixnum))
+
+(defun my-minibuffer-exit-hook ()
+  (setq gc-cons-threshold 8000000))
+
+(add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
+(add-hook 'minibuffer-exit-hook #'my-minibuffer-exit-hook)

@@ -1,6 +1,6 @@
 (menu-bar-mode -1)
 (set-scroll-bar-mode nil)
-(set-fringe-mode '(0 . 8))
+(set-fringe-mode '(2 . 8))
 (defalias 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
 (transient-mark-mode 1)
@@ -76,6 +76,7 @@
 
 (defun cycle-space ()
   (interactive) (cycle-spacing -1 t))
+
 (global-set-key [remap just-one-space] 'cycle-space)
 
 (global-auto-revert-mode 1)
@@ -186,7 +187,7 @@
   (add-hook 'custom-theme-load-hook
             (lambda ()
               (theme-to-xresources)
-              (set-fringe-mode '(0 . 8))
+;;              (set-fringe-mode '(0 . 8))
               (call-process "i3" nil nil nil "reload"))))
 
 (defvar dark-theme 'wombat)

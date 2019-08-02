@@ -98,11 +98,7 @@
 (use-package winner
   :defer nil
   :bind (("C-<" . winner-undo)
-	 ("C->" . winner-redo)
-         :map
-         leader-keys
-         ("w u" . winner-undo-repeat)
-         ("w r" . winner-redo-repeat))
+	 ("C->" . winner-redo))
   :after (defrepeater)
   :config
   (global-set-key [remap winner-redo] 'winner-redo-repeat)
@@ -129,21 +125,7 @@
    ("C-c p s s" . counsel-ag)
    ("C-c p s a" . projectile-ag)
    ("M-s p" . projectile-ag)
-   ("C-c p d" . projectile-dired))
-
-  (define-key projectile-mode-map
-    (leader-kbd "p")
-    'my-projectile-map)
-  (leader-name "p" "proj")
-  
-  (define-prefix-command 'my-projectile-map)
-  (bind-keys
-   :map my-projectile-map
-   ("d" . projectile-dired)
-   ("f" . projectile-find-file)
-   ("q" . projectile-kill-buffers)
-   ("s" . counsel-ag)
-   ("p" . projectile-switch-project)))
+   ("C-c p d" . projectile-dired)))
 
 
 (use-package pcre2el
@@ -239,13 +221,12 @@
 
 (use-package god-mode
   :ensure t
-  :bind (:map leader-keys
-              ("SPC" . god-local-mode))
+  :bind (("<escape>" . god-mode-all))
   :diminish god-local-mode
   :config
 
   (define-key god-local-mode-map (kbd ".") 'repeat)
-  (define-key god-local-mode-map (kbd "<escape>") 'god-local-mode)
+
   (add-to-list 'god-exempt-major-modes 'notmuch-search-mode)
   (add-to-list 'god-exempt-major-modes 'notmuch-show-mode)
 
@@ -255,16 +236,41 @@
   (setq god-mode-modeline-text nil)
   
   (push '(:propertize god-mode-modeline-text
-                     face (:foreground "white" :background "red")
-                     )
+                      face (:foreground "white" :background "red")
+                      )
         mode-line-misc-info)
 
   (defun god-local-mode-lighter ()
     (setq god-mode-modeline-text
-          (and god-local-mode " G ")))
+          (and god-local-mode "-א-")))
   
   (add-hook 'god-local-mode-hook
-            'god-local-mode-lighter))
+            'god-local-mode-lighter)
+
+  (defun god-mode-lookup-command (key-string)
+    "Execute extended keymaps such as C-c, or if it is a command,
+call it."
+    (let* ((key-vector (read-kbd-macro key-string t))
+           (binding (key-binding key-vector)))
+      (cond ((commandp binding)
+             (setq last-command-event (aref key-vector (- (length key-vector) 1)))
+             binding)
+            ((keymapp binding)
+             (god-mode-lookup-key-sequence nil key-string))
+            
+            (:else
+             (let* ((end-pos (- (length key-vector) 1))
+                    (end-elt (elt key-vector end-pos))
+                    (mods (event-modifiers end-elt))
+                    (raw (event-basic-type end-elt)))
+               (if (equal mods '(control))
+                   (progn (aset key-vector end-pos raw)
+                          (god-mode-lookup-command
+                           (format-kbd-macro key-vector 1)))
+                 (error "God: Unknown key binding for `%s`" key-string)))))))
+
+  (with-eval-after-load 'which-key
+    (which-key-enable-god-mode-support)))
 
 (use-package editorconfig
   :ensure t
@@ -340,8 +346,6 @@
       (when (derived-mode-p 'prog-mode)
         (insert "\"")))))
 
-(bind-leader "f i" #'insert-file-path)
-
 (use-package yasnippet
   :ensure t
   :defer nil
@@ -351,7 +355,7 @@
   :config
   (require 'yasnippet-snippets)
   (yas-reload-all)
-  (bind-leader "x" #'yas/expand yas-minor-mode-map)
+  (bind-key "M-#" #'yas/expand yas-minor-mode-map)
   (define-key yas-minor-mode-map [(tab)] nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
   (yas-global-mode))
@@ -403,9 +407,6 @@
 (use-package calc
   :defer t
   :custom (calc-multiplication-has-precedence nil)
-  :bind (:map leader-keys
-              ("e c" . calc-eval-line))
-
   :config
   (defun calc-eval-line ()
     (interactive)
@@ -419,8 +420,8 @@
     (end-of-line)))
 
 (use-package dictionary
-  :ensure t
-  :bind (:map leader-keys
-              ("t d" . dictionary-lookup-definition)))
+  :ensure t)
 
-(use-package completing-read-menu)
+
+
+

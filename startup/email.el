@@ -35,6 +35,10 @@
 (use-package orgalist
   :ensure t
   :commands orgalist-mode
+  :bind
+  (:map orgalist-mode-map
+        ("C-c l" . org-insert-link))
+  
   :init
   (add-hook 'notmuch-message-mode-hook 'orgalist-mode))
 
@@ -188,11 +192,8 @@
    ("u" . notmuch-skip-to-unread)
    :map notmuch-tree-mode-map
    ("q" . notmuch-tree-quit-harder)
-   ("u" . notmuch-skip-to-unread)
-   :map leader-keys
-   ("m m" . notmuch-inbox)
-   ("m n" . notmuch-mua-new-mail))
-  
+   ("u" . notmuch-skip-to-unread))
+    
   :custom
   (notmuch-multipart/alternative-discouraged '("text/plain")) ;; prefer html?
 
@@ -254,14 +255,6 @@
   (require 'org-mime)
   (require 'notmuch-fancy-html)
 
-  (bind-key (leader-kbd "i")
-            #'message-insert-or-toggle-importance
-            message-mode-map)
-
-  (bind-key (leader-kbd "F")
-            #'notmuch-switch-identity
-            message-mode-map)
-  
   (defun notmuch-inbox ()
     (interactive)
     (notmuch-search "tag:inbox or tag:flagged"))
@@ -607,7 +600,8 @@
   :config
   (setq mailcap-user-mime-data
         '(((viewer . "xdg-open %s")
-           (type . ".+")))))
+           (type . ".+"))))
+  )
 
 (use-package dnd
   :config

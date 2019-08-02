@@ -67,18 +67,31 @@ The first will find a file, and the rest headings and subheadings and so on.")
         (cancel-timer org-notify-check-timer)
         (setq org-notify-check-timer nil)
         (mapc #'cancel-timer org-notify-extant-timers)
+        (remove-hook 'after-revert-hook 'org-notify-check-if-org)
+        (remove-hook 'after-save-hook 'org-notify-check-if-org)
         (message "Agenda notifications disabled"))
     (progn
       (require 'notifications)
+      (add-hook 'after-save-hook 'org-notify-check-if-org)
+      (add-hook 'after-revert-hook 'org-notify-check-if-org)
       (setq org-notify-check-timer
             (run-with-timer 0 org-notify-check-interval #'org-notify-check))
       
       (message "Agenda notifications enabled"))))
 
+
+(defvar org-notify-extant-timers nil)
+(defvar org-notify-soon-headings nil)
+
+(defun org-notify-check-if-org ()
+  (when (eq major-mode 'org-mode)
+    (org-notify-check)))
+
 (defun org-notify-check ()
   "Check for any events that are coming soon and schedule a beep for them"
   (message "Checking for org notifications")
   (mapc #'cancel-timer org-notify-extant-timers)
+  (setq org-notify-soon-headings nil)
   (org-map-entries
    'org-notify-check-headline
    "TIMESTAMP>=\"<now>\""
@@ -86,10 +99,7 @@ The first will find a file, and the rest headings and subheadings and so on.")
   (org-map-entries
    'org-notify-check-headline
    "SCHEDULED>=\"<now>\""
-   'agenda)
-  )
-
-(defvar org-notify-extant-timers nil)
+   'agenda))
 
 (defun org-notify-check-headline ()
   (let* ((heading (org-get-heading t t t t))
@@ -100,6 +110,7 @@ The first will find a file, and the rest headings and subheadings and so on.")
          (early-warning (- time-secs (* 60 5))))
     (when (< delta-t org-notify-check-interval)
       (message "Will notify for %s" heading)
+      (push message org-notify-soon-headings)
       (push
        (run-at-time (seconds-to-time early-warning)
                     nil
