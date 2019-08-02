@@ -34,6 +34,13 @@
  '(rainbow-delimiters-unmatched-face ((t (:background "red" :foreground "white"))))
  '(rainbow-delimiters-mismatched-face ((t (:background "red" :foreground "white"))))
 
+ '(fringe ((((background dark)) (:background "black"))
+           (((background light)) (:background "lightgoldenrod"))))
+
+ '(diff-hl-insert ((t (:background "chartreuse"))))
+ '(diff-hl-change ((t (:background "deep sky blue" :foreground "deep sky blue"))))
+ '(diff-hl-delete ((t (:background "red" :foreground "orange red"))))
+ 
  '(diredfl-dir-heading ((t (:inherit match))))
  '(diredfl-read-priv ((t (:inherit default))))
  '(diredfl-write-priv ((t (:inherit default))))
