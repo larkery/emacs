@@ -230,23 +230,16 @@
   (add-to-list 'god-exempt-major-modes 'notmuch-search-mode)
   (add-to-list 'god-exempt-major-modes 'notmuch-show-mode)
 
-  (defvar god-mode-modeline-text nil)
-  (make-variable-buffer-local 'god-mode-modeline-text)
-
-  (setq god-mode-modeline-text nil)
+  (lexical-let (cookie)
+    (defun god-mode-hl-line ()
+      (if god-local-mode
+          (setq cookie
+                (face-remap-add-relative 'mode-line
+                                         '(:background "darkred" :foreground "white")))
+        (face-remap-remove-relative cookie))))
+    
+  (add-hook 'god-local-mode-hook #'god-mode-hl-line)
   
-  (push '(:propertize god-mode-modeline-text
-                      face (:foreground "white" :background "red")
-                      )
-        mode-line-misc-info)
-
-  (defun god-local-mode-lighter ()
-    (setq god-mode-modeline-text
-          (and god-local-mode "-א-")))
-  
-  (add-hook 'god-local-mode-hook
-            'god-local-mode-lighter)
-
   (defun god-mode-lookup-command (key-string)
     "Execute extended keymaps such as C-c, or if it is a command,
 call it."
