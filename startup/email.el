@@ -255,6 +255,23 @@
   (require 'org-mime)
   (require 'notmuch-fancy-html)
 
+  (major-mode-hydra-define
+    notmuch-message-mode (:quit-key "q")
+
+    ("Field"
+     (("f" notmuch-switch-identity "from" :exit nil)
+      ("i" message-insert-or-toggle-importance "urgency"
+       :exit nil))
+     "Attach"
+     (("a" mml-attach-file "file" :exit nil)
+      ("i" notmuch-insert-image-link "img"))))
+
+  (defun notmuch-insert-image-link ()
+    (interactive)
+    (let ((file (read-file-name "Image: ")))
+      (when file
+        (insert "[[" file "]]\n"))))
+
   (defun notmuch-inbox ()
     (interactive)
     (notmuch-search "tag:inbox or tag:flagged"))

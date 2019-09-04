@@ -438,3 +438,8 @@ call it."
      (("*" anzu-query-replace-regexp "qr regex")
       ("%" anzu-query-replace "qr string")))))
 
+
+(use-package major-mode-hydra :ensure t
+  :bind ("<f2>" . major-mode-hydra)
+  :commands major-mode-hydra major-mode-hydra-define)
+
