@@ -3,6 +3,7 @@
 (require 'projectile)
 
 (defvar buffer-table-group-col 2)
+(defvar buffer-table-host-col 4)
 
 (defvar buffer-table-filters nil)
 (make-variable-buffer-local 'buffer-table-filters)
@@ -29,6 +30,7 @@
           ("Name" 25 buffer-table-sort-filename)
           ("Group" 14 (lambda (a b) (buffer-table-sort-other buffer-table-group-col a b)))
           ("Mode" 12 t)
+          ("Host" 8 t)
           ("Filename" 0 t)]
         tabulated-list-padding 2
         tabulated-list-sort-key nil
@@ -72,6 +74,13 @@
                              (proj-name (and buf-path (projectile-project-name)))
                              (proj-root (and buf-path proj-name (projectile-project-root)))
                              (mode-name (buffer-table-buffer-mode))
+                             (host-name
+                              (or (and buf-path
+                                    (file-remote-p buf-path)
+                                    (tramp-file-name-host-port
+                                     (tramp-dissect-file-name buf-path)))
+                                  ""))
+                             
                              (group (cond
                                      ((memq major-mode
                                             '(Custom-mode
@@ -121,6 +130,7 @@
                                               (t 'italic)))
                                 ,group
                                 ,mode-name
+                                ,host-name
                                 ,(or buf-path "")
                                 ]))))
            and unless (buffer-table-filtered-p e)
@@ -251,9 +261,18 @@
   (buffer-table-filter-like-this buffer-table-group-col)
   (tabulated-list-revert))
 
+(defun buffer-table-filter-host ()
+  (interactive)
+  (buffer-table-filter-like-this buffer-table-host-col)
+  (tabulated-list-revert))
+
 (define-key buffer-table-mode-map
-  (kbd "= g")
+  (kbd "f g")
   'buffer-table-filter-group)
+
+(define-key buffer-table-mode-map
+  (kbd "f h")
+  'buffer-table-filter-host)
 
 (defun buffer-table-un-filter ()
   (interactive)
@@ -261,7 +280,35 @@
   (tabulated-list-revert))
 
 (define-key buffer-table-mode-map
-  (kbd "= =")
+  (kbd "f f")
   'buffer-table-un-filter)
+
+(pretty-hydra-define
+  buffer-table
+  (:quit-key ("q") :title "Buffer List" :foreign-keys run)
+  ("Sort"
+   (("o g" buffer-table-sort-by-group "group"))
+   
+   "Filter"
+   (("f g" buffer-table-filter-group "group")
+    ("f h" buffer-table-filter-host "host")
+    ("f f" buffer-table-un-filter "none"))
+
+   "Kill"
+   (("D g" buffer-table-kill-group "group")
+    ("D m" buffer-table-kill-mode "mode"))
+
+   "Act"
+   (("U" buffer-table-unmark-all "clear marks")
+    ("x" buffer-table-execute "execute"))
+   )
+
+  
+  )
+
+(define-key buffer-table-mode-map
+  (kbd "SPC")
+  'buffer-table/body
+  )
 
 (provide 'buffer-table)

@@ -348,7 +348,7 @@ call it."
   :config
   (require 'yasnippet-snippets)
   (yas-reload-all)
-  (bind-key "M-#" #'yas/expand yas-minor-mode-map)
+  (bind-key "M-#" #'yas-expand yas-minor-mode-map)
   (define-key yas-minor-mode-map [(tab)] nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
   (yas-global-mode))
@@ -416,5 +416,25 @@ call it."
   :ensure t)
 
 
+(defun byte-recompile-user-directory ()
+  (interactive)
+  (byte-recompile-directory user-emacs-directory 0 t))
 
+
+(use-package hydra
+  :ensure t)
+
+(use-package pretty-hydra :ensure t
+  :bind ("<f1>" . general-keys/body)
+  :config
+
+  (pretty-hydra-define general-keys
+    
+    (:foreign-keys warn
+                   :quit-key "q" :title "Useful keys"
+                   :exit t)
+
+    ("Search"
+     (("*" anzu-query-replace-regexp "qr regex")
+      ("%" anzu-query-replace "qr string")))))
 

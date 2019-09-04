@@ -14,3 +14,6 @@ tramp
 tutorial/
 url/
 workspace/
+*.elc
+transient/
+image-dired/
