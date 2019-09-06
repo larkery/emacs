@@ -199,6 +199,7 @@
 (use-package all-the-icons-dired
   :ensure t
   :defer t
+  :diminish
   :hook
   (dired-mode . all-the-icons-dired-mode))
 

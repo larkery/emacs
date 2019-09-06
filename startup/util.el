@@ -418,8 +418,10 @@ call it."
 
 (defun byte-recompile-user-directory ()
   (interactive)
+  (let ((default-directory user-emacs-directory))
+    (shell-command
+     "find . -iname \\*.elc -exec rm '{}' ';'"))
   (byte-recompile-directory user-emacs-directory 0 t))
-
 
 (use-package hydra
   :ensure t)
@@ -442,4 +444,12 @@ call it."
 (use-package major-mode-hydra :ensure t
   :bind ("<f2>" . major-mode-hydra)
   :commands major-mode-hydra major-mode-hydra-define)
+
+(use-package diff-hl :ensure t
+  :custom (diff-hl-side 'right))
+
+(use-package scf-mode
+  :commands scf-mode
+  :bind (:map grep-mode-map
+              (")" . scf-mode)))
 

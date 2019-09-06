@@ -3,7 +3,8 @@
 (require 'use-package-save-custom)
 (setq gc-cons-threshold most-positive-fixnum
       make-backup-files nil
-      custom-file (concat user-emacs-directory "custom.el"))
+      custom-file (concat user-emacs-directory "custom.el")
+      load-prefer-newer t)
 
 (load custom-file)
 

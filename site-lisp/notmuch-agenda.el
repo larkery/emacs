@@ -2,6 +2,8 @@
 ;; - showing agenda in message body where there's an invitation
 ;; - adding buttons to respond to messages
 
+(eval-when-compile (require 'org))
+
 (defun notmuch-agenda-datetime-as-iso (datetime)
   "Convert a date retrieved via `icalendar--get-event-property' to ISO format."
   (if datetime
