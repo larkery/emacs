@@ -9,8 +9,7 @@
 
 (use-package wdired
   :defer t
-  :bind (:map dired-mode-map
-              ("<f2>" . wdired-change-to-wdired-mode))
+  :commands wdired-change-to-wdired-mode
   :custom
   (wdired-allow-to-change-permissions t))
 
@@ -41,6 +40,18 @@
   (dired-subtree-line-prefix-face 'subtree)
   :config
 
+  (major-mode-hydra-define dired-mode
+    (:quit-key "q")
+    ("Tools"
+     (("<f2>" wdired-change-to-wdired-mode "edit names"))
+
+     "File"
+     (("S" dired-do-symlink "symlink (absolute)")
+      ("Y" dired-do-relsymlink "symlink (relative)"))
+
+     
+     ))
+  
   (defun dired-subtree-indented-arrow-prefix (d)
       (concat (make-string (* 3 d) ? )
               (propertize ">" 'face (intern (concat "outline-" (number-to-string (mod d 9)))))))
@@ -175,26 +186,7 @@
   :bind (:map dired-mode-map
               ("r" . dired-rsync)))
 
-(defun dired-here-please ()
-  (interactive)
-  (if (eq major-mode 'dired-mode) (quit-window)
-    (let* ((projectile-require-project-root nil)
-           (file (or (buffer-file-name) default-directory))
-           (pr (projectile-project-root))
-           (here (if (file-directory-p file) file (file-name-directory file)))
-           (there (or pr (if (file-directory-p here)
-                             here
-                           (file-name-directory here))))
-           (dired-buffer (save-window-excursion (dired there))))
-      (pop-to-buffer dired-buffer)
-      (dolist (dir
-               (cl-loop until (string= here there)
-                        collect here
-                        do (setq here (file-name-directory (directory-file-name here)))))
-        (dired-maybe-insert-subdir dir))
-      (dired-goto-file file))))
-
-(bind-key "<f7>" 'dired-here-please)
+(bind-key "<f7>" (lambda () (interactive) (dired default-directory)))
 
 (use-package all-the-icons-dired
   :ensure t
