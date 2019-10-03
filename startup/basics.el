@@ -1,6 +1,5 @@
 (menu-bar-mode -1)
 (set-scroll-bar-mode nil)
-(fringe-mode '(0 . 8))
 (defalias 'yes-or-no-p 'y-or-n-p)
 (delete-selection-mode 1)
 (transient-mark-mode 1)
@@ -47,7 +46,9 @@
 
 (window-divider-mode 1)
 
-(custom-set-variables '(calendar-date-style 'european))
+(custom-set-variables
+ '(calendar-date-style 'european)
+ '(fringe-mode '(0 . 8)))
 
 (setq-default scroll-bar-width 8
 	      indent-tabs-mode nil
@@ -184,10 +185,14 @@
   :defer nil
   :commands theme-to-xresources
   :init
-  (add-hook 'custom-theme-load-hook
-            (lambda ()
-              (theme-to-xresources)
-              (call-process "i3" nil nil nil "reload"))))
+  (add-hook
+   'custom-theme-load-hook
+   (lambda ()
+     (theme-to-xresources)
+     (condition-base
+      nil
+      (call-process "i3" nil nil nil "reload")
+      (error nil)))))
 
 (defvar dark-theme 'wombat)
 (defvar light-theme 'adwaita)
@@ -312,3 +317,8 @@
 (advice-add 'x-popup-menu   :before 'i3-disable-fullscreen)
 (advice-add 'x-popup-dialog :before 'i3-disable-fullscreen)
 (advice-add 'x-create-frame :before 'i3-disable-fullscreen)
+
+(use-package sh-script
+  :config
+  ;; for reasons unknown SMIE breaks in shell indentation at the moment
+  (setq sh-use-smie nil))
