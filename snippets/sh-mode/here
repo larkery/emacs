@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: here
+# key: here
+# --
+HERE=$(dirname $(readlink -f "\$0"))
+$0
