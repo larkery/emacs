@@ -260,7 +260,7 @@
 
     ("Field"
      (("f" notmuch-switch-identity "from" :exit nil)
-      ("i" message-insert-or-toggle-importance "urgency"
+      ("u" message-insert-or-toggle-importance "urgency"
        :exit nil))
      "Attach"
      (("a" mml-attach-file "file" :exit nil)
