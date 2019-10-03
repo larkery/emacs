@@ -122,6 +122,7 @@
   (setq projectile-keymap-prefix (kbd "C-c p"))
   (bind-keys
    :map projectile-mode-map
+   ("<f9>" . projectile-switch-project)
    ("C-c p s s" . counsel-ag)
    ("C-c p s a" . projectile-ag)
    ("M-s p" . projectile-ag)
@@ -144,9 +145,12 @@
   :bind
   (([remap query-replace] . 'anzu-query-replace)
    ([remap query-replace-regexp] . 'anzu-query-replace-regexp)
-   ("<f5>" . anzu-query-replace-regexp)
-   ("M-s N" . anzu-replace-at-cursor-thing)
-   ("M-s n" . anzu-query-replace-at-cursor)
+   ;; ("<f5>" . anzu-query-replace-regexp)
+
+   ;; ("M-s N" . anzu-replace-at-cursor-thing)
+
+   ;; ("M-s n" . anzu-query-replace-at-cursor)
+
    :map isearch-mode-map
    ([remap isearch-query-replace] . anzu-isearch-query-replace)
    ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
@@ -276,27 +280,10 @@ call it."
   :config
   (editorconfig-mode 1))
 
-
 (use-package ediff
   :defer t
   :custom
   (ediff-window-setup-function 'ediff-setup-windows-plain))
-
-(defun mark-symbol-or-minibuffer-it ()
-  (interactive)
-  (if (minibufferp)
-      (insert
-       (with-current-buffer
-           (window-buffer (minibuffer-selected-window))
-         (let ((b (bounds-of-thing-at-point 'symbol)))
-           (when b
-             (buffer-substring-no-properties (car b) (cdr b))))))
-    (let ((b (bounds-of-thing-at-point 'symbol)))
-      (when b
-        (set-mark (car b))
-        (goto-char (cdr b))))))
-
-(bind-key "C-'" 'mark-symbol-or-minibuffer-it)
 
 (use-package multiple-cursors
   :defer t
@@ -399,6 +386,7 @@ call it."
 
 (use-package calc
   :defer t
+  :bind ("<f8>" . quick-calc)
   :custom (calc-multiplication-has-precedence nil)
   :config
   (defun calc-eval-line ()
@@ -414,7 +402,6 @@ call it."
 
 (use-package dictionary
   :ensure t)
-
 
 (defun byte-recompile-user-directory ()
   (interactive)
@@ -437,9 +424,30 @@ call it."
                    :exit t)
 
     ("Search"
-     (("*" anzu-query-replace-regexp "qr regex")
-      ("%" anzu-query-replace "qr string")))))
+     (("r r" anzu-query-replace-regexp "rep reg")
+      ("r s" anzu-query-replace "rep str"))
+     "Edit"
+     (("i n" insert-numbers "ins num")
+      ("i f" insert-file-path "ins path")
+      ("e l" calc-eval-line "calc line"))
+     "Set"
+     (("d e" toggle-debug-on-error "debg err")
+      ("d q" toggle-debug-on-quit "debg q")
+      ("h l" hl-line-mode "hl-line"))
+     "Win"
+     (("," winner-undo :exit nil)
+      ("." winner-redo :exit nil))))
 
+  (defun insert-numbers ()
+    (interactive)
+
+    (cond
+     ((> (mc/num-cursors) 1)
+      (call-interactively #'mc/insert-numbers))
+
+     (t (call-interactively #'kmacro-insert-counter))))
+  
+  )
 
 (use-package major-mode-hydra :ensure t
   :bind ("<f2>" . major-mode-hydra)
