@@ -189,7 +189,7 @@
    'custom-theme-load-hook
    (lambda ()
      (theme-to-xresources)
-     (condition-base
+     (condition-case
       nil
       (call-process "i3" nil nil nil "reload")
       (error nil)))))
