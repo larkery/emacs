@@ -12,8 +12,8 @@
 
 (setq package-enable-at-startup nil)
 (add-to-list 'package-archives
-;;	     '("melpa" . "https://melpa.org/packages/")
-             '("melpa" . "https://www.mirrorservice.org/sites/melpa.org/packages/")
+	     '("melpa" . "https://melpa.org/packages/")
+             ;;'("melpa" . "https://www.mirrorservice.org/sites/melpa.org/packages/")
              )
 (add-to-list 'package-archives
 	     '("org-mode" . "https://orgmode.org/elpa/"))

@@ -3,7 +3,11 @@
 (require 'projectile)
 
 (defvar buffer-table-group-col 2)
+(defvar buffer-table-mode-col 3)
 (defvar buffer-table-host-col 4)
+
+(defvar buffer-table-delete-mark (propertize "d" 'face 'error))
+(defvar buffer-table-save-mark (propertize "s" 'face 'success))
 
 (defvar buffer-table-filters nil)
 (make-variable-buffer-local 'buffer-table-filters)
@@ -71,7 +75,7 @@
                     (with-current-buffer b
                       (let* ((buf-name (buffer-name))
                              (buf-path (or buffer-file-name (and dired-directory (expand-file-name dired-directory))))
-                             (proj-name (and buf-path (projectile-project-name)))
+                             (proj-name (projectile-project-name))
                              (proj-root (and buf-path proj-name (projectile-project-root)))
                              (mode-name (buffer-table-buffer-mode))
                              (host-name
@@ -102,6 +106,7 @@
                                      
                                      ((memq major-mode
                                             '(notmuch-show-mode
+                                              notmuch-tree-mode
                                               notmuch-search-mode
                                               notmuch-message-mode))
                                       "mail")
@@ -159,21 +164,21 @@
   'buffer-table-switch-to-buffer)
 
 (defun tabulated-list-put-tag-similar (group tag)
-  (let ((this-group (elt (tabulated-list-get-entry) buffer-table-group-col)))
+  (let ((this-group (elt (tabulated-list-get-entry) group)))
     (save-excursion
       (goto-char (point-min))
       (while (not (eobp))
-        (if (string= (elt (tabulated-list-get-entry) buffer-table-group-col) this-group)
+        (if (string= (elt (tabulated-list-get-entry) group) this-group)
             (tabulated-list-put-tag tag t)
           (forward-line))))))
 
 (defun buffer-table-mark-kill ()
   (interactive)
-  (tabulated-list-put-tag-region "d" t))
+  (tabulated-list-put-tag-region buffer-table-delete-mark t))
 
 (defun buffer-table-mark-save ()
   (interactive)
-  (tabulated-list-put-tag-region "s" t))
+  (tabulated-list-put-tag-region buffer-table-save-mark t))
 
 (define-key buffer-table-mode-map
   (kbd "d") 'buffer-table-mark-kill)
@@ -183,11 +188,11 @@
 
 (defun buffer-table-kill-group ()
   (interactive)
-  (tabulated-list-put-tag-similar buffer-table-group-col "d"))
+  (tabulated-list-put-tag-similar buffer-table-group-col buffer-table-delete-mark))
 
 (defun buffer-table-save-group ()
   (interactive)
-  (tabulated-list-put-tag-similar buffer-table-group-col "s"))
+  (tabulated-list-put-tag-similar buffer-table-group-col buffer-table-save-mark))
 
 (define-key buffer-table-mode-map
   (kbd "D g")
@@ -199,7 +204,7 @@
 
 (defun buffer-table-kill-mode ()
   (interactive)
-  (tabulated-list-put-tag-similar 2 "d"))
+  (tabulated-list-put-tag-similar buffer-table-mode-col buffer-table-delete-mark))
 
 (define-key buffer-table-mode-map
   (kbd "D m")
