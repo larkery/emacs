@@ -34,6 +34,21 @@
 %T"))
    )
   :config
+
+  (major-mode-hydra-define
+    org-mode (:quit-key "q")
+
+    ("Display"
+     (("i" org-toggle-inline-images "images")
+      ("e" org-toggle-pretty-entities "entities")
+      ("l" org-toggle-latex-fragment "latex")
+      )
+
+     
+     
+     )
+    )
+  
   (with-eval-after-load 'org-agenda
     (require 'all-the-icons)
     (setq org-agenda-category-icon-alist

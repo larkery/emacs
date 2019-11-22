@@ -28,6 +28,26 @@
     (let ((notmuch-draft-folder selected-folder))
       (apply o args))))
 
+(defun notmuch-update-signature ()
+  (when (or (functionp message-signature)
+            (listp message-signature))
+    ;; reinsert the signature
+    (save-restriction
+      (save-excursion
+        (goto-char (point-min))
+        (let ((mml-start (if (search-forward "<#" nil t)
+                             (- (point) 2)
+                           (point-max))))
+          (narrow-to-region (point-min) mml-start)
+          (when (message-goto-signature)
+            ;; delete the signature somehow
+            (forward-line -1)
+            (forward-char -1)
+            (delete-region (point) (point-max))))
+        
+        (goto-char (point-min))
+        (message-insert-signature t)))))
+
 (defun notmuch-switch-identity ()
   (interactive)
   (save-excursion
@@ -45,7 +65,9 @@
                           (car notmuch-identities))))
         (delete-region from-start from-end)
         (insert new-from)
-        (notmuch-update-fcc)))))
+        (notmuch-update-fcc)
+        (notmuch-update-signature)
+        ))))
 
 (add-hook 'notmuch-mua-send-hook 'notmuch-update-fcc)
 (advice-add 'notmuch-draft-save :around 'notmuch-select-draft-folder)

@@ -49,6 +49,10 @@
      (("S" dired-do-symlink "symlink (absolute)")
       ("Y" dired-do-relsymlink "symlink (relative)"))
 
+     "Image"
+     (("i t" image-dired-toggle-marked-thumbs "thumbs")
+      ("i d" image-dired-display-thumbs "display"))
+
      
      ))
   
@@ -73,9 +77,13 @@
   (defun dired-xdg-open ()
     "Open the file at point with xdg-open"
     (interactive)
-
-    (dolist (file (dired-get-marked-files t current-prefix-arg))
-      (start-process "xdg-open" nil "xdg-open" file)))
+    (let* ((files (dired-get-marked-files t current-prefix-arg))
+           (nfiles (length files)))
+      (when (or (< nfiles 8)
+                (y-or-n-p (format "Really open %d files?" nfiles)))
+        
+        (dolist (file files)
+          (start-process "xdg-open" nil "xdg-open" file)))))
   
   (defun dired-remove-subdir (arg)
     "Remove the subdir at point, or with C-u remove all of them"

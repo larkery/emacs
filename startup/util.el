@@ -417,6 +417,17 @@ call it."
   :bind ("<f1>" . general-keys/body)
   :config
 
+  (defun insert-named-unicode (unicode-name)
+    "Same as C-x 8 enter UNICODE-NAME."
+    (insert-char (gethash unicode-name (ucs-names))))
+
+  (defhydra symbols-hydra (:hint nil)
+    "
+    _c_ ¤ _x_ ×
+    "
+    ("c" (insert-named-unicode "CURRENCY SIGN"))
+    ("x" (insert-named-unicode "MULTIPLICATION SIGN")))
+
   (pretty-hydra-define general-keys
     
     (:foreign-keys warn
@@ -429,7 +440,9 @@ call it."
      "Edit"
      (("i n" insert-numbers "ins num")
       ("i f" insert-file-path "ins path")
-      ("e l" calc-eval-line "calc line"))
+      ("e l" calc-eval-line "calc line")
+      ("i s" symbols-hydra/body "ins sym"))
+     
      "Set"
      (("d e" toggle-debug-on-error "debg err")
       ("d q" toggle-debug-on-quit "debg q")

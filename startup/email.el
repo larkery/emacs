@@ -589,7 +589,7 @@
 
   (defvar message-signatures-alist
     `(( ,(rx "tom.hinton@cse.org.uk") .
-        "Tom Hinton (📞 0117 934 1455)")))
+        "Dr. Tom Hinton (📞 0117 934 1455)")))
   
   (defun message-signature-select-by-from ()
     (let ((from (save-restriction
@@ -637,6 +637,7 @@
     (funcall shr-colorise-region start end fg nil))
   
   (advice-add 'shr-colorize-region :around 'shr-colorise-region-ignore-bg)
+;  (advice-remove 'shr-colorize-region 'shr-colorise-region-ignore-bg)
 
   (defun disabling-gc (o &rest args)
     (let* (;; (start (current-time))
