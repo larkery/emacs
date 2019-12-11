@@ -126,8 +126,8 @@
    ("C-c p s s" . counsel-ag)
    ("C-c p s a" . projectile-ag)
    ("M-s p" . projectile-ag)
-   ("C-c p d" . projectile-dired)))
-
+   ("C-c p d" . projectile-dired)
+   ("C-x C-d" . projectile-dired)))
 
 (use-package pcre2el
   :diminish pcre-mode

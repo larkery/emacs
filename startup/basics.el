@@ -332,3 +332,11 @@
   :config
   ;; for reasons unknown SMIE breaks in shell indentation at the moment
   (setq sh-use-smie nil))
+
+(use-package mixed-pitch
+  :ensure t
+  :config
+  (add-hook 'text-mode-hook #'mixed-pitch-mode)
+  (add-hook 'notmuch-show-mode-hook #'mixed-pitch-mode)
+  (add-hook 'message-mode-hook #'mixed-pitch-mode)
+  )
