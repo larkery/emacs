@@ -3,6 +3,7 @@
 
 (use-package org
   :bind (("C-c a" . org-agenda)
+         ("C-c c" . org-capture)
          :map org-mode-map
          ("M-p" . outline-previous-heading)
          ("M-n" . outline-next-heading))
@@ -30,8 +31,10 @@
   (org-refile-use-outline-path 'file)
 
   (org-capture-templates
-   '(("c" "> Calendar" entry (file "~/notes/agenda/calendar.org") "* %?
-%T"))
+   '(("p" "Person" entry (file"~/notes/work/people.org")
+      "* %^{Name} %^g
+%u")
+     )
    )
   :config
 

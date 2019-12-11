@@ -148,8 +148,11 @@
                              org-agenda-keymap)))
       )))
 
-(defvar notmuch-agenda-capture-target
-  '(file+datetree "~/notes/agenda/calendar.org"))
+(defvar notmuch-agenda-capture-targets
+  `(( ,(rx "tom.hinton@cse.org.uk")
+      file "~/notes/agenda/work.org")
+    ( ""
+      file "~/notes/agenda/calendar.org")))
 
 (defvar notmuch-agenda-capture-template
   ;; TODO insert also link to email
@@ -236,7 +239,15 @@
         (org-capture t "e")))))
 
 (defun notmuch-agenda-do-capture (event)
-  (let ((calendar-event (plist-get (overlay-properties event) 'calendar-event)))
+  (let ((calendar-event (plist-get (overlay-properties event) 'calendar-event))
+        (notmuch-agenda-capture-target
+         (let ((addr (notmuch-show-get-to)))
+           (cl-loop
+            for tgt in notmuch-agenda-capture-targets
+            when (string-match-p (car tgt) addr)
+            return (cdr tgt)
+            )))
+        )
     (notmuch-agenda-org-capture-or-update calendar-event)))
 
 (defun notmuch-agenda-insert-summary (event zone-map)

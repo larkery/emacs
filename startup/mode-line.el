@@ -46,7 +46,7 @@
    "%* "
    ,(propertize "%b"
                'mouse-face 'mode-line-highlight
-               'local-map (make-mode-line-mouse-map 'mouse-1 'dired-here-please))
+               'local-map (make-mode-line-mouse-map 'mouse-1 'dired-from-buffer))
    (:eval (mode-line-get-project))
    (:eval (mode-line-get-host))
    (:eval (mode-line-pad-right

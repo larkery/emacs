@@ -15,7 +15,8 @@
 
 (use-package dired
   :defer t
-  :bind (:map dired-mode-map
+  :bind (("C-x d" . dired-from-buffer)
+         :map dired-mode-map
               ("M-n" . dired-next-subdir)
               ("M-p" . dired-prev-subdir)
               ("^" . dired-up-directory-here)
@@ -24,7 +25,7 @@
               ("K" . dired-remove-subdir)
               ("e" . dired-xdg-open)
               ("C-x C-f" . dired-C-x-C-f))
-  
+  :commands dired-from-buffer
   :custom
   (dired-auto-revert-buffer t)
   (dired-bind-info nil)
@@ -55,6 +56,16 @@
 
      
      ))
+
+  (defun dired-from-buffer ()
+    (interactive)
+    (let ((b buffer-file-name)
+          (d (if buffer-file-name
+                 (file-name-directory buffer-file-name)
+               default-directory)))
+      (when d
+        (with-current-buffer (dired d)
+          (when b (dired-goto-file b))))))
   
   (defun dired-subtree-indented-arrow-prefix (d)
       (concat (make-string (* 3 d) ? )

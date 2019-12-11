@@ -200,9 +200,14 @@
 (add-to-list 'custom-theme-load-path
              (concat user-emacs-directory "site-lisp/themes"))
 
-(use-package gruvbox-theme :ensure t)
-(setq dark-theme 'gruvbox-dark-hard
-      light-theme 'gruvbox-light-hard)
+;; (use-package gruvbox-theme :ensure t)
+;; (setq dark-theme 'gruvbox-dark-hard
+;;       light-theme 'gruvbox-light-hard)
+
+(use-package modus-operandi-theme :ensure t)
+(use-package modus-vivendi-theme :ensure t)
+(setq dark-theme 'modus-vivendi
+      light-theme 'modus-operandi)
 
 (load-theme light-theme t)
 (load-theme 'tweaks t)
