@@ -172,7 +172,10 @@
 
 (defvar custom-theme-load-hook nil)
 (defadvice load-theme (after update-xresources-after-load-theme activate)
-  (run-hooks 'custom-theme-load-hook))
+  
+  (condition-case nil
+      (run-hooks 'custom-theme-load-hook)
+    (error nil)))
 
 (defun run-custom-theme-load-hook-once (frame)
   (when (window-system frame)
