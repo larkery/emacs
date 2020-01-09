@@ -2,6 +2,8 @@
 
 (custom-theme-set-faces
  'tweaks
+ 
+ '(default ((((background light)) (:background "cornsilk"))))
  '(org-todo ((default (:weight bold))))
  '(dired-subtree-depth-1-face ((t (:slant italic))))
  '(dired-subtree-depth-2-face ((t (:slant normal))))
