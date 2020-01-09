@@ -149,11 +149,52 @@
   :diminish
   :defer nil
   :ensure t
-  :bind (("C-x C-r" . counsel-recentf)
+  :bind (("<f10>" . counsel-tmm)
+         ("C-x C-r" . counsel-recentf)
          :map counsel-mode-map
          ([remap yank-pop] . nil))
   :config
   (counsel-mode 1)
+
+  (defun tmm-get-flat-keymap (menu)
+    (let ((tmm-km-list nil)
+          submap)
+      ;; mangle tmm-km-list
+      (map-keymap (lambda (k v) (tmm-get-keymap (cons k v))) menu)
+
+      ;; explode submenus of same
+      (cl-loop for entry in tmm-km-list
+               do (setq submap (cdr (cdr entry)))
+               if (keymapp submap)
+               append (let ((tmm-flat-keymap-prefix
+                             (concat tmm-flat-keymap-prefix
+                                     (car entry)
+                                     " → ")
+                             ))
+                        (tmm-get-flat-keymap submap))
+               else collect
+               (cons
+                (concat tmm-flat-keymap-prefix (car entry))
+                (cdr entry)))))
+
+  (defun counsel-tmm-prompt (menu)
+    "Select and call an item from the MENU keymap."
+    (let (out
+          choice
+          chosen-string
+          tmm-flat-keymap-prefix)
+      (setq tmm-km-list (tmm-get-flat-keymap menu))
+      (setq out (ivy-read "Menu bar: " (tmm--completion-table tmm-km-list)
+                          :require-match t))
+      (setq choice (cdr (assoc out tmm-km-list)))
+      (setq chosen-string (car choice))
+      (setq choice (cdr choice))
+      (cond ((keymapp choice)
+             (counsel-tmm-prompt choice))
+            ((and choice chosen-string)
+             (setq last-command-event chosen-string)
+             (call-interactively choice)))))
+
   :custom
   (counsel-find-file-ignore-regexp "\\`\\."))
 
