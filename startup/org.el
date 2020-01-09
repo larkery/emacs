@@ -5,6 +5,7 @@
   :bind (("C-c a" . org-agenda)
          ("C-c c" . org-capture)
          :map org-mode-map
+         ("C-." . org-toggle-timestamp-type)
          ("M-p" . outline-previous-heading)
          ("M-n" . outline-next-heading))
   :custom
@@ -44,13 +45,12 @@
     ("Display"
      (("i" org-toggle-inline-images "images")
       ("e" org-toggle-pretty-entities "entities")
-      ("l" org-toggle-latex-fragment "latex")
-      )
+      ("l" org-toggle-latex-fragment "latex"))
 
-     
-     
-     )
-    )
+     "Insert"
+     (("." org-time-stamp "<time>")
+      (">" (org-time-stamp nil t) "[time]"))))
+  
   
   (with-eval-after-load 'org-agenda
     (require 'all-the-icons)
@@ -72,10 +72,7 @@
              org-def org-defdecode))
 
   (advice-add 'org-read-date-analyze :around
-              'org-read-date-analyze-no-stupid-endian)
-
-  
-  )
+              'org-read-date-analyze-no-stupid-endian))
 
 
 (use-package org-extras
