@@ -24,7 +24,8 @@ a subheading of the last. Return the buffer, which will be positioned at the hea
         (current-buffer))))
 
 (defcustom org-log-location
-  '("~/notes/journal/%Y/%B.org"
+  '("~/notes/journal/%Y/%m-%B.org"
+    "Week %W"
     "[%Y-%m-%d %a]")
   "A list of strings, each of which will be used with `format-time-string'.
 The first will find a file, and the rest headings and subheadings and so on.")

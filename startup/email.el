@@ -256,7 +256,7 @@
   (require 'notmuch-fancy-html)
 
   (major-mode-hydra-define
-    notmuch-message-mode (:quit-key "q")
+    notmuch-message-mode (:quit-key "x")
 
     ("Field"
      (("f" notmuch-switch-identity "from" :exit nil)
@@ -264,8 +264,33 @@
        :exit nil))
      "Attach"
      (("a" mml-attach-file "file" :exit nil)
-      ("i" notmuch-insert-image-link "img"))))
+      ("i" notmuch-insert-image-link "img"))
+     "Text"
+     (("s" message-remove-or-update-signature "sig")
+      ("q s" message-split-quote-here "split quote")
+      ("q q" message-quote-here "enquote")
+      )
+     ))
 
+  (defun message-split-quote-here ()
+    (interactive)
+    (insert "#+HTML: </blockquote>\n\n")
+    (save-excursion
+      (insert "#+HTML: <blockquote>\n")))
+
+  (defun message-quote-here ()
+    (interactive)
+    (if (region-active-p)
+        (progn
+          (save-excursion
+            (goto-char (region-beginning))
+            (beginning-of-line)
+            (insert "#+HTML: <blockquote>\n"))
+          (save-excursion
+            (goto-char (region-end))
+            (end-of-line)
+            (insert "\n#+HTML: </blockquote>\n")))))
+    
   (defun notmuch-insert-image-link ()
     (interactive)
     (let ((file (read-file-name "Image: ")))

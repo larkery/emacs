@@ -28,23 +28,35 @@
     (let ((notmuch-draft-folder selected-folder))
       (apply o args))))
 
+(defun message-remove-or-update-signature ()
+  (interactive)
+  (save-excursion
+    (if (message-goto-signature)
+        (message-remove-signature)
+      (notmuch-update-signature))))
+
+
+(defun message-remove-signature ()
+  (interactive)
+  (goto-char (point-min))
+  (let ((mml-start (if (search-forward "<#" nil t)
+                       (- (point) 2)
+                     (point-max))))
+    (narrow-to-region (point-min) mml-start)
+    (when (message-goto-signature)
+      ;; delete the signature somehow
+      (forward-line -1)
+      (forward-char -1)
+      (delete-region (point) (point-max)))))
+
 (defun notmuch-update-signature ()
+  (interactive)
   (when (or (functionp message-signature)
             (listp message-signature))
     ;; reinsert the signature
     (save-restriction
       (save-excursion
-        (goto-char (point-min))
-        (let ((mml-start (if (search-forward "<#" nil t)
-                             (- (point) 2)
-                           (point-max))))
-          (narrow-to-region (point-min) mml-start)
-          (when (message-goto-signature)
-            ;; delete the signature somehow
-            (forward-line -1)
-            (forward-char -1)
-            (delete-region (point) (point-max))))
-        
+        (message-remove-signature)
         (goto-char (point-min))
         (message-insert-signature t)))))
 

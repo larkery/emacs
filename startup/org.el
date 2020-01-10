@@ -80,7 +80,8 @@
   :bind ("C-c j" . org-log-goto)
   :config
   (setq org-log-location
-        '("~/notes/journal/%Y/%B.org"
+        '("~/notes/journal/%Y/%m-%B.org"
+          "Week %W"
           "[%Y-%m-%d %a]")))
 
 (use-package date-at-point
