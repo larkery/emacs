@@ -42,14 +42,10 @@
             (if past "yesterday" "tomorrow"))
            ((< abs-days 8) (concat (if past "last" "this")
                                    (format-time-string " %A" encoded-timestamp)))
-           ((and (not past) (< abs-days 15))
-            (concat "a week on"
-                    (format-time-string " %A" encoded-timestamp)
-                    ))
-           (t (format "%s, %d week%s %s" (format-time-string "%A %e %B %Y" encoded-timestamp)
+           (t (format "%d week%s%s"
                       (floor (/ abs-days 7))
                       (if (= 1 (floor (/ abs-days 7))) "" "s")
-                      (if past "ago" "time")
+                      (if past " ago" "")
                       ))
            )))
     
@@ -57,10 +53,9 @@
 
 (defun notmuch-agenda-friendly-date (dtstart dtend rrule rdate duration)
   (let* ((now (decode-time (current-time)))
-         (start-time (format-time-string "%H:%M" (apply 'encode-time dtstart)))
+         (start-time (format-time-string "%a, %d %b %H:%M" (apply 'encode-time dtstart)))
          (rel-date (notmuch-agenda-relative-date now dtstart)))
-    ;; TODO handle other date structures
-    (concat start-time " " rel-date)))
+    (concat start-time " (" rel-date ")")))
 
 (defun notmuch-agenda-org-date (dtstart-dec dtend-dec rrule rdate duration)
   (let* ((start-d (notmuch-agenda-datetime-as-iso dtstart-dec))
@@ -265,18 +260,31 @@
          (rdate (icalendar--get-event-property event 'RDATE))
          (duration (icalendar--get-event-property event 'DURATION))
          
-         
-         (friendly-date (notmuch-agenda-friendly-date dtstart dtend rrule rdate duration)))
+         (friendly-start (notmuch-agenda-friendly-date dtstart dtend rrule rdate duration)))
 
-    (when friendly-date (insert friendly-date "\n"))
-    (when summary (insert "Summary: "summary"\n"))
-    (when comment (insert "Comment: "comment"\n"))
-    (when location (insert "Location: "location"\n"))
-    (when organizer (insert "Organizer: "organizer"\n"))
-    (when attendees (insert "Attending: \n"))
-    (while attendees
-      (insert "  - " (car attendees) "\n")
-      (setq attendees (cdr attendees)))
+    (when summary (insert (propertize summary 'face '(:underline t :height 1.5)) "\n"))
+
+    (when friendly-start
+      (insert (propertize "Start: " 'face 'bold))
+      (insert friendly-start "\n"))
+    
+    (when comment (insert (propertize "Comment: " 'face 'bold)
+                          comment"\n"))
+    (when location (insert (propertize "Location: " 'face 'bold)
+                           location"\n"))
+    (when organizer (insert (propertize "Organizer: " 'face 'bold)
+                            (replace-regexp-in-string
+                             "^mailto: *" ""
+                             organizer)"\n"))
+    (when attendees (insert (propertize "Attending: " 'face 'bold))
+          (while attendees
+            (insert (replace-regexp-in-string
+                     "^mailto: *" ""
+                     (car attendees)))
+            (when (cdr attendees) (insert ", "))
+            (setq attendees (cdr attendees)))
+          (insert "\n"))
+    (insert "\n")
     ))
 
 (defun notmuch-agenda-insert-part (msg part content-type nth depth button)

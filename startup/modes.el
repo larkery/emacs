@@ -8,6 +8,12 @@
   :defer t
   :commands pdf-view-mode)
 
+(use-package pdf-view-rotate
+  :bind
+  (:map pdf-view-mode-map
+        ("R" . pdf-view-rotate-clockwise)
+        ("L" . pdf-view-rotate-counterclockwise)))
+
 (use-package web-mode
   :ensure t
   :mode (("\\.js\\'" . web-mode)

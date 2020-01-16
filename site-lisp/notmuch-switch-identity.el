@@ -42,12 +42,14 @@
   (let ((mml-start (if (search-forward "<#" nil t)
                        (- (point) 2)
                      (point-max))))
-    (narrow-to-region (point-min) mml-start)
-    (when (message-goto-signature)
-      ;; delete the signature somehow
-      (forward-line -1)
-      (forward-char -1)
-      (delete-region (point) (point-max)))))
+    
+    (save-restriction
+      (narrow-to-region (point-min) mml-start)
+      (when (message-goto-signature)
+        ;; delete the signature somehow
+        (forward-line -1)
+        (forward-char -1)
+        (delete-region (point) (point-max))))))
 
 (defun notmuch-update-signature ()
   (interactive)

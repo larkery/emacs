@@ -15,7 +15,8 @@
   (org-use-speed-commands t)
   (org-speed-commands-user
    '(("P" . org-set-property)))
-  (org-agenda-files '("~/notes/agenda"))
+  (org-agenda-files '("~/notes/agenda" "~/notes/work"))
+  (org-agenda-todo-list-sublevels nil)
   (org-agenda-diary-file "~/notes/agenda/calendar.org")
   (org-id-locations-file "~/notes/.metadata/org-id-locations")
   (org-agenda-insert-diary-extract-time t)
