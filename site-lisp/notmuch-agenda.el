@@ -394,13 +394,7 @@
                               '("tom.hinton@cse.org.uk" "larkery.com")
                               (upcase response)))
 
-               (buffer-string))))))
-        )
-
-      ;; need to find the event
-      ;; (when (and response (member response '("Accepted" "Tentative")))
-      ;;   (notmuch-agenda-org-capture-or-update (car requires-response)))
-
+               (buffer-string)))))))
       )))
 
 (advice-add 'notmuch-mua-reply :around 'notmuch-agenda-reply-advice)

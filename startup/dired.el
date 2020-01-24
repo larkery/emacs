@@ -24,6 +24,7 @@
               ("<tab>" . dired-maybe-replace-subdir)
               ("K" . dired-remove-subdir)
               ("e" . dired-xdg-open)
+              ("/" . find-dired)
               ("C-x C-f" . dired-C-x-C-f))
   :commands dired-from-buffer
   :custom

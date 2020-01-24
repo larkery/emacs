@@ -141,7 +141,7 @@
   :custom
   (recentf-exclude
    (quote
-   ("^/home/hinton/notes/" "^/nix/store" recentf-exclude-deleted-local-files)))
+   ("^/home/hinton/notes/agenda" "^/nix/store" recentf-exclude-deleted-local-files)))
   (recentf-max-saved-items 100)
   (recentf-auto-cleanup 300))
 
@@ -384,3 +384,27 @@
   (add-hook 'notmuch-show-mode-hook #'mixed-pitch-mode)
   (add-hook 'message-mode-hook #'mixed-pitch-mode)
   )
+
+
+(defun narrow-to-thing ()
+  (interactive)
+
+  (cond
+   ((eq 'org-mode major-mode)
+    (cond
+     ((org-at-block-p)
+      (org-narrow-to-block))
+
+     (t (org-narrow-to-subtree))))
+   
+   ((derived-mode-p 'prog-mode)
+    (narrow-to-defun))
+
+   ((derived-mode-p 'text-mode)
+    (save-mark-and-excursion
+      (mark-paragraph)
+      (narrow-to-region)))
+   
+   (t (narrow-to-region))))
+
+(bind-key "C-x n n" #'narrow-to-thing)

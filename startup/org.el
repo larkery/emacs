@@ -7,7 +7,13 @@
          :map org-mode-map
          ("C-." . org-toggle-timestamp-type)
          ("M-p" . outline-previous-heading)
-         ("M-n" . outline-next-heading))
+         ("M-n" . outline-next-heading)
+         ("C-M-u" . outline-up-heading)
+         ("C-M-f" . org-forward-heading-same-level)
+         ("C-M-b" . org-backward-heading-same-level)
+         ("C-M-d" . outline-next-heading)
+         ("C-M-SPC" . org-mark-element)
+         )
   :custom
   (org-refile-use-outline-path t)
   (org-goto-interface 'outline)
