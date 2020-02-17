@@ -184,6 +184,10 @@
    ("RET" . notmuch-search-show-or-tree)
    :map notmuch-message-mode-map
    ("C-c f" . notmuch-switch-identity)
+   ("C-c s" . message-remove-or-update-signature)
+   ("C-c i" . message-insert-or-toggle-importance)
+   ("C-c C-s" . nil)
+   ("M-n" . message-next-thing)
    :map notmuch-show-mode-map
    ("C-o" . open-url-at-point)
    ("d" . notmuch-delete)
@@ -256,7 +260,7 @@
   (require 'notmuch-fancy-html)
 
   (major-mode-hydra-define
-    notmuch-message-mode (:quit-key "x")
+    notmuch-message-mode (:quit-key "x" :foreign-keys t)
 
     ("Field"
      (("f" notmuch-switch-identity "from" :exit nil)
@@ -267,16 +271,44 @@
       ("i" notmuch-insert-image-link "img"))
      "Text"
      (("s" message-remove-or-update-signature "sig")
-      ("q s" message-split-quote-here "split quote")
-      ("q q" message-quote-here "enquote")
-      )
-     ))
+      ("." message-split-quote-here "split quote")
+      ("," message-quote-here "enquote")
+      ("q" message-mark-end-quote :exit nil)
+      ("z" message-kill-remaining-quote :exit nil))))
+  
+  (defun message-next-thing ()
+    (interactive)
 
+    (cond
+     ((message-in-body-p)
+      (let ((here (point)))
+        (message-goto-signature)
+        (when (= here (point))
+          (goto-char (point-min))
+          (search-forward-regexp (rx bol (* alphanumeric) ": ") nil t))))
+     
+     ((not (search-forward-regexp (rx bol (* alphanumeric) ": ") nil t))
+      (message-goto-body))))
+  
+  (defun message-mark-end-quote ()
+    (interactive)
+    (unless (region-active-p)
+      (set-mark (point))
+      (activate-mark))
+    (search-forward-regexp
+     (rx bol "#+HTML: </blockquote>") nil t))
+
+  (defun message-kill-remaining-quote ()
+    (interactive)
+    (message-mark-end-quote)
+    (beginning-of-line)
+    (kill-region (point) (mark)))
+  
   (defun message-split-quote-here ()
     (interactive)
-    (insert "#+HTML: </blockquote>\n\n")
+    (insert "#+HTML: </blockquote>\n")
     (save-excursion
-      (insert "#+HTML: <blockquote>\n")))
+      (insert "\n#+HTML: <blockquote>\n")))
 
   (defun message-quote-here ()
     (interactive)
