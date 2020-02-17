@@ -25,7 +25,11 @@
               ("K" . dired-remove-subdir)
               ("e" . dired-xdg-open)
               ("/" . find-dired)
-              ("C-x C-f" . dired-C-x-C-f))
+              ("C-x C-f" . dired-C-x-C-f)
+              ("f" . nil)
+              ("f n" . find-name-dired-here)
+              ("f g" . find-grep-dired-here))
+  
   :commands dired-from-buffer
   :custom
   (dired-auto-revert-buffer t)
@@ -40,8 +44,23 @@
   (dired-subtree-line-prefix 'dired-subtree-indented-arrow-prefix)
   (dired-subtree-use-backgrounds nil)
   (dired-subtree-line-prefix-face 'subtree)
+  (directory-free-space-args "-PkH")
   :config
 
+  (defun find-name-dired-here (pattern)
+    (interactive "sPattern: ")
+    (find-name-dired default-directory pattern))
+
+  (defun find-grep-dired-here (pattern)
+    (interactive "sRegexp: ")
+    (find-grep-dired default-directory pattern))
+  
+  (defun with-ignored-errors (o &rest args)
+    (ignore-errors
+      (apply o args)))
+
+  (advice-add 'get-free-disk-space :around 'with-ignored-errors)
+  
   (major-mode-hydra-define dired-mode
     (:quit-key "q")
     ("Tools"
@@ -186,6 +205,11 @@
 
   (bind-key [mouse-2] 'dired-click dired-mode-map)          
         
+  (defun recentf-add-dired-directory ()
+    (when (and (stringp dired-directory)
+               (equal "" (file-name-nondirectory dired-directory)))
+      (recentf-add-file dired-directory)))
+  (add-hook 'dired-mode-hook 'recentf-add-dired-directory)
 
   )
 
