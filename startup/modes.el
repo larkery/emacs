@@ -6,6 +6,7 @@
 (use-package pdf-tools
   :ensure t
   :defer t
+  :mode ("\\.pdf\\'" . pdf-view-mode)
   :commands pdf-view-mode)
 
 (use-package pdf-view-rotate
