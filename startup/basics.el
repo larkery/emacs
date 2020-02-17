@@ -134,7 +134,8 @@
   (recentf-mode 1)
 
   (defun recentf-excluded-deleted-local-files (fi)
-    (unless (file-remote-p fi)
+    (unless (or (file-remote-p fi)
+                (string-match-p (rx bos "/net") fi))
       (not (file-exists-p fi))))
   (run-with-idle-timer 600 t 'recentf-save-list)
 
@@ -244,26 +245,28 @@
 (add-to-list 'custom-theme-load-path
              (concat user-emacs-directory "site-lisp/themes"))
 
-;; (use-package gruvbox-theme :ensure t)
+(use-package gruvbox-theme :ensure t)
 ;; (setq dark-theme 'gruvbox-dark-hard
 ;;       light-theme 'gruvbox-light-hard)
 
-(use-package modus-operandi-theme :ensure t)
-(use-package modus-vivendi-theme :ensure t)
-(setq dark-theme 'modus-vivendi
-      light-theme 'modus-operandi)
+
+(setq dark-theme 'gruvbox-dark-soft
+      light-theme 'gruvbox-light-soft)
 
 (load-theme light-theme t)
 (load-theme 'tweaks t)
 
 (defun switch-theme ()
   (interactive)
-  (let ((themes (if (custom-theme-enabled-p light-theme)
-                    (cons light-theme dark-theme)
-                  (cons dark-theme light-theme))))
-    (disable-theme (car themes))
-    (load-theme (cdr themes) t))
-  (load-theme 'tweaks t))
+  (let* ((light-mode (custom-theme-enabled-p light-theme))
+         (target-theme (if light-mode dark-theme light-theme))
+         (inhibit-redisplay t))
+    (dolist (theme custom-enabled-themes)
+      (disable-theme theme))
+
+    (load-theme target-theme t)
+    (load-theme 'tweaks t)))
+
 
 (bind-key "<f6>" 'switch-theme)
 
@@ -408,3 +411,9 @@
    (t (narrow-to-region))))
 
 (bind-key "C-x n n" #'narrow-to-thing)
+
+(advice-add
+ 'auto-revert-handler
+ :around (lambda (orig-fun &rest args)
+           (let ((auto-revert-verbose (not (minibufferp (window-buffer)))))
+              (apply orig-fun args))))
