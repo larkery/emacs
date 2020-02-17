@@ -137,32 +137,12 @@
    ("C-c p d" . projectile-dired)
    ("C-x C-d" . projectile-dired))
 
-
-  (defvar projectile-locate-dominating-stop-dir-regexp
-    (rx bos "/net"))
-  
-  (defun projectile-locate-dominating-file (file name)
-    "Look up the directory hierarchy from FILE for a directory containing NAME.
-Stop at the first parent directory containing a file NAME,
-and return the directory.  Return nil if not found.
-Instead of a string, NAME can also be a predicate taking one argument
-\(a directory) and returning a non-nil value if that directory is the one for
-which we're looking."
-    ;; copied from files.el (stripped comments) emacs-24 bzr branch 2014-03-28 10:20
-    (setq file (abbreviate-file-name file))
-    (let ((root nil)
-          try)
-      (while (not (or root
-                      (null file)
-                      (string-match projectile-locate-dominating-stop-dir-regexp file)))
-        (setq try (if (stringp name)
-                      (projectile-file-exists-p (expand-file-name name file))
-                    (funcall name file)))
-        (cond (try (setq root file))
-              ((equal file (setq file (file-name-directory
-                                       (directory-file-name file))))
-               (setq file nil))))
-      (and root (expand-file-name (file-name-as-directory root))))))
+  (defadvice projectile-locate-dominating-file (around stop-looking-in-net (file name))
+    (let ((locate-dominating-stop-dir-regexp
+           (rx-to-string `(| (regexp ,locate-dominating-stop-dir-regexp) (seq bos "/net")))
+           ))
+      ad-do-it))
+  )
 
 (use-package pcre2el
   :diminish pcre-mode
