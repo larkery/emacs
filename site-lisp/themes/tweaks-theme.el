@@ -19,7 +19,7 @@
 
  '(notmuch-search-unread-face ((t (:box nil :foreground "white" :distant-foreground "black" :weight bold))))
 
- '(notmuch-search-flagged-face ((t (:foreground "green4" :distant-foreground "cyan4" :weight bold))))
+ '(notmuch-search-flagged-face ((t (:inherit error))))
  
  '(symbol-overlay-default-face ((t (:underline "grey50"))))
 
