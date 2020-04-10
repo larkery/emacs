@@ -689,6 +689,36 @@
   (shr-use-fonts nil)
   :config
 
+  (defun shr-ensure-paragraph ()
+    (unless (bobp)
+      (let ((prefix (get-text-property (line-beginning-position)
+                                       'shr-prefix-length)))
+        (cond
+         ((and (bolp)
+               (save-excursion
+                 (forward-line -1)
+                 (looking-at " *$")))
+          ;; We're already at a new paragraph; do nothing.
+          )
+         ((and prefix
+               (= prefix (- (point) (line-beginning-position))))
+          ;; Do nothing; we're at the start of a <li>.
+          )
+         ((save-excursion
+            (beginning-of-line)
+            ;; If the current line is totally blank, and doesn't even
+            ;; have any face properties set, then delete the blank
+            ;; space.
+            (and (looking-at " *$")
+                 (not (get-text-property (point) 'face))
+                 (not (= (next-single-property-change (point) 'face nil
+                                                      (line-end-position))
+                         (line-end-position)))))
+          (delete-region (match-beginning 0) (match-end 0)))
+         ;; Insert new paragraph.
+         (t
+          (insert "\n"))))))
+  
   (defun shr-colorise-region-ignore-bg
       (shr-colorise-region start end fg &optional bg)
     (funcall shr-colorise-region start end fg nil))
