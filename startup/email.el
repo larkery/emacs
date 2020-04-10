@@ -185,6 +185,7 @@
    :map notmuch-message-mode-map
    ("C-c f" . notmuch-switch-identity)
    ("C-c s" . message-remove-or-update-signature)
+   ("C-c z" . message-kill-remaining-quote)
    ("C-c i" . message-insert-or-toggle-importance)
    ("C-c C-s" . nil)
    ("M-n" . message-next-thing)
