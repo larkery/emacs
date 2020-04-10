@@ -44,7 +44,7 @@
       locate-dominating-stop-dir-regexp
       (purecopy (rx bos "/net/" (* (not (any "/"))) "/" (* (not (any "/"))) eos)))
 
-(window-divider-mode 1)
+(window-divider-mode 0)
 
 (custom-set-variables
  '(calendar-date-style 'european)
