@@ -402,7 +402,8 @@ call it."
 (use-package calc
   :defer t
   :bind ("<f8>" . quick-calc)
-  :custom (calc-multiplication-has-precedence nil)
+  :custom
+  (calc-multiplication-has-precedence nil)
   :config
   (defun calc-eval-line ()
     (interactive)
@@ -413,7 +414,11 @@ call it."
         (goto-char (match-beginning 0))
         (delete-region (point) (save-excursion (end-of-line) (point)))
         (insert " => " (calc-eval (buffer-substring here (point))))))
-    (end-of-line)))
+    (end-of-line))
+
+  (with-eval-after-load 'calc
+    (defalias 'calcFunc-uconv 'math-convert-units))
+  )
 
 (use-package dictionary
   :ensure t)
