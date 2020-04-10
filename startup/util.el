@@ -131,7 +131,7 @@
   (bind-keys
    :map projectile-mode-map
    ("<f9>" . projectile-switch-project)
-   ("C-c p s s" . counsel-ag)
+   ("C-c p s s" . counsel-projectile-ag)
    ("C-c p s a" . projectile-ag)
    ("M-s p" . projectile-ag)
    ("C-c p d" . projectile-dired)
