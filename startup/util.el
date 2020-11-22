@@ -8,12 +8,6 @@
   :config
   (add-hook 'vc-annotate-mode-hook 'vc-annotate-toggle-annotation-visibility))
 
-(use-package rainbow-delimiters
-  :ensure t
-  :commands rainbow-delimiters-mode
-  :init
-  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
-
 (use-package smartparens
   :diminish smartparens-mode
   :ensure t
@@ -37,12 +31,10 @@
               ("C-#" . sp-reindent-toplevel)
               ("C-;" . move-past-close-reindent-and-flash))
   :init
-  
   (add-hook 'prog-mode-hook 'smartparens-mode)
   (add-hook 'prog-mode-hook 'show-smartparens-mode)
 
   :config
-
   (defun sp-wrap-with-paren ()
     (interactive)
     (sp-wrap-with-pair "("))
@@ -99,15 +91,13 @@
   :defer nil
   :bind (("C-<" . winner-undo)
 	 ("C->" . winner-redo))
-  :after (defrepeater)
-  :config
-  (global-set-key [remap winner-redo] 'winner-redo-repeat)
-  (global-set-key [remap winner-undo] 'winner-undo-repeat)
   
-  (winner-mode 1)
-  (defrepeater #'winner-undo)
-  (defrepeater #'winner-redo))
+  :config
+  (winner-mode 1))
 
+(use-package counsel-projectile
+  :commands counsel-projectile-ag
+  )
 
 (use-package projectile
   :diminish
@@ -141,8 +131,7 @@
     (let ((locate-dominating-stop-dir-regexp
            (rx-to-string `(| (regexp ,locate-dominating-stop-dir-regexp) (seq bos "/net")))
            ))
-      ad-do-it))
-  )
+      ad-do-it)))
 
 (use-package pcre2el
   :diminish pcre-mode
@@ -175,33 +164,67 @@
              anzu-query-replace-at-cursor
              anzu-isearch-query-replace)
   :config
+
+  (defun my-anzu-pcre-to-elisp (query)
+    (let* ((sep (anzu--separator))
+           (to (when (and (string-match sep query)
+                          (get-text-property (match-beginning 0) 'separator query))
+                 (substring-no-properties query (match-end 0))))
+           (from (or (and to (substring-no-properties query 0 (match-beginning 0)))
+                     query))
+           (from-el (rxt-pcre-to-elisp from)))
+      (concat from-el
+              (when to sep)
+              to)))
+    
   (defun my-anzu-wangle-minibuffer-input (f buf beg end use-re overlay-limit)
     (if (and use-re pcre-mode)
         (let ((-minibuffer-contents (symbol-function 'minibuffer-contents)))
           (cl-letf (((symbol-function 'minibuffer-contents)
                      (lambda ()
-                       (let ((mc (funcall -minibuffer-contents)))
-                         (condition-case nil
-                             (rxt-pcre-to-elisp mc)
-                           (error "";; mc
-                                  ))))))
+                       (condition-case nil
+                           (my-anzu-pcre-to-elisp (funcall -minibuffer-contents))
+                         (error ""))
+                       )))
+            
             (funcall f buf beg end use-re overlay-limit)))
-
       (funcall f buf beg end use-re overlay-limit)))
 
   (defun my-anzu-pcre-mode (f prompt beg end use-re overlay-limit)
     (if (and use-re pcre-mode)
-        (let ((res (funcall f (concat prompt " (PCRE)") beg end use-re overlay-limit)))
-          (condition-case nil
-              (rxt-pcre-to-elisp res)
-            (error (error "'%s' is invalid regexp." res))))
+        (cl-letf (((symbol-function 'anzu--transform-from-to-history)
+                   (lambda ()
+                     (let ((separator (anzu--separator)))
+                       (append (mapcar (lambda (from-to)
+                                         (concat (query-replace-descr
+                                                  (condition-case nil
+                                                      (rxt-elisp-to-pcre (car from-to))
+                                                    (error (car from-to))))
+                                                 separator
+                                                 (query-replace-descr (cdr from-to))))
+                                       anzu--query-defaults)
+                               (mapcar
+                                (lambda (r)
+                                  (condition-case nil
+                                      (rxt-elisp-to-pcre r)
+                                    (error r)))
+                                (symbol-value query-replace-from-history-variable))))
+                     )
+                   )
+                  ((symbol-function 'anzu--validate-regexp)
+                   (lambda (q) t)))
+          (my-anzu-pcre-to-elisp (funcall f (concat prompt " (PCRE)") beg end use-re overlay-limit))
+          ;; (condition-case nil
+          
+          ;;   (error (error "Invalid regexp")))
+          )
       (funcall f prompt beg end use-re overlay-limit)))
 
   (advice-add 'anzu--check-minibuffer-input :around #'my-anzu-wangle-minibuffer-input)
   (advice-add 'anzu--query-from-string :around #'my-anzu-pcre-mode)
 
-  ;;(advice-remove 'anzu--check-minibuffer-input #'my-anzu-wangle-minibuffer-input)
-  ;;(advice-remove 'anzu--query-from-string #'my-anzu-pcre-mode)
+  ;; (advice-remove 'anzu--check-minibuffer-input #'my-anzu-wangle-minibuffer-input)
+  ;; (advice-remove 'anzu--query-from-string #'my-anzu-pcre-mode)
   
   (setq anzu-mode-lighter ""))
 
@@ -212,15 +235,6 @@
          ("C-," . dumb-jump-back))
   :custom
   (dumb-jump-git-grep-cmd "git grep --no-recurse-submodules"))
-
-
-(use-package which-key
-  :diminish ""
-  :ensure t
-  :custom
-  (which-key-idle-delay 0.75)
-  :config
-  (which-key-mode 1))
 
 (use-package hippie-exp
   :bind ("M-/" . hippie-expand)
@@ -238,51 +252,52 @@
   :config
   (auth-source-pass-enable))
 
-(use-package god-mode
-  :ensure t
-  :bind (("<escape>" . god-mode-all))
-  :diminish god-local-mode
-  :config
+;; (use-package god-mode
+;;   :ensure t
+;;   :bind (("<escape>" . god-mode-all))
+;;   :diminish god-local-mode
+;;   :config
 
-  (define-key god-local-mode-map (kbd ".") 'repeat)
+;;   (define-key god-local-mode-map (kbd ".") 'repeat)
 
-  (add-to-list 'god-exempt-major-modes 'notmuch-search-mode)
-  (add-to-list 'god-exempt-major-modes 'notmuch-show-mode)
+;;   (add-to-list 'god-exempt-major-modes 'notmuch-search-mode)
+;;   (add-to-list 'god-exempt-major-modes 'notmuch-show-mode)
 
-  (lexical-let (cookie)
-    (defun god-mode-hl-line ()
-      (if god-local-mode
-          (setq cookie
-                (face-remap-add-relative 'mode-line
-                                         '(:background "darkred" :foreground "white")))
-        (face-remap-remove-relative cookie))))
+;;   (lexical-let (cookie)
+;;     (defun god-mode-hl-line ()
+;;       (if god-local-mode
+;;           (setq cookie
+;;                 (face-remap-add-relative 'mode-line
+;;                                          '(:background "darkred" :foreground "white")))
+;;         (face-remap-remove-relative cookie))))
     
-  (add-hook 'god-local-mode-hook #'god-mode-hl-line)
+;;   (add-hook 'god-local-mode-hook #'god-mode-hl-line)
   
-  (defun god-mode-lookup-command (key-string)
-    "Execute extended keymaps such as C-c, or if it is a command,
-call it."
-    (let* ((key-vector (read-kbd-macro key-string t))
-           (binding (key-binding key-vector)))
-      (cond ((commandp binding)
-             (setq last-command-event (aref key-vector (- (length key-vector) 1)))
-             binding)
-            ((keymapp binding)
-             (god-mode-lookup-key-sequence nil key-string))
+;;   (defun god-mode-lookup-command (key-string)
+;;     "Execute extended keymaps such as C-c, or if it is a command,
+;; call it."
+;;     (let* ((key-vector (read-kbd-macro key-string t))
+;;            (binding (key-binding key-vector)))
+;;       (cond ((commandp binding)
+;;              (setq last-command-event (aref key-vector (- (length key-vector) 1)))
+;;              binding)
+;;             ((keymapp binding)
+;;              (god-mode-lookup-key-sequence nil key-string))
             
-            (:else
-             (let* ((end-pos (- (length key-vector) 1))
-                    (end-elt (elt key-vector end-pos))
-                    (mods (event-modifiers end-elt))
-                    (raw (event-basic-type end-elt)))
-               (if (equal mods '(control))
-                   (progn (aset key-vector end-pos raw)
-                          (god-mode-lookup-command
-                           (format-kbd-macro key-vector 1)))
-                 (error "God: Unknown key binding for `%s`" key-string)))))))
+;;             (:else
+;;              (let* ((end-pos (- (length key-vector) 1))
+;;                     (end-elt (elt key-vector end-pos))
+;;                     (mods (event-modifiers end-elt))
+;;                     (raw (event-basic-type end-elt)))
+;;                (if (equal mods '(control))
+;;                    (progn (aset key-vector end-pos raw)
+;;                           (god-mode-lookup-command
+;;                            (format-kbd-macro key-vector 1)))
+;;                  (error "God: Unknown key binding for `%s`" key-string)))))))
 
-  (with-eval-after-load 'which-key
-    (which-key-enable-god-mode-support)))
+;;   (with-eval-after-load 'which-key
+;;     (which-key-enable-god-mode-support)))
+
 
 (use-package editorconfig
   :ensure t
@@ -303,7 +318,11 @@ call it."
 (use-package multiple-cursors
   :defer t
   :bind (("C-/" . mc/mark-more-like-this-extended)
-         ("C-M-/" . mc/mark-all-dwim)))
+         ("C-M-/" . mc/mark-all-dwim)
+         :map mc/keymap
+         ("C-c SPC" . mc/vertical-align-with-space)
+         ("C-c n" . mc/insert-numbers)
+         ("C-c l" . mc/insert-letters)))
 
 (use-package edit-as-root
   :bind ("C-x C-a" . edit-as-root))
@@ -323,7 +342,6 @@ call it."
   (symbol-overlay-idle-time 0.75)
   :init
   (add-hook 'prog-mode-hook 'symbol-overlay-mode))
-
 
 (use-package browse-url
   :custom
@@ -350,7 +368,7 @@ call it."
   :config
   (require 'yasnippet-snippets)
   (yas-reload-all)
-  (bind-key "M-#" #'yas-expand yas-minor-mode-map)
+  (bind-key "C-<return>" #'yas-expand yas-minor-mode-map)
   (define-key yas-minor-mode-map [(tab)] nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
   (yas-global-mode))
@@ -378,50 +396,18 @@ call it."
   :hook
   ((after-save . executable-make-buffer-file-executable-if-script-p)))
 
-(defun terminal-here ()
-  (interactive)
-  (let* ((file-name-at-point (thing-at-point 'filename))
-         (directory (cond
-                     ((and file-name-at-point
-                           (file-exists-p file-name-at-point))
-                      (if (file-directory-p file-name-at-point)
-                          file-name-at-point
-                        (file-name-directory file-name-at-point)))
-                     
-                     (buffer-file-name
-                      (file-name-directory buffer-file-name))
-                     
-                     ((eq major-mode 'dired-mode)
-                      (dired-current-directory))
-                     
-                     (t default-directory))))
-    (when (and directory
-               (not (file-remote-p directory)))
-      (start-process "" nil "env" "-C" directory "urxvt"))))
-
 (use-package calc
   :defer t
   :bind ("<f8>" . quick-calc)
   :custom
   (calc-multiplication-has-precedence nil)
   :config
-  (defun calc-eval-line ()
-    (interactive)
-    (save-excursion
-      (beginning-of-line)
-      (let ((here (point)))
-        (search-forward-regexp (rx (| (: (* blank) "=>" (* blank)) eol)) nil t)
-        (goto-char (match-beginning 0))
-        (delete-region (point) (save-excursion (end-of-line) (point)))
-        (insert " => " (calc-eval (buffer-substring here (point))))))
-    (end-of-line))
-
+  (require 'calc-hydras)
+  
   (with-eval-after-load 'calc
-    (defalias 'calcFunc-uconv 'math-convert-units))
-  )
+    (defalias 'calcFunc-uconv 'math-convert-units)))
 
-(use-package dictionary
-  :ensure t)
+(use-package dictionary :ensure t)
 
 (defun byte-recompile-user-directory ()
   (interactive)
@@ -430,60 +416,12 @@ call it."
      "find . -iname \\*.elc -exec rm '{}' ';'"))
   (byte-recompile-directory user-emacs-directory 0 t))
 
-(use-package hydra
-  :ensure t)
+(use-package hydra :ensure t)
 
-(use-package pretty-hydra :ensure t
-  :bind ("<f1>" . general-keys/body)
-  :config
-
-  (defun insert-named-unicode (unicode-name)
-    "Same as C-x 8 enter UNICODE-NAME."
-    (insert-char (gethash unicode-name (ucs-names))))
-
-  (defhydra symbols-hydra (:hint nil)
-    "
-    _c_ ¤ _x_ ×
-    "
-    ("c" (insert-named-unicode "CURRENCY SIGN"))
-    ("x" (insert-named-unicode "MULTIPLICATION SIGN")))
-
-  (pretty-hydra-define general-keys
-    
-    (:foreign-keys warn
-                   :quit-key "q" :title "Useful keys"
-                   :exit t)
-
-    ("Search"
-     (("r r" anzu-query-replace-regexp "rep reg")
-      ("r s" anzu-query-replace "rep str"))
-     "Edit"
-     (("i n" insert-numbers "ins num")
-      ("i f" insert-file-path "ins path")
-      ("e l" calc-eval-line "calc line")
-      ("i s" symbols-hydra/body "ins sym"))
-     
-     "Set"
-     (("d e" toggle-debug-on-error "debg err")
-      ("d q" toggle-debug-on-quit "debg q")
-      ("h l" hl-line-mode "hl-line"))
-     "Win"
-     (("," winner-undo :exit nil)
-      ("." winner-redo :exit nil))))
-
-  (defun insert-numbers ()
-    (interactive)
-
-    (cond
-     ((> (mc/num-cursors) 1)
-      (call-interactively #'mc/insert-numbers))
-
-     (t (call-interactively #'kmacro-insert-counter))))
-  
-  )
+(use-package pretty-hydra :ensure t)
 
 (use-package major-mode-hydra :ensure t
-  :bind ("<f2>" . major-mode-hydra)
+  :bind ("<f1>" . major-mode-hydra)
   :commands major-mode-hydra major-mode-hydra-define)
 
 (use-package diff-hl :ensure t
@@ -491,6 +429,42 @@ call it."
 
 (use-package scf-mode
   :commands scf-mode
-  :bind (:map grep-mode-map
-              (")" . scf-mode)))
+  :bind (:map grep-mode-map (")" . scf-mode)))
+
+(use-package macro-math
+  :bind (("C-c e" . macro-math-eval-region)))
+
+(use-package literate-calc-mode
+  :ensure t
+  :bind (("C-c =" . literate-calc-minor-mode))
+  :config
+  
+  (defvar literate-calc--result
+    (rx bol
+        (opt (1+ (or letter blank)))
+        "="
+        (+? (not (any ?=)))
+        (group (* blank) "=> " (1+ any))
+        eol))
+  
+  (defun literate-calc-remove-results ()
+    (interactive)
+    (save-mark-and-excursion
+      (goto-char (point-min))
+      (while (search-forward-regexp literate-calc--result nil t)
+        (goto-char (match-beginning 1))
+        (kill-line))
+      
+      )
+    )
+
+  (defun literate-calc-toggle ()
+    (if literate-calc-minor-mode
+        (literate-calc-remove-results)
+      (when (y-or-n-p "Keep results?")
+        (literate-calc-insert-results))))
+  
+  (add-hook 'literate-calc-minor-mode-hook
+            'literate-calc-toggle))
+
 
