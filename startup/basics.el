@@ -153,9 +153,23 @@
   :bind (("<f10>" . counsel-tmm)
          ("C-x C-r" . counsel-recentf)
          :map counsel-mode-map
-         ([remap yank-pop] . nil))
+         ([remap yank-pop] . nil)
+         )
   :config
   (counsel-mode 1)
+
+  (defun counsel-yank-pop-unles-yanking (o &rest args)
+    (if (eq last-command 'yank)
+        (apply o args)
+      (counsel-yank-pop)))
+
+  (advice-add 'yank-pop :around 'counsel-yank-pop-unles-yanking)
+
+  (defun completing-read-prefix-bindings (&rest _)
+    (let ((stuff (substring (concat (this-command-keys-vector)) 0 -1)))
+      (counsel-descbinds stuff)))
+
+  (advice-add 'describe-prefix-bindings :around #'completing-read-prefix-bindings)
 
   (defun tmm-get-flat-keymap (menu)
     (let ((tmm-km-list nil)
@@ -279,24 +293,25 @@
   :custom
   (visual-line-fringe-indicators '(nil right-curly-arrow)))
 
-(use-package browse-kill-ring
-  :commands browse-kill-ring
-  :ensure t
-  :init
-  (defadvice yank-pop (around kill-ring-browse-maybe (arg))
-    "If last action was not a yank, run `browse-kill-ring' instead."
-    ;; pinched from browse-kill-ring, so we don't have to autoload it at startup
-    (interactive "p")
-    (if (not (eq last-command 'yank))
-        (browse-kill-ring)
-      (barf-if-buffer-read-only)
-      ad-do-it))
-  (ad-activate 'yank-pop)
-  :custom
-  (browse-kill-ring-show-preview nil)
-  (counsel-yank-pop-preselect-last t)
-  :config
-  (bind-key "M-y" 'browse-kill-ring-forward browse-kill-ring-mode-map))
+;; (use-package browse-kill-ring
+;;   :commands browse-kill-ring
+;;   :ensure t
+;;   :init
+;;   (defadvice yank-pop (around kill-ring-browse-maybe (arg))
+;;     "If last action was not a yank, run `browse-kill-ring' instead."
+;;     ;; pinched from browse-kill-ring, so we don't have to autoload it at startup
+;;     (interactive "p")
+;;     (if (not (eq last-command 'yank))
+;;         (counsel-yank-pop)
+;;       (barf-if-buffer-read-only)
+;;       ad-do-it))
+;;   (ad-activate 'yank-pop)
+;;   :custom
+;;   (browse-kill-ring-show-preview nil)
+;;   (counsel-yank-pop-preselect-last t)
+;;   :config
+;;   (bind-key "M-y" 'browse-kill-ring-forward browse-kill-ring-mode-map))
+
 
 (use-package savehist
   :config
