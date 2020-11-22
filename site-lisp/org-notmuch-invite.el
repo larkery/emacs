@@ -1,6 +1,7 @@
 (require 'org)
 (require 'notmuch)
 (require 'icalendar)
+(require 'imip)
 
 (defun completing-read-multiple-menu (prompt collection)
   (save-window-excursion
@@ -49,12 +50,14 @@
              (with-temp-buffer
                (insert-file-contents ics-file nil)
                (delete-file ics-file)
-               (with-current-buffer (icalendar--get-unfolded-buffer (current-buffer))
-                 (icalendar--read-element nil nil))))))
+               (let* ((unfolded (icalendar--get-unfolded-buffer (current-buffer)))
+                      (event (with-current-buffer unfolded
+                               (goto-char (point-min))
+                               (icalendar--read-element nil nil))))
+                 (kill-buffer unfolded)
+                 event)))))
 
-      (org-set-property "SEQUENCE" (number-to-string sequence))
-      (org-set-property "ORGANIZER" organizer)
-      (apply #'org-entry-put-multivalued-property (point) "ATTENDING" attendees)
+      (message "%s" event)
       
       (setf
        (alist-get 'METHOD (nth 2 event))
@@ -99,6 +102,10 @@
              ;;           (list 'CN (car addr))))
              nil
              ,(format "mailto:%s" (cadr addr))))))
+
+      (org-set-property "SEQUENCE" (number-to-string sequence))
+      (org-set-property "ORGANIZER" organizer)
+      (apply #'org-entry-put-multivalued-property (point) "ATTENDING" attendees)
       
       (notmuch-mua-new-mail)
       (make-variable-buffer-local 'message-syntax-checks)
