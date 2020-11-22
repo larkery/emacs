@@ -433,16 +433,13 @@
         (emacs-lisp-docstring-fill-column t))
     (fill-paragraph nil region)))
 
-(bind-key "M-S-Q" 'unfill-paragraph)
+(bind-key "M-Q" 'unfill-paragraph)
 
 (diminish 'defining-kbd-macro (propertize " M" 'face '(error bold)))
 
 (use-package so-long
   :config
-  (so-long-enable)
-
-  ;; (so-long-disable)
-  )
+  (so-long-enable))
 
 (use-package mode-line-bell
   :ensure t
