@@ -30,7 +30,7 @@
 
 (defvar calc-function-hydra-topline
   "
-Calc: ~i(INV,^)~h( HYP,^) %`calc-angle-mode [_md_ _mr] [,] _dg_roup %`calc-float-format [_df_ix _ds_ci _dn_orm] _K_eep args  _SPC_ more _q_uit
+Calc: ~i(INV,^)~h( HYP,^) %`calc-angle-mode [_md_ _mr_] [,] _dg_roup %`calc-float-format [_df_ix _ds_ci _dn_orm] _K_eep args  _SPC_ more _q_uit
 ")
 
 (defvar calc-function-hydra-topline-heads
@@ -271,6 +271,6 @@ style _gs_ l _gS_ p
 
 
 (bind-key "SPC" 'calc-function-hydra/body calc-mode-map)
-(bind-key "s s" 'calc-store-show calc-mode-map)
-(bind-key "s S" 'calc-store calc-mode-map)
+;(bind-key "s s" 'calc-store-show calc-mode-map)
+;(bind-key "s S" 'calc-store calc-mode-map)
 (provide 'calc-hydras)
