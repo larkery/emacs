@@ -1,5 +1,4 @@
-(use-package htmlize
-  :ensure t)
+(use-package htmlize :ensure t)
 
 (use-package org
   :bind (("C-c a" . org-agenda)
@@ -57,7 +56,8 @@
      "Insert"
      (("." org-time-stamp "<time>")
       (">" (org-time-stamp nil t) "[time]"))))
-  
+
+  (require 'org-notmuch-link)
   
   (with-eval-after-load 'org-agenda
     (require 'all-the-icons)
@@ -66,9 +66,8 @@
             ("birthday" (display ,(all-the-icons-faicon "birthday-cake" :height 0.75)))
             ("holiday" (display ,(all-the-icons-faicon "calendar-o" :height 0.75)))
             ("work" (display ,(all-the-icons-octicon "briefcase" :height 0.75)))
-            ("samba" (display ,(all-the-icons-faicon "child" :height 0.75)))
-            )))
-
+            ("samba" (display ,(all-the-icons-faicon "child" :height 0.75))))))
+  
   (defun org-read-date-analyze-no-stupid-endian (o ans org-def org-defdecode)
     (funcall o
              (if (string-match-p
@@ -79,33 +78,49 @@
              org-def org-defdecode))
 
   (advice-add 'org-read-date-analyze :around
-              'org-read-date-analyze-no-stupid-endian))
+              'org-read-date-analyze-no-stupid-endian)
 
+  )
+
+(with-eval-after-load 'org-export
+  (defun org-odt-export-to-docx (&optional async subtreep visible-only ext-plist)
+    (let ((org-odt-preferred-output-format "docx"))
+      (org-odt-export-to-odt async subtreep visible-only ext-plist)))
+  
+  (org-export-define-derived-backend
+      'docx 'odt
+    :menu-entry
+    '(?o "Export to ODT"
+         ((?x "To docx file" org-odt-export-to-docx))
+
+         ))
+
+
+  ;; fix use of copy-file in ox-odt.el
+
+  (defun org-odt-template-readonly-fix (o &rest args)
+    (let ((orig-copy-file (symbol-function 'copy-file)))
+      (cl-letf (((symbol-function 'copy-file)
+                 (lambda (file newname &rest stuff)
+                   (let ((out (apply orig-copy-file file newname stuff)))
+                     (set-file-modes
+                      newname
+                      (logior (file-modes newname) #o600))
+                     out))))
+        (apply o args))))
+
+  (advice-add 'org-odt-template :around 'org-odt-template-readonly-fix)
+  )
+  
 
 (use-package org-extras
   :commands org-log-goto
   :bind ("C-c j" . org-log-goto)
+  :defer 30
   :config
+  (org-notify 1)
   (setq org-log-location
-        '("~/notes/journal/%Y/%m-%B.org"
-          "Week %W"
-          "[%Y-%m-%d %a]")))
-
-(use-package date-at-point
-  :ensure t
-  
-  :config
-  (defun org-agenda-date-at-point (o &rest args)
-    (let* ((dap (date-at-point))
-           (org-agenda-start-day
-            (or org-agenda-start-day
-                dap)))
-      (apply o args)))
-
-  (advice-add 'org-agenda :around 'org-agenda-date-at-point)
-  
-  )
-
+        '("~/notes/journal/%Y/W%W.org" "%a %d %b")))
 
 ;; UK public holidays, and other UK notable dates.
 (setq calendar-holidays
