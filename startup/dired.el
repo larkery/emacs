@@ -1,12 +1,3 @@
-(defvar diredfl-ignore-compressed-flag nil)
-
-(use-package diredfl
-  :ensure t
-  :commands diredfl-mode
-  :custom
-  (diredfl-ignore-compressed-flag nil)
-  (diredfl-compressed-extensions nil))
-
 (use-package wdired
   :defer t
   :commands wdired-change-to-wdired-mode
@@ -15,7 +6,8 @@
 
 (use-package dired
   :defer t
-  :bind (("C-x d" . dired-from-buffer)
+  :after major-mode-hydra
+  :bind (("C-c d" . dired-from-buffer)
          :map dired-mode-map
               ("M-n" . dired-next-subdir)
               ("M-p" . dired-prev-subdir)
@@ -28,7 +20,9 @@
               ("C-x C-f" . dired-C-x-C-f)
               ("f" . nil)
               ("f n" . find-name-dired-here)
-              ("f g" . find-grep-dired-here))
+              ("f g" . find-grep-dired-here)
+              ("<f2>" . wdired-change-to-wdired-mode)
+              ("SPC" . hydra-dired/body))
   
   :commands dired-from-buffer
   :custom
@@ -64,7 +58,7 @@
   (major-mode-hydra-define dired-mode
     (:quit-key "q")
     ("Tools"
-     (("<f2>" wdired-change-to-wdired-mode "edit names"))
+     (("w" wdired-change-to-wdired-mode "edit names"))
 
      "File"
      (("S" dired-do-symlink "symlink (absolute)")
@@ -76,6 +70,16 @@
 
      
      ))
+
+  (defhydra hydra-dired
+    (:hint nil)
+
+    "
+_<f2>_ rename
+"
+    ("<f2>" wdired-change-to-wdired-mode :exit t)
+    ("q" nil :exit t)
+    )
 
   (defun dired-from-buffer ()
     (interactive)
@@ -94,8 +98,6 @@
   (require 'dired-parent-links)
   
   (add-hook 'dired-mode-hook 'auto-revert-mode)
-
-  (add-hook 'dired-mode-hook 'diredfl-mode)
 
   (add-hook 'dired-mode-hook 'dired-omit-mode)
   
@@ -230,7 +232,7 @@
   :bind (:map dired-mode-map
               ("r" . dired-rsync)))
 
-(bind-key "<f7>" (lambda () (interactive) (dired default-directory)))
+(bind-key "<f5>" #'dired-from-buffer)
 
 (use-package all-the-icons-dired
   :ensure t
