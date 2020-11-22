@@ -104,33 +104,56 @@
       'swiper 
     (bind-key "C-'" nil swiper-map))
   
-  (defun swiper-at-point ()
-    (interactive)
-    (swiper (when (region-active-p)
-              (buffer-substring-no-properties (region-beginning) (region-end)))))
-            
+  (defun shorten-text (text length keep-left)
+    (if (> (length text) length)
+        (concat
+         (substring text 0 keep-left)
+         "…"
+         (substring text (- (length text)  (- length 1 keep-left))))
+        text))
+  
+  (defun shorten-file-name (f l)
+    (let ((f (abbreviate-file-name f)))
+      (shorten-text f l 2)
+      ))
+
   (defun ivy-switch-buffer-transformer (str)
     (if (< (window-width (minibuffer-window)) 75) str
       (let* ((b (get-buffer str))
+             (file (and b
+                        (with-current-buffer b
+                          (or buffer-file-name dired-directory default-directory))))
+             (remote (and file (file-remote-p file)))
              (typ (if b
                       (with-current-buffer b
                         (cond (dired-directory "/")
-                              ((file-remote-p (or buffer-file-name default-directory)) "@")
+                              (remote "@")
                               (buffer-file-name "f")
                               (t "%")))
                     "v"))
-             (pname (or (and b
+             (pname (and b
+                         (with-current-buffer b
+                           (let ()
+                             (and file
+                                  (not remote)
+                                  (projectile-project-name))))))
+             (dname (or (and b
+                             (not (equal typ "%"))
                              (with-current-buffer b
-                               (let ((fn (or buffer-file-name dired-directory)))
-                                 (and fn
-                                      (not (file-remote-p fn))
-                                      (projectile-project-name)))))
-                        "-")))
+                               (and file
+                                    (if pname
+                                        (file-relative-name file (projectile-project-root))
+                                      (abbreviate-file-name (file-name-directory file)))))
+                             ) ""))
+             )
 
         (format
-         "%s %10s  %s"
+         "%s %10s  %-30s   %s"
          (propertize typ 'face 'error)
-         (propertize pname 'face 'shadow) str)))))
+         (propertize (shorten-text (or pname "-") 10 0) 'face 'shadow)
+         str
+         (propertize dname 'face 'shadow)
+         )))))
 
 (use-package recentf
   :config
