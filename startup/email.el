@@ -71,40 +71,25 @@
            (point-max))))
     (goto-char (point-min)))
 
-  (defun message-styled-p ()
-    (save-excursion
-      (goto-char (point-min))
-      (search-forward-regexp
-       (rx bol (| (: (* blank) (+ digit) "." blank)
-                  (: (+ "*") blank)
-                  (: (* blank) (any "-+") blank alphanumeric)
-                  (: (group-n 1 (any "*/_~"))
-                     (+ alphanumeric)
-                     (backref 1))
-                  (: (* blank) "|" (* nonl) "|" eol)
-                  (: "[[/" (+ any) (| ".jpg" ".png" ".gif")"]]")
-                  ))
-       nil t)))
-
   (defun org-mime-maybe-htmlize ()
     (save-match-data
       (save-excursion
         (save-restriction
           (narrow-to-message)
           (mark-whole-buffer)
-          (when (or (message-styled-p)
-                    (y-or-n-p "Send as HTML?"))
-            
-            (message "Sending as HTML")
-            (org-mime-htmlize))))))
+          (org-mime-htmlize)))))
 
-  (defun org-mime--escaping-quote (args)
-    (let ((text (car args))
-          (rest (cdr args)))
-      ;; transform the text
-      (cons text rest)))
-
-  (advice-add 'org-mime--export-string :filter-args #'org-mime--escaping-quote)
+  ;; just do html part.
+  (defun org-mime-multipart (plain html &optional images)
+    "Markup a multipart/alternative with HTML alternatives.
+If html portion of message includes IMAGES they are wrapped in multipart/related part."
+    (concat (when images "<#multipart type=related>")
+            "<#part type=text/html>\n"
+            (if org-mime-beautify-quoted-mail
+                (org-mime-beautify-quoted html)
+              html)
+            images
+            (when images "<#/multipart>\n")))
 
   (defun maybe-htmlize-send-and-exit ()
     (interactive)
@@ -156,7 +141,7 @@
             (goto-char last-qlstart)
             (forward-line)
             (dotimes (_ qdepth)
-              (insert "#+END_QUOTE\n")))
+              (insert "#+HTML: </blockquote>\n")))
           (set-marker last-qlstart nil))
         )))
 
@@ -182,11 +167,13 @@
    ("@" . notmuch-search-person)
    ("z" . notmuch-tree-from-search-thread)
    ("RET" . notmuch-search-show-or-tree)
+   ("G" . notmuch-start-idle)
    :map notmuch-message-mode-map
    ("C-c f" . notmuch-switch-identity)
    ("C-c s" . message-remove-or-update-signature)
    ("C-c z" . message-kill-remaining-quote)
    ("C-c i" . message-insert-or-toggle-importance)
+   ("C-c q" . message-quotify-region)
    ("C-c C-s" . nil)
    ("M-n" . message-next-thing)
    :map notmuch-show-mode-map
@@ -195,6 +182,8 @@
    ("f" . notmuch-flag)
    ("U" . notmuch-mark-read)
    ("u" . notmuch-skip-to-unread)
+   ("v" . notmuch-show-view-part)
+   ("S" . notmuch-show-save-part)
    :map notmuch-tree-mode-map
    ("q" . notmuch-tree-quit-harder)
    ("u" . notmuch-skip-to-unread))
@@ -207,7 +196,11 @@
      (:name "inbox" :query "tag:inbox or tag:flagged" :key "i")
      (:name "drafts" :query "tag:draft" :key "d")
      (:name "sent" :query "tag:sent" :key "s")
-     (:name "NHM" :query "from:nhm.support@cse.org.uk" :key "N")
+     
+     (:name "recent"
+            :query "date:\"this week\""
+            :key "r"
+            )
      ))
 
   (notmuch-tag-formats
@@ -276,6 +269,12 @@
       ("," message-quote-here "enquote")
       ("q" message-mark-end-quote :exit nil)
       ("z" message-kill-remaining-quote :exit nil))))
+
+  (defun message-quotify-region ()
+    (interactive)
+    (if (region-active-p)
+        (message-quote-here)
+      (message-split-quote-here)))
   
   (defun message-next-thing ()
     (interactive)
@@ -301,6 +300,8 @@
 
   (defun message-kill-remaining-quote ()
     (interactive)
+    (when (looking-at (rx bol "#+HTML: </blockquote>"))
+      (kill-line))
     (message-mark-end-quote)
     (beginning-of-line)
     (kill-region (point) (mark)))
@@ -402,7 +403,10 @@
             (ivy-read "Notmuch: "
                       (mapcar (lambda (x) (plist-get x :name)) notmuch-saved-searches)
                       :history 'counsel-notmuch-history
-                      :caller 'counsel-notmuch-blah))
+                      :caller 'counsel-notmuch-blah
+                      :keymap (let ((km (make-sparse-keymap)))
+                                (bind-key "TAB" #'notmuch-read-query-hydra/body km)
+                                km)))
            (match (car (remove-if-not (lambda (x)
                                         (string= (plist-get x :name) search))
                                       notmuch-saved-searches)))
@@ -447,7 +451,6 @@
             (t
              (concat "*notmuch-search-" query "*"))
             )))
-
 
   (defun notmuch-toggle-tag (tags advance)
     (let* ((cur-tags
@@ -498,7 +501,6 @@
 
   (advice-add 'notmuch-show-insert-bodypart :around #'notmuch-expand-calendar-parts)
 
-
   (defun notmuch-skip-to-unread ()
     (interactive)
     (cl-case major-mode
@@ -513,7 +515,6 @@
                    (not (eobp)))
          (forward-line))
        (notmuch-tree-show-message nil))))
-  
 
   (defvar notmuch-reply-sender-regexes
     (list (cons (regexp-quote "tom.hinton@cse.org.uk") "Tom Hinton")
@@ -548,55 +549,6 @@
 
   (advice-add 'notmuch-mua-reply :around 'notmuch-mua-reply-guess-sender)
 
-  ;; don't colour in the whole line
-  (defun notmuch-search-color-line-here ()
-    (let ((face (plist-get (text-properties-at (point)) 'face)))
-      (or (eq face 'notmuch-search-matching-authors)
-          (eq face 'notmuch-search-subject)
-          (eq face 'notmuch-search-date)
-          (not face))))
-
-  (defun notmuch-search-color-line-partially (o start end line-tag-list)
-    (save-excursion
-      (goto-char start)
-
-      (let (npt (in (notmuch-search-color-line-here)) (last start))
-        (while (and (setq npt (next-single-property-change (point) 'face nil end))
-                    (< npt end))
-          (goto-char npt)
-          (let ((face (assoc 'face (text-properties-at (point)))))
-            (if (notmuch-search-color-line-here)
-                (unless in (setq in t last (point)))
-              (when in
-                (setq in nil)
-                (funcall o last (point) line-tag-list)))))
-        (when in
-          (setq in nil)
-          (funcall o last (point) line-tag-list)))))
-
-  (advice-add 'notmuch-search-color-line :around #'notmuch-search-color-line-partially)
-
-  (defun notmuch-read-query-suggest-tag (nrq prompt)
-    (let* ((tag-to-hide
-            (notmuch-avoid-tag (case major-mode
-			         (notmuch-search-mode (notmuch-search-get-query))
-			         (notmuch-show-mode (notmuch-show-get-query))
-			         (notmuch-tree-mode (notmuch-tree-get-query))))))
-      
-      (if tag-to-hide
-          (let ((do-read-from-minibuffer (symbol-function 'read-from-minibuffer)))
-            (cl-letf (((symbol-function 'read-from-minibuffer)
-                       (lambda (prompt &optional initial-contents keymap read
-                                       hist default-value inherit-input-method)
-                         (funcall do-read-from-minibuffer
-                                  prompt
-                                  (concat tag-to-hide initial-contents)
-                                  keymap read hist default-value inherit-input-method))))
-              (funcall nrq prompt)))
-        (funcall nrq prompt))))
-
-  (advice-add 'notmuch-read-query :around #'notmuch-read-query-suggest-tag)
-
   (defun notmuch-search-other-place ()
     (interactive)
     (let ((search (notmuch-search-get-query))
@@ -610,7 +562,16 @@
         ((string-match-p (regexp-quote there) search)
          (replace-regexp-in-string (regexp-quote there) here search))
         (t
-         (concat here " AND (" search ")")))))))
+         (concat here " AND (" search ")"))))))
+
+
+  (defun notmuch-start-idle ()
+    (interactive)
+    (if-let ((existing-buffer (get-buffer "*idle*")))
+        (display-buffer-at-bottom existing-buffer nil)
+      (async-shell-command "idle" "*idle*")))
+  )
+
 
 (use-package notmuch-attachment-list
   :after notmuch
@@ -675,8 +636,7 @@
   :config
   (setq mailcap-user-mime-data
         '(((viewer . "xdg-open %s")
-           (type . ".+"))))
-  )
+           (type . ".+")))))
 
 (use-package dnd
   :config
@@ -740,17 +700,3 @@
       result))
 
   (advice-add 'shr-insert-document :around 'disabling-gc))
-
-(use-package bbdb
-  :defer t
-  :ensure t
-  :commands bbdb
-  :custom
-  (bbdb-file "~/notes/bbdb")
-  (bbdb-default-country nil)
-  :config
-  
-  (defun bbdb-use-completing-read-default ()
-    (setq-local completing-read-function 'completing-read-default))
-  
-  (add-hook 'bbdb-mode-hook 'bbdb-use-completing-read-default))
