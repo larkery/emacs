@@ -470,19 +470,23 @@
   ;; for reasons unknown SMIE breaks in shell indentation at the moment
   (setq sh-use-smie nil))
 
-(use-package mixed-pitch
-  :ensure t
-  :config
-  (add-hook 'text-mode-hook #'mixed-pitch-mode)
-  (add-hook 'notmuch-show-mode-hook #'mixed-pitch-mode)
-  (add-hook 'message-mode-hook #'mixed-pitch-mode)
-  )
-
-
 (defun narrow-to-thing ()
   (interactive)
 
   (cond
+   ((region-active-p)
+    (narrow-to-region (mark) (point)))
+
+   ((and smartparens-mode
+         (let ((here (point))
+               (back-thing (sp-get-thing)))
+           (= here (plist-get back-thing :beg))))
+    (save-mark-and-excursion
+      (sp-mark-sexp)
+      (beginning-of-line)
+      (narrow-to-region (mark) (point))
+      (deactivate-mark)))
+      
    ((eq 'org-mode major-mode)
     (cond
      ((org-at-block-p)
@@ -496,14 +500,20 @@
    ((derived-mode-p 'text-mode)
     (save-mark-and-excursion
       (mark-paragraph)
-      (narrow-to-region)))
-   
-   (t (narrow-to-region))))
+      (narrow-to-region (mark) (point))))
+
+   t
+   (message "Not sure what to narrow to")
+   ))
 
 (bind-key "C-x n n" #'narrow-to-thing)
 
+;; quiet auto-revert down
 (advice-add
  'auto-revert-handler
  :around (lambda (orig-fun &rest args)
            (let ((auto-revert-verbose (not (minibufferp (window-buffer)))))
-              (apply orig-fun args))))
+             (apply orig-fun args))))
+
+(global-set-key (kbd "M-u") 'upcase-dwim)
+(global-set-key (kbd "M-l") 'downcase-dwim)
