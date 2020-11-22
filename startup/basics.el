@@ -354,24 +354,76 @@
   :custom
   (calendar-date-style (quote european)))
 
-(defun update-dbus-session-bus-address ()
-  (interactive)
-  
+;; Hack dbus so that it keeps working even when it's broken by change
+;; of address. Stupid dbus.
+(use-package dbus
+  :config
+  (require 'subr-x)
+
+  (defvar dbus-real-session-bus :session)
+
+  (defun update-dbus-session-bus-address ()
+    (interactive)
+    
+    (condition-case nil
+        (let ((sbus
+               (with-temp-buffer
+                 (insert-file-contents "~/.dbus_session_bus_address")
+                 (string-trim (buffer-string)))))
+          (setenv "DBUS_SESSION_BUS_ADDRESS" sbus)
+          (setq dbus-real-session-bus sbus)
+          (dbus-init-bus sbus))
+      
+      (error nil)))
+
+  (update-dbus-session-bus-address)
+
   (condition-case nil
-      (setenv "DBUS_SESSION_BUS_ADDRESS"
-              (with-temp-buffer
-                (insert-file-contents "~/.dbus_session_bus_address")
-                (buffer-string)))
-    (error nil)))
+      (inotify-add-watch
+       (expand-file-name "~/.dbus_session_bus_address")
+       'close-write
+       (lambda (_) (update-dbus-session-bus-address)))
+    (error nil))
+  
+  (defun replace-session-bus (args)
+    (when (eq :session (car args))
+      ;; this is a bit dodge, since I am directly editing the cons
+      ;; cell
+      (setcar args dbus-real-session-bus))
+    args)
 
-(condition-case nil
-    (inotify-add-watch
-     (expand-file-name "~/.dbus_session_bus_address")
-     'close-write
-     (lambda (_) (update-dbus-session-bus-address)))
-  (error nil))
-
-(update-dbus-session-bus-address)
+  (dolist (fn '(dbus-call-method
+                dbus-call-method-asynchronously
+                dbus-send-signal
+                dbus-register-service
+                dbus-unregister-service
+                dbus-register-signal
+                dbus-register-method
+                dbus-list-activatable-names
+                dbus-list-names
+                dbus-list-known-names
+                dbus-list-queued-owners
+                dbus-get-name-owner
+                dbus-ping
+                dbus-introspect
+                dbus-introspect-xml
+                dbus-introspect-get-node-names
+                dbus-introspect-get-all-nodes
+                dbus-introspect-get-interface-names
+                dbus-introspect-get-interface
+                dbus-introspect-get-method-names
+                dbus-introspect-get-method
+                dbus-introspect-get-signal-names
+                dbus-introspect-get-signal
+                dbus-introspect-get-property-names
+                dbus-introspect-get-property
+                dbus-introspect-get-argument-names
+                dbus-introspect-get-argument
+                dbus-get-property
+                dbus-set-property
+                dbus-get-all-properties
+                dbus-get-all-managed-objects))
+    (advice-add fn :filter-args 'replace-session-bus)))
 
 (defun unfill-paragraph (&optional region)
   "Takes a multi-line paragraph and makes it into a single line of text."
