@@ -69,10 +69,11 @@
           (insert "#include \".Xresources_i3_light\"\n")
         (insert "#include \".Xresources_i3_dark\"\n"))
 
-      (let ((weight (face-attribute 'default :weight)))
-        (when weight
-          (insert (format "URxvt.font: xft:Monospace:size=12:weight=%s\n" weight))
-          (insert (format "URxvt.boldFont: xft:Monospace:size=12:weight=bold"))))
+      ;; (let ((weight (face-attribute 'default :weight)))
+      ;;   (when weight
+      ;;     (insert (format "URxvt.font: xft:Monospace:size=12:weight=%s\n" weight))
+      ;;     (insert (format "URxvt.boldFont: xft:Monospace:size=12:weight=bold"))))
+
       (insert "\n")
       
       (goto-char (point-min))
