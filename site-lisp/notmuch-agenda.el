@@ -31,20 +31,23 @@
                   86400))
          (past (< days 0))
          (abs-days (abs days))
+         (rem-days (% (ceiling abs-days) 7))
 
          (day-part
           (cond
            ((and (< abs-days 2)
                  (= reference-day timestamp-day))
             "today")
-           ((and (< abs-days 2)
-                 (< (abs (- reference-day timestamp-day)) 1))
+           ((and (< abs-days 2) (= (abs (- reference-day timestamp-day)) 1 ))
             (if past "yesterday" "tomorrow"))
-           ((< abs-days 8) (concat (if past "last" "this")
-                                   (format-time-string " %A" encoded-timestamp)))
-           (t (format "%d week%s%s"
+           ((< abs-days 8) (format "%d days%s"
+                                   (ceiling abs-days)
+                                   (if past " ago" "")))
+           (t (format "%d week%s%s%s"
                       (floor (/ abs-days 7))
                       (if (= 1 (floor (/ abs-days 7))) "" "s")
+                      (if (zerop rem-days) ""
+                        (format " %d days" rem-days))
                       (if past " ago" "")
                       ))
            )))
@@ -57,11 +60,41 @@
          (rel-date (notmuch-agenda-relative-date now dtstart)))
     (concat start-time " (" rel-date ")")))
 
+(defun notmuch-agenda-org-repeater (rrule)
+  (or (and rrule
+           (let* ((parts (mapcar
+                          (lambda (p)
+                            (let ((parts (split-string p "=")))
+                              (cons (intern (car parts))
+                                    (cadr parts))))
+                          (split-string
+                           rrule
+                           ";" t "\\s-"))))
+
+             (let ((freq (alist-get 'FREQ parts))
+                   (interval (string-to-number (alist-get 'INTERVAL parts "1"))))
+               (and freq interval
+                    (cond
+                     ((string= freq "DAILY")
+                      (format " +%dd" interval))
+
+                     ((string= freq "WEEKLY")
+                      (format " +%dw" interval))
+
+                     ((string= freq "MONTHLY")
+                      (format " +%dm" interval))
+
+                     ((string= freq "YEARLY")
+                      (format " +%dy" interval)))))))
+      ""))
+
 (defun notmuch-agenda-org-date (dtstart-dec dtend-dec rrule rdate duration)
   (let* ((start-d (notmuch-agenda-datetime-as-iso dtstart-dec))
          (start-t (icalendar--datetime-to-colontime dtstart-dec))
          
-         end-d end-t)
+         end-d end-t
+
+         (repeater (notmuch-agenda-org-repeater rrule)))
 
     (setq end-d (if dtend-dec
                     (notmuch-agenda-datetime-as-iso dtend-dec)
@@ -71,9 +104,10 @@
                     (icalendar--datetime-to-colontime dtend-dec)
                   start-t))
     
-      (if (equal start-d end-d)
-          (format "<%s %s-%s>" start-d start-t end-t)
-        (format "<%s %s>--<%s %s>" start-d start-t end-d end-t))))
+    (if (equal start-d end-d)
+        (format "<%s %s-%s%s>" start-d start-t end-t repeater)
+      (format "<%s %s>--<%s %s>" start-d start-t end-d end-t)))
+  )
 
 (defun notmuch-agenda-insert-agenda (event zone-map)
   (require 'org)
@@ -160,9 +194,13 @@
 :END:
 %:event-timestamp
 %:event-comment
+%:event-description
+%a
 %?")
 
 (defvar notmuch-agenda-capturing-event nil)
+(defvar notmuch-agenda-capturing-subject-line nil)
+(defvar notmuch-agenda-capturing-message-id nil)
 
 (defun notmuch-agenda-store-link ()
   (when notmuch-agenda-capturing-event
@@ -176,10 +214,11 @@
                          (intern (concat ":event-" (downcase (symbol-name prop))))
                          (or val ""))))
                     
-                    (list 'LOCATION 'SEQUENCE 'UID 'SUMMARY 'COMMENT 'ORGANIZER))))
+                    (list 'LOCATION 'SEQUENCE 'UID 'SUMMARY 'COMMENT 'ORGANIZER 'DESCRIPTION))))
         (apply 'org-store-link-props
                :type "event"
-               :link "nope://nope"
+               :link (format "nm:%s" notmuch-agenda-capturing-message-id)
+               :description (format "✉ %s" notmuch-agenda-capturing-subject-line)
                :event-timestamp (notmuch-agenda-org-date
                                  (notmuch-agenda-event-time event zone-map 'DTSTART)
                                  (notmuch-agenda-event-time event zone-map 'DTEND)
@@ -215,7 +254,13 @@
           
           (set-marker existing-event nil nil))
       
-      (let* ((notmuch-agenda-capturing-event event)
+      (let* ((notmuch-agenda-capturing-subject-line
+              (notmuch-show-get-subject))
+
+             (notmuch-agenda-capturing-message-id
+              (notmuch-show-get-message-id))
+
+             (notmuch-agenda-capturing-event event)
 
              (org-link-parameters
               '(("nope" :store notmuch-agenda-store-link)))
@@ -259,17 +304,21 @@
          (rrule (icalendar--get-event-property event 'RRULE))
          (rdate (icalendar--get-event-property event 'RDATE))
          (duration (icalendar--get-event-property event 'DURATION))
+         (description (icalendar--get-event-property event 'DESCRIPTION))
          
          (friendly-start (notmuch-agenda-friendly-date dtstart dtend rrule rdate duration)))
 
     (when summary (insert (propertize summary 'face '(:underline t :height 1.5)) "\n"))
 
+    (when (or rrule rdate) (insert (format "RRULE: %s %s\n" rrule rdate)))
+    
     (when friendly-start
       (insert (propertize "Start: " 'face 'bold))
       (insert friendly-start "\n"))
     
     (when comment (insert (propertize "Comment: " 'face 'bold)
                           comment"\n"))
+    
     (when location (insert (propertize "Location: " 'face 'bold)
                            location"\n"))
     (when organizer (insert (propertize "Organizer: " 'face 'bold)
@@ -284,6 +333,10 @@
             (when (cdr attendees) (insert ", "))
             (setq attendees (cdr attendees)))
           (insert "\n"))
+    
+    ;; (when description
+    ;;   (insert (read (format "\"%s\"" description))))
+    
     (insert "\n")
     ))
 
@@ -342,7 +395,8 @@
         (setq body (cdr body))
         (let ((content-type (plist-get head :content-type)))
           (cond
-           ((string= content-type "multipart/alternative")
+           ((or (string= content-type "multipart/alternative")
+                (string= content-type "multipart/mixed"))
             (setq body (append body (plist-get head :content))))
            ((and (string= content-type "text/calendar")
                  (string-match-p "^METHOD:REQUEST$" (plist-get head :content)))
