@@ -24,9 +24,7 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-(eval-when-compile
-
-  (require 'use-package))
+(eval-when-compile (require 'use-package))
 
 (let ((startup-directory (concat user-emacs-directory "startup/")))
   (load (concat startup-directory "basics.el"))
