@@ -75,14 +75,15 @@
                     (with-current-buffer b
                       (let* ((buf-name (buffer-name))
                              (buf-path (or buffer-file-name (and dired-directory (expand-file-name dired-directory))))
-                             (proj-name (projectile-project-name))
+                             (remote (and buf-path (file-remote-p buf-path)))
+                             (proj-name (and (not remote) (projectile-project-name)))
                              (proj-root (and buf-path proj-name (projectile-project-root)))
                              (mode-name (buffer-table-buffer-mode))
                              (host-name
                               (or (and buf-path
-                                    (file-remote-p buf-path)
-                                    (tramp-file-name-host-port
-                                     (tramp-dissect-file-name buf-path)))
+                                       remote
+                                       (tramp-file-name-host-port
+                                        (tramp-dissect-file-name buf-path)))
                                   ""))
                              
                              (group (cond
@@ -108,7 +109,9 @@
                                             '(notmuch-show-mode
                                               notmuch-tree-mode
                                               notmuch-search-mode
-                                              notmuch-message-mode))
+                                              notmuch-message-mode
+                                              notmuch-attachment-list-mode
+                                              ))
                                       "mail")
 
                                      ((memq major-mode
@@ -146,14 +149,25 @@
   (let ((from (buffer-name (current-buffer)))
         (buf (get-buffer-create "*Buffer Table*")))
     (with-current-buffer buf
-      (buffer-table-mode)
-      (tabulated-list-print)
-      (goto-char (point-min))
-      (while (not (string= (tabulated-list-get-id)
-                           from))
-        (forward-line))
-      (hl-line-mode buffer-table-group-col))
-    (switch-to-buffer buf)))
+      (if (eq major-mode 'buffer-table-mode)
+          (progn
+            (tabulated-list-revert)
+            (unless (tabulated-list-goto-id from)
+              (setq buffer-table-filters nil)
+              (tabulated-list-revert)
+              (tabulated-list-goto-id from)))
+        
+        (buffer-table-mode)
+        (tabulated-list-print)
+        (goto-char (point-min))
+        (while (not (string= (tabulated-list-get-id)
+                             from))
+          (forward-line))
+        (hl-line-mode buffer-table-group-col)))
+    (let ((windows (get-buffer-window-list buf)))
+      (if windows
+          (select-window (car windows))
+        (switch-to-buffer buf)))))
 
 (defun buffer-table-switch-to-buffer ()
   (interactive)
