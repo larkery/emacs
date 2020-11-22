@@ -289,12 +289,11 @@
 ;; (setq dark-theme 'gruvbox-dark-hard
 ;;       light-theme 'gruvbox-light-hard)
 
-
-(setq dark-theme 'gruvbox-dark-soft
-      light-theme 'gruvbox-light-soft)
+(use-package spacemacs-theme :ensure t)
+(setq dark-theme 'spacemacs-dark light-theme 'spacemacs-light)
 
 (load-theme light-theme t)
-(load-theme 'tweaks t)
+;; (load-theme 'tweaks t)
 
 (defun switch-theme ()
   (interactive)
@@ -305,7 +304,8 @@
       (disable-theme theme))
 
     (load-theme target-theme t)
-    (load-theme 'tweaks t)))
+    ;; (load-theme 'tweaks t)
+    ))
 
 
 (bind-key "<f6>" 'switch-theme)
