@@ -10,6 +10,10 @@
       default-frame-scroll-bars nil
       default-frame-alist '((scroll-bar-width . 1)
                             (right-divider-width . 3))
+
+      frame-resize-pixelwise t
+      window-resize-pixelwise t
+      
       focus-follows-mouse t
       mouse-autoselect-window t
       echo-keystrokes 0.2
@@ -32,7 +36,8 @@
       inhibit-startup-screen t
       inhibit-startup-echo-area-message t
       initial-buffer-choice t
-      initial-major-mode 'text-mode
+      initial-major-mode 'lisp-interaction-mode
+      initial-scratch-message ";; Only death is certain, and the time of death is unknown\n\n"
 
       enable-recursive-minibuffers t
 
@@ -42,7 +47,10 @@
       mouse-drag-and-drop-region t
 
       locate-dominating-stop-dir-regexp
-      (purecopy (rx bos "/net/" (* (not (any "/"))) "/" (* (not (any "/"))) eos)))
+      (purecopy (rx bos "/net/" (* (not (any "/"))) "/" (* (not (any "/"))) eos))
+
+      view-read-only t
+      )
 
 (window-divider-mode 0)
 
@@ -82,17 +90,12 @@
 
 (global-auto-revert-mode 1)
 
-(use-package defrepeater
-  :ensure t)
-
-(use-package diminish
-  :ensure t)
+(use-package diminish :ensure t)
 
 (use-package ivy
   :diminish
   :ensure t
   :defer nil
-  :bind (("M-s M-s" . swiper-at-point))
   :custom
   (ivy-use-virtual-buffers t)
   :config (ivy-mode)
