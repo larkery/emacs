@@ -1,13 +1,32 @@
 (use-package clojure-mode
   :ensure t
+  :after major-mode-hydra
   :mode (("\\.clj\\'" . clojure-mode)
-	 ("\\.cljs\\'" . clojurescript-mode)))
+	 ("\\.cljs\\'" . clojurescript-mode))
+  :config
+  (defun clojure-mode-rename-to-ns ()
+    (when (buffer-file-name)
+      (when (string-match-p (rx  "/core.clj" (? (any "cs")) eos) (buffer-file-name))
+       (rename-buffer
+        (concat
+         (let ((part (split-string (buffer-file-name) "/")))
+           (elt part (- (length part) 2))
+           )
+         "/"
+         (file-name-nondirectory (buffer-file-name)))
+        t))))
+  
+  (add-hook 'clojure-mode-hook 'clojure-mode-rename-to-ns))
 
 (use-package cider
   :ensure t
+  
   :commands (cider cider-connect cider-jack-in)
   :custom
   (cider-mode-line-show-connection nil)
+  (nrepl-repl-buffer-name-template "*%r REPL %s*")
+  (cider-session-name-template "%j:%H:%p")
+  (nrepl-sync-request-timeout 30)
   :config
   (add-to-list 'display-buffer-alist
         `(,(rx "cider")
@@ -45,6 +64,9 @@
 
   (require 'quick-peek)
 
+  (require 'cider-reflect-doc)
+  (require 'cider-fix-sesman)
+  
   (defun cider-doc-quick-peek ()
     (interactive)
 
@@ -83,17 +105,33 @@
   :defer t
   :commands quick-peek-show quick-peek-hide)
 
-
 (use-package clj-refactor
   :ensure t
-  :commands clj-refactor-mode-on
+  :commands clj-refactor-mode
+  :after hydra
+  :bind (:map clj-refactor-map ("C-c r" . clj-refactor-mode-hydra/body))
   :init
-  (add-hook 'clojure-mode-hook #'clj-refactor-mode-on)
+  (add-hook 'clojure-mode-hook #'clj-refactor-mode)
   :config
-  (defun clj-refactor-mode-on ()
-    (clj-refactor-mode 1)
-    (cljr-add-keybindings-with-prefix "C-c C-m"))
-  
+
+  (pretty-hydra-define clj-refactor-mode-hydra
+    (:quit-key "q")
+
+    ("Refactor"
+     (("r" cljr-rename-symbol "rename")
+      ("e c" cljr-extract-constant "extract constant")
+      ("e d" cljr-extract-def "extract def")
+      )
+
+     "Let"
+     (("l x" cljr-expand-let "expand")
+      ("l l" cljr-introduce-let "introduce")
+      ("l r" cljr-remove-let "remove"))
+     
+     )
+    
+    )
+
   )
 
 (use-package clojure-snippets
