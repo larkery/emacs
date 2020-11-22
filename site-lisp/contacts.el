@@ -1,5 +1,7 @@
 (require 'tabulated-list)
+(require 'cl)
 (require 'json)
+(require 'tabulated-list-utils)
 
 (defvar contacts-file "~/notes/contacts.json")
 (defvar contacts-data nil)
@@ -8,12 +10,9 @@
   "Contacts" "A contact list"
 
   (setq tabulated-list-format
-        `[("Name"   10 t)
-          ("Family" 10 t)
-          ("Org" 6 t)
-          ("Email" 20 t)
-          ("Tel" 16)
-          ("Addr" 0)]
+        `[("Name"   30 t)
+          ("Tags" 15 t)
+          ("Org" 6 t)]
         tabulated-list-padding 2
         tabulated-list-sort-key '("Name")
         tabulated-list-entries #'contacts-mode-rows
@@ -57,6 +56,10 @@
       
       "")))
 
+(defun contact-tags (c)
+  (let ((es (alist-get 'groups c)))
+    (if es (mapconcat 'identity es ",") "")))
+
 (defun contact-address (c)
   (let ((es (alist-get 'address c)))
     (replace-regexp-in-string
@@ -74,31 +77,27 @@
 
 (defun contacts-compose ()
   (interactive)
-  (let* ((c (contacts-current-entry))
-         (es (alist-get 'email c)))
-    (cond
-     ((not es) (message "No email addresses"))
-     ((= 1 (length es))
-      (let ((e (elt es 0)))
-        (message "%s email" (elt e 0))
-        (compose-mail (elt e 1))))
-     (t
-      (let ((e (completing-read "Address: "
-                                (cl-loop for e across es
-                                         collect (format "%s: %s" (elt e 0) (elt e 1))
-                                         )
-                                nil t)))
-        (when e
-          (compose-mail
-           (substring e (+ 2 (position ?: e)))
-           )
-          )
-        )
-      )
-     )
+  (let* ((ids (tabulated-list-marked-or-current-id ?m))
+         out)
+    
+    (dolist (id ids)
+      (let* ((c (alist-get id contacts-data))
+             (es (alist-get 'email c))
+             (e (cond
+                 ((= 1 (length es)) (elt (elt es 0) 1))
+                 (es
+                  (let ((e (completing-read
+                            "Address: "
+                            (cl-loop for e across es
+                                     collect (format "%s: %s" (elt e 0) (elt e 1)))
+                            nil t)))
+                    (when e
+                      (substring e (+ 2 (position ?: e)))))))))
+        (when e (push e out))))
 
-    ))
-
+    (when out
+      (contacts-unmark-all)
+      (compose-mail (mapconcat 'identity out ", ")))))
 
 (defun contacts-mode-rows ()
   (cl-loop for contact in contacts-data
@@ -107,44 +106,76 @@
             (car contact)
             (let ((p (cdr contact)))
               (vector
-               (contact-first-name p)
-               (contact-family-name p)
+               (contact-name p)
+               (contact-tags p)
                (contact-organisation p)
-               (contact-email p)
-               (contact-tel p)
-               (contact-address p)
-               )
-              )
-            )
-           )
-  )
+               )))))
 
 (defun contacts-save ()
   (interactive)
-  (with-current-buffer (get-buffer-create "*json*")
-    (pop-to-buffer (current-buffer))
-
-    (erase-buffer)
+  (with-temp-buffer
     (insert (json-encode contacts-data))
-    (json-pretty-print-buffer)))
+    (write-file contacts-file)))
 
-(defun contact-set-org ()
+(defun contacts-revert ()
   (interactive)
-  
-  (let ((e (contacts-current-entry))
-        (i (tabulated-list-get-id)))
-    (setf (alist-get 'organisation e)
-          (completing-read "Set organisation: "
-                           '()
-                           ))
-    (setf (alist-get i contacts-data) e)
-    (tabulated-list-revert)))
+  (setq contacts-data (json-read-file contacts-file))
+  (tabulated-list-revert))
 
 (defun contacts-edit ()
   (interactive)
   (contact-edit (tabulated-list-get-id)))
 
-(define-key contacts-mode-map (kbd "m") #'contacts-compose)
+(defun contacts-mark ()
+  (interactive)
+  (tabulated-list-put-tag-region "m" t))
+
+(defun contacts-unmark ()
+  (interactive)
+  (tabulated-list-put-tag-region " " t))
+
+(defun contacts-unmark-all ()
+  (interactive)
+  (tabulated-list-put-tag-all " "))
+
+(defun contacts-merge-groups (groups add remove)
+  (seq-into
+   (remove-duplicates
+    
+    )
+   'vector))
+
+
+(defun contacts-edit-groups ()
+  (interactive)
+  (let* ((ids (tabulated-list-marked-or-current-id ?m))
+         (all-gs  (seq-into
+                   (remove-duplicates
+                    (cl-loop
+                     for cell in contacts-data
+                     vconcat (alist-get 'groups (cdr cell)))
+                    :test #'equal)
+                   'list))
+
+         (gs (vconcat (remove-duplicates
+                       (completing-read-multiple
+                        "Groups: "
+                        (append all-gs (cl-loop for x in all-gs collect (concat "-" x))))
+                       :test #'equal)))
+         (add )
+         )
+    (dolist (id ids)
+      (cl-callf #'contacts-merge-groups
+          (alist-get 'groups (alist-get id contacts-data))
+        add remove)))
+  (tabulated-list-revert))
+
+(define-key contacts-mode-map (kbd "m") #'contacts-mark)
+(define-key contacts-mode-map (kbd "U") #'contacts-unmark-all)
+(define-key contacts-mode-map (kbd "u") #'contacts-unmark)
+(define-key contacts-mode-map (kbd "e") #'contacts-compose)
+(define-key contacts-mode-map (kbd "g") #'contacts-revert)
+(define-key contacts-mode-map (kbd "+") #'contacts-edit-groups)
 (define-key contacts-mode-map (kbd "C-x C-s") #'contacts-save)
 ;(define-key contacts-mode-map (kbd "so") #'contact-set-org)
 (define-key contacts-mode-map (kbd "RET") #'contacts-edit)
@@ -159,9 +190,7 @@
       (tabulated-list-print)
       (goto-char (point-min))
       (hl-line-mode t))
-    
     (switch-to-buffer b)))
-
 
 (defvar current-contact-id nil)
 (make-variable-buffer-local 'current-contact-id)
@@ -181,9 +210,7 @@
   (replace-regexp-in-string
    (regexp-quote "\n")
    "\n               "
-   a
-   )
-  )
+   a))
 
 (defun contact-mode-rows ()
   (let ((the-contact (alist-get current-contact-id contacts-data)))
@@ -210,6 +237,12 @@
          collect
          (list 'address `["✉" ,(elt addr 0) ,(contact-pad-field (elt addr 1))]))
 
+      ,@(cl-loop
+         for group across (alist-get 'groups the-contact)
+         collect
+         (list 'group `["g" "" ,group])
+         )
+      
       ,(list 'notes `["?" "" ,(contact-pad-field (or (alist-get 'notes the-contact) ""))])
       )
     )
