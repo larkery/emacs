@@ -78,7 +78,16 @@
 (defun kill-current-buffer ()
   (interactive) (kill-buffer nil))
 (global-set-key (kbd "C-x k") 'kill-current-buffer)
-(global-set-key (kbd "M-o") 'other-window)
+
+(defun other-window-or-split ()
+  (interactive)
+  (if (= 1 (count-windows))
+      (progn
+        (select-window (split-window-sensibly))
+        (switch-to-next-buffer))
+    (call-interactively 'other-window)))
+
+(global-set-key (kbd "M-o") 'other-window-or-split)
 
 (global-set-key (kbd "M-*") 'query-replace-regexp)
 (global-set-key (kbd "C-*") 'query-replace)
@@ -136,13 +145,13 @@
                            (let ()
                              (and file
                                   (not remote)
-                                  (projectile-project-name))))))
+                                  (project-name))))))
              (dname (or (and b
                              (not (equal typ "%"))
                              (with-current-buffer b
                                (and file
                                     (if pname
-                                        (file-relative-name file (projectile-project-root))
+                                        (file-relative-name file (project-root))
                                       (abbreviate-file-name (file-name-directory file)))))
                              ) ""))
              )
@@ -168,7 +177,7 @@
   :custom
   (recentf-exclude
    (quote
-   ("^/home/hinton/notes/agenda" "^/nix/store" recentf-exclude-deleted-local-files)))
+    ("^/home/hinton/notes/agenda" "^/nix/store" recentf-exclude-deleted-local-files)))
   (recentf-max-saved-items 100)
   (recentf-auto-cleanup 300))
 
@@ -279,32 +288,20 @@
       (call-process "i3" nil nil nil "reload")
       (error nil)))))
 
-(defvar dark-theme 'wombat)
-(defvar light-theme 'adwaita)
-
-(add-to-list 'custom-theme-load-path
-             (concat user-emacs-directory "site-lisp/themes"))
-
-(use-package gruvbox-theme :ensure t)
-;; (setq dark-theme 'gruvbox-dark-hard
-;;       light-theme 'gruvbox-light-hard)
-
-(use-package spacemacs-theme :ensure t)
-(setq dark-theme 'spacemacs-dark light-theme 'spacemacs-light)
+(defvar dark-theme 'tango-dark)
+(defvar light-theme 'tango)
 
 (load-theme light-theme t)
-;; (load-theme 'tweaks t)
 
 (defun switch-theme ()
   (interactive)
-  (let* ((light-mode (custom-theme-enabled-p light-theme))
+  (let* ((light-mode (not (custom-theme-enabled-p dark-theme)))
          (target-theme (if light-mode dark-theme light-theme))
          (inhibit-redisplay t))
     (dolist (theme custom-enabled-themes)
       (disable-theme theme))
 
-    (load-theme target-theme t)
-    ;; (load-theme 'tweaks t)
+    (when target-theme (load-theme target-theme t))
     ))
 
 

@@ -34,7 +34,7 @@ canceled the action, signal quit."
                 (concat "Session exists (" (car session) "). "
                         "[Q]uit, [N]ew session, or Hack [S]ibling: "))))
 
-        (case c
+        (cl-case c
           ((?q ?Q)
            (let ((debug-on-quit nil)) (signal 'quit nil)))
           ((?n ?N) params)

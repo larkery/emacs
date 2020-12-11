@@ -80,10 +80,10 @@
 
 (defun scf-mode-has-compilation (&optional mode)
   (setq mode (or mode major-mode))
-  (memq 'compilation-mode (loop for parent = mode then (get parent 'derived-mode-parent)
-                                while parent
-                                collect parent into parents
-                                finally return parents)))
+  (memq 'compilation-mode (cl-loop for parent = mode then (get parent 'derived-mode-parent)
+                                   while parent
+                                   collect parent into parents
+                                   finally return parents)))
 
 (defun scf-add-invisible-overlay (begin end)
   "Add an overlay from `begin' to `end' in the current buffer.  Push the
@@ -136,7 +136,7 @@ overlay onto `scf-invisible-overlays'."
                 (let* ((start (point))
                        (fn (buffer-substring-no-properties
                             start
-                            (loop until (progn
+                            (cl-loop until (progn
                                           (goto-char (or (next-single-property-change (point) 'face)
                                                          (point-max)))
                                           (not (scf-has-face 'compilation-info)))

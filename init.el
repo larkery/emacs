@@ -1,12 +1,13 @@
 (setq messages-buffer-max-lines 100000)
 (add-to-list 'load-path (concat user-emacs-directory "site-lisp/"))
-(require 'use-package-save-custom)
+
 (setq gc-cons-threshold most-positive-fixnum
       make-backup-files nil
       custom-file (concat user-emacs-directory "custom.el")
       load-prefer-newer t)
 
 (load custom-file)
+(require 'use-package-filter-custom)
 
 (require 'package)
 

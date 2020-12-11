@@ -95,49 +95,45 @@
   :config
   (winner-mode 1))
 
-(use-package counsel-projectile
-  :commands counsel-projectile-ag
-  )
-
-(use-package projectile
-  :diminish
-  :ensure t
-  :demand t
-  :custom
-  (projectile-keymap-prefix (kbd "C-c p"))
-  (projectile-completion-system 'ivy)
-  (projectile-switch-project-action 'projectile-dired)
-  (projectile-project-root-files
-   '("build.boot" "project.clj" "deps.edn"
-     "README" "default.nix" "shell.nix" "README.org"
-     "pom.xml" "build.gradle"
-     "gradlew"))
-  (projectile-project-root-file-bottom-up
-   '(".projectile" ".git" ".hg"))
+(use-package project
+  :bind
+  (("M-j" . project-find-file)
+   ("M-J" . project-dired)
+   ("M-s p" . project-find-regexp)
+   ("C-c k" . project-kill))
   
   :config
-  (projectile-global-mode 1)
-  (setq projectile-keymap-prefix (kbd "C-c p"))
-  (bind-keys
-   :map projectile-mode-map
-   ("<f9>" . projectile-switch-project)
-   ("C-c p s s" . counsel-projectile-ag)
-   ("C-c p s a" . projectile-ag)
-   ("M-s p" . projectile-ag)
-   ("C-c p d" . projectile-dired)
-   ("C-x C-d" . projectile-dired))
+  (defun project-dired (prefix)
+    (interactive "P")
+    (if-let ((cur (and (not prefix)
+                       (project-current nil))))
+        (dired (car (project-roots cur)))
+      (counsel-bookmarked-directory)))
+  
+  (defun project-kill ()
+    (interactive)
+    (when (y-or-n-p "Kill project?")
+      (when-let ((cur (project-current nil)))
+        (cl-loop
+         for b being the buffers
+         when (with-current-buffer b (equal (project-current nil) cur))
+         do (kill-buffer b)))))
 
-  (defadvice projectile-locate-dominating-file (around stop-looking-in-net (file name))
-    (let ((locate-dominating-stop-dir-regexp
-           (rx-to-string `(| (regexp ,locate-dominating-stop-dir-regexp) (seq bos "/net")))
-           ))
-      ad-do-it)))
+  (defun project-name ()
+    (when-let ((root (project-root))) (file-name-nondirectory root)))
+
+  (defun project-root ()
+    (when-let ((cur (project-current nil))) (directory-file-name (cdr cur))))
+  )
 
 (use-package pcre2el
   :diminish pcre-mode
   :ensure t
   :config
-  (pcre-mode t))
+  (pcre-mode t)
+
+  (with-eval-after-load 'xref
+    (advice-add 'xref--regexp-to-extended :override #'rxt-elisp-to-pcre)))
 
 (use-package replace
   :bind ("M-s o" . occur)
@@ -149,11 +145,6 @@
   :bind
   (([remap query-replace] . 'anzu-query-replace)
    ([remap query-replace-regexp] . 'anzu-query-replace-regexp)
-   ;; ("<f5>" . anzu-query-replace-regexp)
-
-   ;; ("M-s N" . anzu-replace-at-cursor-thing)
-
-   ;; ("M-s n" . anzu-query-replace-at-cursor)
 
    :map isearch-mode-map
    ([remap isearch-query-replace] . anzu-isearch-query-replace)
@@ -385,12 +376,6 @@
   :ensure t
   :bind ("C-=" . goto-last-change))
 
-(use-package ag
-  :ensure t
-  :config
-  (setq ag-arguments '("--smart-case")
-        ag-highlight-search t))
-
 (use-package executable
   :ensure nil
   :hook
@@ -467,4 +452,6 @@
   (add-hook 'literate-calc-minor-mode-hook
             'literate-calc-toggle))
 
-
+(use-package halp
+  :bind ("C-?" . halp-inline)
+  )

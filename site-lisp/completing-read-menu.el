@@ -71,7 +71,7 @@
      ((and (listp menu)
            (cl-every #'keymapp menu))
       (nreverse
-       (loop for keymap in menu
+       (cl-loop for keymap in menu
              concat (keymap-to-alist menu))))
      
      ((listp menu)

@@ -14,7 +14,7 @@
          ("C-M-SPC" . org-mark-element)
          )
   :custom
-  (org-refile-use-outline-path t)
+  (org-refile-use-outline-path 'file)
   (org-goto-interface 'outline)
   (org-outline-path-complete-in-steps nil)
   (org-use-speed-commands t)
@@ -33,8 +33,7 @@
    )
   (org-latex-pdf-process
    '("xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f"))
-  (org-refile-targets '((nil :maxlevel . 3)
-                        (org-agenda-files :maxlevel . 2)))
+  (org-refile-targets '((nil :maxlevel . 3) (org-agenda-files :maxlevel . 2)))
   (org-refile-use-outline-path 'file)
 
   (org-capture-templates

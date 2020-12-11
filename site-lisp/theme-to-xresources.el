@@ -66,8 +66,8 @@
       ;;                 (face-attribute 'default :background)))
 
       (if (eq 'light (frame-parameter nil 'background-mode))
-          (insert "#include \".Xresources_i3_light\"\n")
-        (insert "#include \".Xresources_i3_dark\"\n"))
+          (insert "#include \".config/i3/light-resources\"\n")
+        (insert "#include \".config/i3/dark-resources\"\n"))
 
       ;; (let ((weight (face-attribute 'default :weight)))
       ;;   (when weight

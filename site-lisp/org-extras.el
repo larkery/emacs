@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 (defun org-goto-path (path &optional ff-command template-text)
     "Find / create an org heading. PATH is a list of strings.
 First string is a filename, subsequent strings are heading names, each being
@@ -195,7 +197,7 @@ The first will find a file, and the rest headings and subheadings and so on.")
                       (elt time 1) mins
                       (elt time 2) hrs)
                 
-                (lexical-let ((location location))
+                (let ((location location))
                   (let* ((time (time-to-seconds (apply 'encode-time time)))
                          (delta (- time (time-to-seconds))))
                     (when (< 0 delta (* 2 org-notify-check-interval))
@@ -204,13 +206,12 @@ The first will find a file, and the rest headings and subheadings and so on.")
                         (setq next-appt-time time
                               next-appt-text (format "%02d:%02d %s"  hrs mins heading)))
                       
-                      ;; (push
-                      ;;  (run-at-time (seconds-to-time (- time (* 60 5)))
-                      ;;               nil
-                      ;;               'org-notify-display-notification
-                      ;;               heading location 5)
-                      
-                      ;;  org-notify-extant-timers)
+                      (push
+                       (run-at-time (seconds-to-time (- time (* 60 5)))
+                                    nil
+                                    'org-notify-display-notification
+                                    heading location 5)
+                       org-notify-extant-timers)
 
                       (push (run-at-time (seconds-to-time time)
                                          nil
@@ -219,12 +220,7 @@ The first will find a file, and the rest headings and subheadings and so on.")
                             
                             org-notify-extant-timers)))))))
 
-          (if (string= "" next-appt-text)
-              (setq-default header-line-format nil)
-            (setq-default header-line-format
-                          (list
-                           (propertize "Meeting: " 'face 'error)
-                           (mode-line-pad-right next-appt-text))))))
+          ))
       )))
 
 (provide 'org-extras)

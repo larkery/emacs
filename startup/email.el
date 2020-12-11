@@ -20,7 +20,8 @@
             (push (buffer-name buffer) buffers))))
       (nreverse buffers)))
 
-  (bind-key "," 'gnus-dired-attach gnus-dired-mode-map))
+  (bind-key "," 'gnus-dired-attach gnus-dired-mode-map)
+  (bind-key "E" 'gnus-dired-attach gnus-dired-mode-map))
 
 (use-package org-add-font-lock-defaults
   :commands org-add-font-lock-defaults
@@ -218,11 +219,12 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
      ("replied" "→")
      ("attachment" "A")
      ("inbox" "%")
+     ("deleted" (propertize "DEL"  'face '(error (:inverse-video t))))
      ))
 
   (notmuch-search-line-faces
    '(("unread" . notmuch-search-unread-face)
-     ("deleted" . (:strike-through "red"))
+;     ("deleted" . (:strike-through "red"))
      ("flagged" . notmuch-search-flagged-face)
      ))
   
@@ -236,12 +238,12 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
   (notmuch-search-oldest-first nil)
   (notmuch-fcc-dirs
    '(("tom\\.hinton@cse\\.org\\.uk" . "\"cse/Sent Items\" +sent -inbox")
-     ("larkery\\.com" . "\"fastmail/Sent Items\" +sent -inbox")))
+     ("larkery\\.com" . "\"fm/Sent Items\" +sent -inbox")))
   (notmuch-identities
    '("Tom Hinton <tom.hinton@cse.org.uk>" "Tom Hinton <t@larkery.com>"))
   (notmuch-draft-folders
    '(("tom\\.hinton@cse\\.org\\.uk" . "cse/Drafts")
-     ("larkery\\.com" . "fastmail/Drafts")))
+     ("larkery\\.com" . "fm/Drafts")))
 
   (notmuch-address-selection-function
    (lambda
@@ -399,6 +401,7 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
   
   (defun counsel-notmuch ()
     (interactive)
+    (require 'cl-lib)
     (let* ((search
             (ivy-read "Notmuch: "
                       (mapcar (lambda (x) (plist-get x :name)) notmuch-saved-searches)
@@ -407,7 +410,7 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
                       :keymap (let ((km (make-sparse-keymap)))
                                 (bind-key "TAB" #'notmuch-read-query-hydra/body km)
                                 km)))
-           (match (car (remove-if-not (lambda (x)
+           (match (car (cl-remove-if-not (lambda (x)
                                         (string= (plist-get x :name) search))
                                       notmuch-saved-searches)))
            (search (if match (plist-get match :query) search)))
@@ -429,7 +432,7 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
     (let* ((saved-search
             (let (longest
                   (longest-length 0))
-              (loop for tuple in notmuch-saved-searches
+              (cl-loop for tuple in notmuch-saved-searches
                     if (let ((quoted-query (regexp-quote (notmuch-saved-search-get tuple :query))))
                          (and (string-match (concat "^" quoted-query) query)
                               (> (length (match-string 0 query))
@@ -588,13 +591,16 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
   (mml-enable-flowed nil)
   (message-send-mail-function 'message-send-mail-with-sendmail)
   (message-sendmail-envelope-from 'header)
+  (mail-envelope-from 'header)
+  (message-sendmail-f-is-evil nil)
+  (mail-specify-envelope-from t)
   (message-fill-column nil)
   (mm-coding-system-priorities '(utf-8))
   (mm-inline-override-types '("image/tiff"))
   (mm-inline-large-images 'resize)
   (mm-inline-large-images-proportion 0.9)
   (mm-inline-text-html-with-images t)
-  (sendmail-program "msmtpq-quiet")
+  (sendmail-program "msmtpq")
   (user-mail-address "tom.hinton@cse.org.uk")
   (message-auto-save-directory nil)
   (message-interactive nil)

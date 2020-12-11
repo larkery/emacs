@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 (use-package wdired
   :defer t
   :commands wdired-change-to-wdired-mode
@@ -21,8 +23,9 @@
               ("f" . nil)
               ("f n" . find-name-dired-here)
               ("f g" . find-grep-dired-here)
+              ("f r" . find-xref-matches-here)
               ("<f2>" . wdired-change-to-wdired-mode)
-              ("SPC" . hydra-dired/body))
+              ("SPC" . major-mode-hydra))
   
   :commands dired-from-buffer
   :custom
@@ -35,7 +38,6 @@
   (dired-listing-switches "-lahgG")
   (dired-omit-files "^\\.[^\\.]")
   (dired-omit-verbose nil)
-  (dired-subtree-line-prefix 'dired-subtree-indented-arrow-prefix)
   (dired-subtree-use-backgrounds nil)
   (dired-subtree-line-prefix-face 'subtree)
   (directory-free-space-args "-PkH")
@@ -48,6 +50,16 @@
   (defun find-grep-dired-here (pattern)
     (interactive "sRegexp: ")
     (find-grep-dired default-directory pattern))
+
+  (defun find-xref-matches-here (pattern)
+    (interactive
+     (list (read-regexp "Regexp: ")))
+    
+    (xref--show-xrefs
+     (lambda ()
+       (message "%s" pattern)
+       (xref-matches-in-directory pattern "*" default-directory nil))
+     nil))
   
   (defun with-ignored-errors (o &rest args)
     (ignore-errors
@@ -58,7 +70,8 @@
   (major-mode-hydra-define dired-mode
     (:quit-key "q")
     ("Tools"
-     (("w" wdired-change-to-wdired-mode "edit names"))
+     (("w" wdired-change-to-wdired-mode "edit names")
+      ("E" gnus-dired-attach "attach to mail"))
 
      "File"
      (("S" dired-do-symlink "symlink (absolute)")
@@ -66,20 +79,7 @@
 
      "Image"
      (("i t" image-dired-toggle-marked-thumbs "thumbs")
-      ("i d" image-dired-display-thumbs "display"))
-
-     
-     ))
-
-  (defhydra hydra-dired
-    (:hint nil)
-
-    "
-_<f2>_ rename
-"
-    ("<f2>" wdired-change-to-wdired-mode :exit t)
-    ("q" nil :exit t)
-    )
+      ("i d" image-dired-display-thumbs "display"))))
 
   (defun dired-from-buffer ()
     (interactive)
@@ -91,10 +91,6 @@ _<f2>_ rename
         (with-current-buffer (dired d)
           (when b (dired-goto-file b))))))
   
-  (defun dired-subtree-indented-arrow-prefix (d)
-      (concat (make-string (* 3 d) ? )
-              (propertize ">" 'face (intern (concat "outline-" (number-to-string (mod d 9)))))))
-    
   (require 'dired-parent-links)
   
   (add-hook 'dired-mode-hook 'auto-revert-mode)

@@ -10,16 +10,16 @@
 
 (defun mode-line-get-project ()
   (when (and (buffer-file-name)
-             (featurep 'projectile)
+             (featurep 'project)
              (not (file-remote-p (buffer-file-name)))
-             (projectile-project-p))
-    (let ((root (projectile-project-root)))
+             (project-current nil))
+    (let ((root (project-root)))
       (when (string-prefix-p root (buffer-file-name))
         (concat " ("
-                (propertize (projectile-project-name)
+                (propertize (project-name)
                             'face 'underline
                             'mouse-face 'mode-line-highlight
-                            'local-map (make-mode-line-mouse-map 'mouse-1 'projectile-dired-other-window))
+                            'local-map (make-mode-line-mouse-map 'mouse-1 'project-dired))
                 ")")))))
 
 (defun mode-line-pad-right (rhs)
@@ -36,8 +36,8 @@
                    (buffer-file-name
                     (:eval
                      (if (and (not (file-remote-p buffer-file-name))
-                              (projectile-project-p))
-                         (list "[" (projectile-project-name) "]" " %b")
+                              (project-current nil))
+                         (list "[" (project-name) "]" " %b")
                       buffer-file-name))
                     "%b"))
  

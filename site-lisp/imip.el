@@ -14,7 +14,7 @@
          events)
 
     (dolist (item invitation-contents)
-      (case (car item)
+      (cl-case (car item)
         (VTIMEZONE
          (push item events))
         
@@ -26,7 +26,7 @@
                 attendees
                 misc)
            (dolist (thing event-things)
-             (case (car thing)
+             (cl-case (car thing)
                (ATTENDEE
                 (when (string-match-p address-re (nth 2 thing))
                   (push `(ATTENDEE (PARTSTAT ,response-string) ,(nth 2 thing)) attendees)))

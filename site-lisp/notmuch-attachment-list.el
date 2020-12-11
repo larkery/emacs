@@ -208,7 +208,7 @@
 
 (defun notmuch-list-attachments (query)
   (interactive
-   (list (or (case major-mode
+   (list (or (cl-case major-mode
                (notmuch-search-mode (notmuch-search-get-query))
                (notmuch-show-mode (notmuch-show-get-query))
                (notmuch-tree-mode (notmuch-tree-get-query)))

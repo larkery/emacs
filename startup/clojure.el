@@ -24,7 +24,7 @@
   :commands (cider cider-connect cider-jack-in)
   :custom
   (cider-mode-line-show-connection nil)
-  (nrepl-repl-buffer-name-template "*%r REPL %s*")
+  (nrepl-repl-buffer-name-template "*cider-repl %s(%r:%S)*")
   (cider-session-name-template "%j:%H:%p")
   (nrepl-sync-request-timeout 30)
   :config
@@ -62,24 +62,24 @@
   (advice-add 'cider-eldoc-info :filter-return 'cider-eldoc-info-add-specs)
   (advice-add 'cider-eldoc-format-function :around 'cider-eldoc-format-function-with-spec)
 
-  (require 'quick-peek)
-
   (require 'cider-reflect-doc)
   (require 'cider-fix-sesman)
-  
-  (defun cider-doc-quick-peek ()
-    (interactive)
 
+  (require 'halp)
+
+  (add-hook 'cider-mode-hook (lambda () (setq halp-backend 'cider)))
+
+  (cl-defmethod halp-text ((provider (eql cider)))
     (let ((s (thing-at-point 'symbol)))
       (when s
         (let ((b (cider-create-doc-buffer s)))
-          (when b
-            (let ((bc (with-current-buffer b (buffer-string))))
-              (quick-peek-show bc)
-              (set-transient-map nil nil #'quick-peek-hide)
-              ))))))
+          (when b (with-current-buffer b (buffer-string)))))))
 
-  (bind-key "C-c d" #'cider-doc-quick-peek cider-mode-map)
+  (cl-defmethod halp-open ((provider (eql cider)))
+    (let ((s (thing-at-point 'symbol)))
+      (when s
+        (let ((b (cider-create-doc-buffer s)))
+          (when b (pop-to-buffer b))))))
 
   (define-clojure-indent
     (defroutes 'defun)
@@ -98,7 +98,6 @@
     (rfn 2)
     (let-routes 1)
     (context 2)))
-
 
 (use-package quick-peek
   :ensure t
@@ -127,12 +126,7 @@
      (("l x" cljr-expand-let "expand")
       ("l l" cljr-introduce-let "introduce")
       ("l r" cljr-remove-let "remove"))
-     
-     )
-    
-    )
-
-  )
+     )))
 
 (use-package clojure-snippets
   :ensure t

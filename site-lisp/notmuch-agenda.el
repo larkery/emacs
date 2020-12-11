@@ -147,7 +147,7 @@
                        org-agenda-mail-buffer
                      (setq pa (point-min))
                      (gnus-find-text-property-region (point-min) (point-max) 'org-marker))))
-              (loop for marker in org-marker-regions
+              (cl-loop for marker in org-marker-regions
                     do
                     (add-text-properties
                      (+ p (- (car marker) pa)) (+ p (- (cadr marker) pa))
@@ -161,7 +161,7 @@
           (save-restriction
             (narrow-to-region p (point))
             (let ((face-regions (gnus-find-text-property-region (point-min) (point-max) 'face)))
-              (loop for range in face-regions
+              (cl-loop for range in face-regions
                     do
                     (let ((face (get-text-property (car range) 'face)))
                       (add-text-properties
@@ -361,6 +361,7 @@
     (when icalendar-element
       (let* ((events (icalendar--all-events icalendar-element))
              (zone-map (icalendar--convert-all-timezones events)))
+        (insert "#+BEGIN_EXAMPLE\n")
         (dolist (event events)
           ;; insert event description string
           (notmuch-agenda-insert-summary event zone-map)
@@ -369,6 +370,7 @@
                          :type 'notmuch-show-part-button-type
                          'action 'notmuch-agenda-do-capture
                          'calendar-event event))
+        (insert "\n#+END_EXAMPLE\n")
         t))))
 
 (defun notmuch-agenda-reply-advice (o &rest args)

@@ -1,6 +1,6 @@
 (require 'tabulated-list)
 (require 'tabulated-list-utils)
-(require 'projectile)
+(require 'project)
 
 (defvar buffer-table-group-col 2)
 (defvar buffer-table-mode-col 3)
@@ -76,8 +76,8 @@
                       (let* ((buf-name (buffer-name))
                              (buf-path (or buffer-file-name (and dired-directory (expand-file-name dired-directory))))
                              (remote (and buf-path (file-remote-p buf-path)))
-                             (proj-name (and (not remote) (projectile-project-name)))
-                             (proj-root (and buf-path proj-name (projectile-project-root)))
+                             (proj-name (and (not remote) (project-name)))
+                             (proj-root (and buf-path proj-name (project-root)))
                              (mode-name (buffer-table-buffer-mode))
                              (host-name
                               (or (and buf-path
@@ -246,7 +246,7 @@
     (save-excursion
       (goto-char (point-min))
       (while (not (eobp))
-        (case (char-after)
+        (cl-case (char-after)
           (?d (push (get-buffer (tabulated-list-get-id))
                     delete-buffers))
           (?s (push (get-buffer (tabulated-list-get-id))
