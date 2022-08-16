@@ -6,6 +6,8 @@
       (notmuch-fcc-header-setup)
       ))
 
+(defvar notmuch-draft-folders nil)
+
 (defun notmuch-select-draft-folder (o &rest args)
   (let ((selected-folder notmuch-draft-folder))
     (save-mark-and-excursion

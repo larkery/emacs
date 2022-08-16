@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: mkShell
+# key: mkShell
+# --
+{ pkgs ? import <nixpkgs> {} }:
+pkgs.mkShell {
+   nativeBuildInputs = [
+     $0
+   ];
+}

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pgref
+# key: pgref
+# --
+${1:thing}_id ${2:not null} references $1(${3:id}) ${4:on delete cascade},

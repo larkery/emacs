@@ -59,7 +59,11 @@
              do (push symbol (gethash fp inverse)))
     (cl-loop for fp being the hash-keys of inverse
              using (hash-values symbols)
-             when (car fp)
+             when (and (car fp)
+                       (featurep (cdr fp))
+                       (cl-every
+                        (lambda (s) (or (fboundp s) (boundp s)))
+                        symbols))
              do (let (kill-ring)
                   (with-current-buffer (find-file-noselect (car fp))
                     (save-mark-and-excursion
@@ -97,7 +101,9 @@
                                   (use-package-filter-custom-format-custom sym)))
                               )
                             ))
-                        )))))))
+                        ))
+                    (save-buffer)
+                    )))))
 
 (advice-add 'custom-save-variables :after 'use-package-filter-custom-file)
 

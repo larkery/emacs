@@ -30,7 +30,7 @@
    (list (or (cdr (assoc "ORGANIZER" (org-entry-properties nil "ORGANIZER")))
              (completing-read "Organizer: " notmuch-identities nil nil))
          (or (org-entry-get-multivalued-property (point) "ATTENDING")
-             (completing-read-multiple-menu "Attending: " (notmuch-address-options "cse")))))
+             (completing-read-multiple-menu "Attending: " (notmuch-address-options "")))))
 
   (org-id-get-create)
   

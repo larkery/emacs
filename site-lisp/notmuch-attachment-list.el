@@ -131,6 +131,7 @@
     (let ((view-proc (start-process "view-attachment"
                                     nil
                                     "xdg-open"
+                                    "--block"
                                     tempfile)))
       (set-process-sentinel
        view-proc

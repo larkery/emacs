@@ -133,7 +133,8 @@ The first will find a file, and the rest headings and subheadings and so on.")
 (defvar org-notify-soon-headings nil)
 
 (defun org-notify-check-if-org ()
-  (when (eq major-mode 'org-mode)
+  (when (and (eq major-mode 'org-mode)
+             (member buffer-file-name (org-agenda-files t)))
     (org-notify-check)))
 
 (defun org-notify-display-notification (title location delay)
@@ -149,6 +150,7 @@ The first will find a file, and the rest headings and subheadings and so on.")
      (when is-url (list "default" "Go to location"))
      :on-action
      (when is-url (lambda (&rest args)
+                    (message "%s" args)
                     (browse-url location)))
 
      :urgency (when (zerop delay) 'critical))))
@@ -166,61 +168,64 @@ The first will find a file, and the rest headings and subheadings and so on.")
           (next-appt-text ""))
       
       (dolist (f (org-agenda-files))
-        (dolist (e (org-agenda-get-day-entries
-                    f date :scheduled :timestamp))
-          (let* ((hd-marker (get-text-property 0 'org-hd-marker e))
-                 (marker (get-text-property 0 'org-marker e))
-                 (heading (save-excursion
-                            (set-buffer (marker-buffer hd-marker))
-                            (goto-char (marker-position hd-marker))
-                            (org-get-heading t t t t)
-                            ))
-                 (location (org-entry-get hd-marker "LOCATION"))
-                 (is-url (and location
-                              (string-match
-                               (rx bos "http" (? "s") "://")
-                               location)))
-                 (timestamp (save-excursion
-                              (set-buffer (marker-buffer marker))
-                              (goto-char (marker-position marker))
-                              (and (looking-at org-ts-regexp3)
-                                   (match-string 0))))
-                 )
-            (when timestamp
-              (let* ((time (decode-time (org-time-string-to-time timestamp)))
-                     (sec (elt time 0))
-                     (mins (elt time 1))
-                     (hrs (elt time 2))
-                     (time (decode-time)))
-                
-                (setf (elt time 0) sec
-                      (elt time 1) mins
-                      (elt time 2) hrs)
-                
-                (let ((location location))
-                  (let* ((time (time-to-seconds (apply 'encode-time time)))
-                         (delta (- time (time-to-seconds))))
-                    (when (< 0 delta (* 2 org-notify-check-interval))
-                      (when (or (not next-appt-time)
-                                (< time next-appt-time))
-                        (setq next-appt-time time
-                              next-appt-text (format "%02d:%02d %s"  hrs mins heading)))
-                      
-                      (push
-                       (run-at-time (seconds-to-time (- time (* 60 5)))
-                                    nil
-                                    'org-notify-display-notification
-                                    heading location 5)
-                       org-notify-extant-timers)
+        (condition-case nil
+            (progn (find-file-noselect f)
+                   (dolist (e (org-agenda-get-day-entries
+                               f date :scheduled :timestamp))
+                     (let* ((hd-marker (get-text-property 0 'org-hd-marker e))
+                            (marker (get-text-property 0 'org-marker e))
+                            (heading (save-excursion
+                                       (set-buffer (marker-buffer hd-marker))
+                                       (goto-char (marker-position hd-marker))
+                                       (org-get-heading t t t t)
+                                       ))
+                            (location (org-entry-get hd-marker "LOCATION"))
+                            (is-url (and location
+                                         (string-match
+                                          (rx bos "http" (? "s") "://")
+                                          location)))
+                            (timestamp (save-excursion
+                                         (set-buffer (marker-buffer marker))
+                                         (goto-char (marker-position marker))
+                                         (and (looking-at org-ts-regexp3)
+                                              (match-string 0))))
+                            )
+                       (when timestamp
+                         (let* ((time (decode-time (org-time-string-to-time timestamp)))
+                                (sec (elt time 0))
+                                (mins (elt time 1))
+                                (hrs (elt time 2))
+                                (time (decode-time)))
+                           
+                           (setf (elt time 0) sec
+                                 (elt time 1) mins
+                                 (elt time 2) hrs)
+                           
+                           (let ((location location))
+                             (let* ((time (time-to-seconds (apply 'encode-time time)))
+                                    (delta (- time (time-to-seconds))))
+                               (when (< 0 delta (* 2 org-notify-check-interval))
+                                 (when (or (not next-appt-time)
+                                           (< time next-appt-time))
+                                   (setq next-appt-time time
+                                         next-appt-text (format "%02d:%02d %s"  hrs mins heading)))
+                                 
+                                 (push
+                                  (run-at-time (seconds-to-time (- time (* 60 5)))
+                                               nil
+                                               'org-notify-display-notification
+                                               heading location 5)
+                                  org-notify-extant-timers)
 
-                      (push (run-at-time (seconds-to-time time)
-                                         nil
-                                         'org-notify-display-notification
-                                         heading location 0)
-                            
-                            org-notify-extant-timers)))))))
+                                 (push (run-at-time (seconds-to-time time)
+                                                    nil
+                                                    'org-notify-display-notification
+                                                    heading location 0)
+                                       
+                                       org-notify-extant-timers)))))))
 
-          ))
+                     ))
+          (error nil)))
       )))
 
 (provide 'org-extras)

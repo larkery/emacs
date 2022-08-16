@@ -62,6 +62,13 @@
   (let ((help-window-select t))
     (pop-to-buffer (man (thing-at-point 'symbol)))))
 
+(cl-defmethod halp-text ((provider (eql shell-mode)))
+  (shell-command-to-string (format "man --whatis %s" (thing-at-point 'symbol))))
+
+(cl-defmethod halp-open ((provider (eql shell-mode)))
+  (let ((help-window-select t))
+    (pop-to-buffer (man (thing-at-point 'symbol)))))
+
 (cl-defmethod halp-open ((provider (eql clojure-mode)))
   (browse-url (format "https://clojuredocs.org/clojure.core/%s"
                       (thing-at-point 'symbol))))
@@ -73,6 +80,9 @@
   (dictionary-search (thing-at-point 'word)))
 
 (add-hook 'text-mode-hook
+          (lambda () (setq halp-backend 'dictionary)))
+
+(add-hook 'org-mode-hook
           (lambda () (setq halp-backend 'dictionary)))
 
 (provide 'halp)

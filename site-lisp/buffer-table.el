@@ -3,8 +3,8 @@
 (require 'project)
 
 (defvar buffer-table-group-col 2)
-(defvar buffer-table-mode-col 3)
-(defvar buffer-table-host-col 4)
+;; (defvar buffer-table-mode-col 3)
+(defvar buffer-table-host-col 3)
 
 (defvar buffer-table-delete-mark (propertize "d" 'face 'error))
 (defvar buffer-table-save-mark (propertize "s" 'face 'success))
@@ -31,9 +31,9 @@
   "Major mode for listing buffers"
   (setq tabulated-list-format
         `[("%" 2 t)
-          ("Name" 25 buffer-table-sort-filename)
+          ("Name" 30 buffer-table-sort-filename)
           ("Group" 14 (lambda (a b) (buffer-table-sort-other buffer-table-group-col a b)))
-          ("Mode" 12 t)
+          ;; ("Mode" 12 t)
           ("Host" 8 t)
           ("Filename" 0 t)]
         tabulated-list-padding 2
@@ -60,12 +60,13 @@
            (buffer-table-sort-filename b a))
           (t nil))))
 
-(defun buffer-table-buffer-mode ()
-  (let* ((n (symbol-name major-mode))
-         (e (- (length n) 5)))
-    (if (string= "-mode" (substring n e))
-        (substring n 0 e)
-      n)))
+;; (defun buffer-table-buffer-mode ()
+;;   (let* ((n (symbol-name major-mode))
+;;          (e (- (length n) 5)))
+;;     (if (string= "-mode" (substring n e))
+;;         (substring n 0 e)
+;;       n)))
+
 
 (defun buffer-table--get-buffers ()
   (cl-loop with e = nil
@@ -76,9 +77,9 @@
                       (let* ((buf-name (buffer-name))
                              (buf-path (or buffer-file-name (and dired-directory (expand-file-name dired-directory))))
                              (remote (and buf-path (file-remote-p buf-path)))
-                             (proj-name (and (not remote) (project-name)))
-                             (proj-root (and buf-path proj-name (project-root)))
-                             (mode-name (buffer-table-buffer-mode))
+                             (proj-name (and (not remote) (project-current-name)))
+                             (proj-root (and buf-path proj-name (project-current-root)))
+                             ;; (mode-name (buffer-table-buffer-mode))
                              (host-name
                               (or (and buf-path
                                        remote
@@ -95,14 +96,15 @@
                                               buffer-table-mode
                                               help-mode
                                               Info-mode
-                                              ) ) "emacs")
+                                              bookmark-bmenu-mode
+                                              ) ) "*")
 
                                      ((member buf-name
-                                             '("*scratch*"
-                                               "*Backtrace*"
-                                               )
-                                               )
-                                      "emacs"
+                                              '("*scratch*"
+                                                "*Backtrace*"
+                                                )
+                                              )
+                                      "*"
                                       )
                                      
                                      ((memq major-mode
@@ -114,30 +116,43 @@
                                               ))
                                       "mail")
 
-                                     ((memq major-mode
-                                            '(rcirc-mode)
-                                            )
-                                      "irc")
-
                                      (proj-name proj-name)
                                      (t "")))
                              (buf-path
                               (if proj-root
-                                  (substring buf-path (length (expand-file-name proj-root)))
+                                  (let ((r (substring buf-path (length (expand-file-name proj-root)))))
+                                    (if (string= r "/")
+                                        buf-path
+                                      r))
                                 (or buf-path ""))))
                         (list buf-name
                               `[,(cond
                                   ((buffer-modified-p) "%")
                                   (t ""))
                                 
-                                ,(propertize buf-name
-                                             'face
-                                             (cond
-                                              (buffer-file-name 'bold)
-                                              (dired-directory 'default)
-                                              (t 'italic)))
+                                ,(concat
+                                  (let ((n (or (and (buffer-file-name)
+                                                    (all-the-icons-icon-for-file
+                                                     (file-name-nondirectory (buffer-file-name))
+                                                     :height 0.75))
+                                               (all-the-icons-icon-for-mode
+                                                major-mode
+                                                :height 0.75)
+                                               )))
+                                    (if (stringp n)
+                                        n (all-the-icons-octicon
+                                           "gear" :height 0.75)))
+                                  
+                                  
+                                  " "
+                                  (propertize buf-name
+                                              'face
+                                              (cond
+                                               (buffer-file-name 'bold)
+                                               (dired-directory 'default)
+                                               (t 'italic))))
                                 ,group
-                                ,mode-name
+                                ;; ,mode-name
                                 ,host-name
                                 ,(or buf-path "")
                                 ]))))
@@ -216,13 +231,14 @@
   (kbd "S g")
   'buffer-table-save-group)
 
-(defun buffer-table-kill-mode ()
-  (interactive)
-  (tabulated-list-put-tag-similar buffer-table-mode-col buffer-table-delete-mark))
+;; (defun buffer-table-kill-mode ()
+;;   (interactive)
+;;   (tabulated-list-put-tag-similar buffer-table-mode-col buffer-table-delete-mark))
 
-(define-key buffer-table-mode-map
-  (kbd "D m")
-  'buffer-table-kill-mode)
+;; (define-key buffer-table-mode-map
+;;   (kbd "D m")
+;;   'buffer-table-kill-mode)
+
 
 (defun buffer-table-unmark-all ()
   (interactive)
@@ -302,28 +318,29 @@
   (kbd "f f")
   'buffer-table-un-filter)
 
-(pretty-hydra-define
-  buffer-table
-  (:quit-key ("q") :title "Buffer List" :foreign-keys run)
-  ("Sort"
-   (("o g" buffer-table-sort-by-group "group"))
+;; (pretty-hydra-define
+;;   buffer-table
+;;   (:quit-key ("q") :title "Buffer List" :foreign-keys run)
+;;   ("Sort"
+;;    (("o g" buffer-table-sort-by-group "group"))
    
-   "Filter"
-   (("f g" buffer-table-filter-group "group")
-    ("f h" buffer-table-filter-host "host")
-    ("f f" buffer-table-un-filter "none"))
+;;    "Filter"
+;;    (("f g" buffer-table-filter-group "group")
+;;     ("f h" buffer-table-filter-host "host")
+;;     ("f f" buffer-table-un-filter "none"))
 
-   "Kill"
-   (("D g" buffer-table-kill-group "group")
-    ("D m" buffer-table-kill-mode "mode"))
+;;    "Kill"
+;;    (("D g" buffer-table-kill-group "group")
+;;     ("D m" buffer-table-kill-mode "mode"))
 
-   "Act"
-   (("U" buffer-table-unmark-all "clear marks")
-    ("x" buffer-table-execute "execute"))
-   )
+;;    "Act"
+;;    (("U" buffer-table-unmark-all "clear marks")
+;;     ("x" buffer-table-execute "execute"))
+;;    )
 
   
-  )
+;;   )
+
 
 (define-key buffer-table-mode-map
   (kbd "SPC")

@@ -24,21 +24,6 @@
              nil
              "-f" "html" "-t" "org" "--wrap=none"))
           (insert "#+END_QUOTE\n")
-          ;; (goto-char (point-min))
-
-          ;; (let ((qd -1))
-          ;;   (while (not (eobp))
-          ;;     (cond
-          ;;      ((looking-at (rx bol "#+BEGIN_QUOTE"))
-          ;;       (setq qd (+ qd 1))
-          ;;       (kill-line 1))
-          ;;      ((looking-at (rx bol "#+END_QUOTE"))
-          ;;       (setq qd (- qd 1))
-          ;;       (kill-line 1))
-          ;;      ((>= qd 0)
-          ;;       (insert (make-string qd ?>) " ")))
-          
-          ;;     (forward-line)))
 
           (goto-char (point-min))
           (replace-string "#+BEGIN_QUOTE" "#+HTML: <blockquote>")

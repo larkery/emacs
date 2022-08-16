@@ -8,8 +8,7 @@
 
 (use-package dired
   :defer t
-  :after major-mode-hydra
-  :bind (("C-c d" . dired-from-buffer)
+  :bind (("C-c D" . dired-from-buffer)
          :map dired-mode-map
               ("M-n" . dired-next-subdir)
               ("M-p" . dired-prev-subdir)
@@ -31,16 +30,12 @@
   :custom
   (dired-auto-revert-buffer t)
   (dired-bind-info nil)
-  (dired-bind-jump nil)
+  (dired-bind-jump t)
   (dired-bind-man nil)
   (dired-dwim-target t)
   (dired-isearch-filenames 'dwim)
   (dired-listing-switches "-lahgG")
-  (dired-omit-files "^\\.[^\\.]")
-  (dired-omit-verbose nil)
-  (dired-subtree-use-backgrounds nil)
-  (dired-subtree-line-prefix-face 'subtree)
-  (directory-free-space-args "-PkH")
+  (directory-free-space-args "-Pk")
   :config
 
   (defun find-name-dired-here (pattern)
@@ -67,19 +62,20 @@
 
   (advice-add 'get-free-disk-space :around 'with-ignored-errors)
   
-  (major-mode-hydra-define dired-mode
-    (:quit-key "q")
-    ("Tools"
-     (("w" wdired-change-to-wdired-mode "edit names")
-      ("E" gnus-dired-attach "attach to mail"))
+  ;; (major-mode-hydra-define dired-mode
+  ;;   (:quit-key "q")
+  ;;   ("Tools"
+  ;;    (("w" wdired-change-to-wdired-mode "edit names")
+  ;;     ("E" gnus-dired-attach "attach to mail"))
 
-     "File"
-     (("S" dired-do-symlink "symlink (absolute)")
-      ("Y" dired-do-relsymlink "symlink (relative)"))
+  ;;    "File"
+  ;;    (("S" dired-do-symlink "symlink (absolute)")
+  ;;     ("Y" dired-do-relsymlink "symlink (relative)"))
 
-     "Image"
-     (("i t" image-dired-toggle-marked-thumbs "thumbs")
-      ("i d" image-dired-display-thumbs "display"))))
+  ;;    "Image"
+  ;;    (("i t" image-dired-toggle-marked-thumbs "thumbs")
+  ;;     ("i d" image-dired-display-thumbs "display"))))
+
 
   (defun dired-from-buffer ()
     (interactive)
@@ -211,17 +207,14 @@
 
   )
 
-(use-package wdired
-  :bind
-  (:map dired-mode-map
-        (";" . dired-toggle-read-only)))
-
-
 (use-package dired-x
   :defer t
   :commands dired-omit-mode
   :bind (:map dired-mode-map
-              (")" . dired-omit-mode)))
+              (")" . dired-omit-mode))
+  :custom
+  (dired-omit-files "^\\.[^\\.]")
+  (dired-omit-verbose nil))
 
 (use-package dired-rsync
   :ensure t

@@ -19,8 +19,10 @@
   (org-outline-path-complete-in-steps nil)
   (org-use-speed-commands t)
   (org-speed-commands-user
-   '(("P" . org-set-property)))
-  (org-agenda-files '("~/notes/agenda" "~/notes/work"))
+   '(("P" . org-set-property)
+     ("m" . org-send-invitation)))
+  (org-agenda-files '("~/notes/agenda"
+                      "~/notes/work/todo.org"))
   (org-agenda-todo-list-sublevels nil)
   (org-agenda-diary-file "~/notes/agenda/calendar.org")
   (org-id-locations-file "~/notes/.metadata/org-id-locations")
@@ -44,17 +46,18 @@
    )
   :config
 
-  (major-mode-hydra-define
-    org-mode (:quit-key "q")
+  ;; (major-mode-hydra-define
+  ;;   org-mode (:quit-key "q")
 
-    ("Display"
-     (("i" org-toggle-inline-images "images")
-      ("e" org-toggle-pretty-entities "entities")
-      ("l" org-toggle-latex-fragment "latex"))
+  ;;   ("Display"
+  ;;    (("i" org-toggle-inline-images "images")
+  ;;     ("e" org-toggle-pretty-entities "entities")
+  ;;     ("l" org-toggle-latex-fragment "latex"))
 
-     "Insert"
-     (("." org-time-stamp "<time>")
-      (">" (org-time-stamp nil t) "[time]"))))
+  ;;    "Insert"
+  ;;    (("." org-time-stamp "<time>")
+  ;;     (">" (org-time-stamp nil t) "[time]"))))
+
 
   (require 'org-notmuch-link)
   
@@ -65,7 +68,30 @@
             ("birthday" (display ,(all-the-icons-faicon "birthday-cake" :height 0.75)))
             ("holiday" (display ,(all-the-icons-faicon "calendar-o" :height 0.75)))
             ("work" (display ,(all-the-icons-octicon "briefcase" :height 0.75)))
-            ("samba" (display ,(all-the-icons-faicon "child" :height 0.75))))))
+            ("samba" (display ,(all-the-icons-faicon "child" :height 0.75)))))
+
+    ;; an evil hack to extend the block syntax in org-mode to support repeaters
+    ;; with the meaning being repeat every X until Y.
+    ;; TODO patch this to amend the (x/y) text that gets inserted to be appt. (n/m)
+    (defun filter-org-agenda-get-blocks (blocks)
+      (with-no-warnings (defvar date))
+      (let* ((current (calendar-absolute-from-gregorian date))
+             (dotime))
+        (cl-loop
+         for block in blocks
+         do (setq dotime (and block (get-text-property 0 'dotime block)))
+         when (and dotime
+                   (string-match-p org-repeat-re dotime)
+                   (string-match org-ts-regexp dotime))
+         when (= current (org-time-string-to-absolute (match-string 1 dotime)
+                                                      current
+                                                      'future))
+         collect block)))
+
+    (advice-add 'org-agenda-get-blocks
+                :filter-return
+                #'filter-org-agenda-get-blocks)
+    )
   
   (defun org-read-date-analyze-no-stupid-endian (o ans org-def org-defdecode)
     (funcall o
@@ -93,8 +119,6 @@
          ((?x "To docx file" org-odt-export-to-docx))
 
          ))
-
-
   ;; fix use of copy-file in ox-odt.el
 
   (defun org-odt-template-readonly-fix (o &rest args)
@@ -184,3 +208,6 @@
                 (list (list (list 12 27 y)
                             "Christmas Day Bank Holiday"))))))))
 
+
+(use-package org-notmuch-invite
+  :commands org-send-invitation)

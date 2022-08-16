@@ -4,6 +4,17 @@
 (delete-selection-mode 1)
 (transient-mark-mode 1)
 
+(setq tooltip-reuse-hidden-frame t
+      tooltip-delay 1)
+
+
+(setq ring-bell-function
+      (lambda ()
+        (call-process
+         "paplay"
+         nil 0 nil
+         "/run/current-system/sw/share/sounds/freedesktop/stereo/dialog-warning.oga")))
+
 (setq window-divider-default-places t 
       window-divider-default-bottom-width 1
       window-divider-default-right-width 1
@@ -11,6 +22,8 @@
       default-frame-alist '((scroll-bar-width . 1)
                             (right-divider-width . 3))
 
+      visible-bell nil
+      
       frame-resize-pixelwise t
       window-resize-pixelwise t
       
@@ -37,7 +50,14 @@
       inhibit-startup-echo-area-message t
       initial-buffer-choice t
       initial-major-mode 'lisp-interaction-mode
-      initial-scratch-message ";; Only death is certain, and the time of death is unknown\n\n"
+      initial-scratch-message
+      ";; May all sentient beings have happiness and the causes of happiness;
+;; May all sentient beings be free from suffering and the causes of suffering;
+;; May all sentient beings never be separated from the happiness that knows no suffering;
+;; May all sentient beings live in equanimity, free from attachment and aversion.
+;; ☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸☸
+
+"
 
       enable-recursive-minibuffers t
 
@@ -56,12 +76,13 @@
 
 (custom-set-variables
  '(calendar-date-style 'european)
- '(fringe-mode '(0 . 8)))
+ '(fringe-mode '(6 . 8)))
 
 (setq-default scroll-bar-width 8
 	      indent-tabs-mode nil
 	      case-fold-search t
-	      bidi-display-reordering nil
+              bidi-paragraph-direction 'left-to-right
+              bidi-inhibit-bda t
 	      indicate-empty-lines t
 	      indicate-buffer-boundaries 'right)
 
@@ -97,6 +118,7 @@
 
 (global-set-key [remap just-one-space] 'cycle-space)
 
+(setq auto-revert-interval 1)
 (global-auto-revert-mode 1)
 
 (use-package diminish :ensure t)
@@ -106,7 +128,7 @@
   :ensure t
   :defer nil
   :custom
-  (ivy-use-virtual-buffers t)
+  (ivy-use-virtual-buffers nil)
   :config (ivy-mode)
 
   (with-eval-after-load
@@ -145,13 +167,13 @@
                            (let ()
                              (and file
                                   (not remote)
-                                  (project-name))))))
+                                  (project-current-name))))))
              (dname (or (and b
                              (not (equal typ "%"))
                              (with-current-buffer b
                                (and file
                                     (if pname
-                                        (file-relative-name file (project-root))
+                                        (file-relative-name file (project-current-root))
                                       (abbreviate-file-name (file-name-directory file)))))
                              ) ""))
              )
@@ -168,16 +190,12 @@
   :config
   (recentf-mode 1)
 
-  (defun recentf-excluded-deleted-local-files (fi)
-    (unless (or (file-remote-p fi)
-                (string-match-p (rx bos "/net") fi))
-      (not (file-exists-p fi))))
-  (run-with-idle-timer 600 t 'recentf-save-list)
+  (run-with-idle-timer 30 t 'recentf-save-list)
 
   :custom
   (recentf-exclude
    (quote
-    ("^/home/hinton/notes/agenda" "^/nix/store" recentf-exclude-deleted-local-files)))
+    ("^/home/hinton/notes/agenda" "^/nix/store")))
   (recentf-max-saved-items 100)
   (recentf-auto-cleanup 300))
 
@@ -185,11 +203,9 @@
   :diminish
   :defer nil
   :ensure t
-  :bind (("<f10>" . counsel-tmm)
-         ("C-x C-r" . counsel-recentf)
+  :bind (("C-x C-r" . counsel-recentf)
          :map counsel-mode-map
-         ([remap yank-pop] . nil)
-         )
+         ([remap yank-pop] . nil))
   :config
   (counsel-mode 1)
 
@@ -200,53 +216,11 @@
 
   (advice-add 'yank-pop :around 'counsel-yank-pop-unles-yanking)
 
-  (defun completing-read-prefix-bindings (&rest _)
-    (let ((stuff (substring (concat (this-command-keys-vector)) 0 -1)))
-      (counsel-descbinds stuff)))
-
-  (advice-add 'describe-prefix-bindings :around #'completing-read-prefix-bindings)
-
-  (defun tmm-get-flat-keymap (menu)
-    (let ((tmm-km-list nil)
-          submap)
-      ;; mangle tmm-km-list
-      (map-keymap (lambda (k v) (tmm-get-keymap (cons k v))) menu)
-
-      ;; explode submenus of same
-      (cl-loop for entry in tmm-km-list
-               do (setq submap (cdr (cdr entry)))
-               if (keymapp submap)
-               append (let ((tmm-flat-keymap-prefix
-                             (concat tmm-flat-keymap-prefix
-                                     (car entry)
-                                     " → ")
-                             ))
-                        (tmm-get-flat-keymap submap))
-               else collect
-               (cons
-                (concat tmm-flat-keymap-prefix (car entry))
-                (cdr entry)))))
-
-  (defun counsel-tmm-prompt (menu)
-    "Select and call an item from the MENU keymap."
-    (let (out
-          choice
-          chosen-string
-          tmm-flat-keymap-prefix)
-      (setq tmm-km-list (tmm-get-flat-keymap menu))
-      (setq out (ivy-read "Menu bar: " (tmm--completion-table tmm-km-list)
-                          :require-match t))
-      (setq choice (cdr (assoc out tmm-km-list)))
-      (setq chosen-string (car choice))
-      (setq choice (cdr choice))
-      (cond ((keymapp choice)
-             (counsel-tmm-prompt choice))
-            ((and choice chosen-string)
-             (setq last-command-event chosen-string)
-             (call-interactively choice)))))
-
   :custom
   (counsel-find-file-ignore-regexp "\\`\\."))
+
+(use-package lacarte
+  :bind (("<f10>" . lacarte-execute-menu-command)))
 
 (use-package uniquify
   :custom
@@ -256,10 +230,10 @@
   :config
   (show-paren-mode 1))
 
-(use-package yascroll
-  :ensure t
-  :config
-  (global-yascroll-bar-mode 1))
+;; (use-package yascroll
+;;   :ensure t
+;;   :config
+;;   (global-yascroll-bar-mode 1))
 
 (defvar custom-theme-load-hook nil)
 (defadvice load-theme (after update-xresources-after-load-theme activate)
@@ -291,19 +265,47 @@
 (defvar dark-theme 'tango-dark)
 (defvar light-theme 'tango)
 
-(load-theme light-theme t)
+(use-package modus-themes
+  :ensure t
+  :init (setq modus-themes-mode-line '(3d)
+              ;modus-themes-completions 'moderate
+              modus-themes-bold-constructs t
+              modus-themes-syntax '(faint)
+              modus-themes-fringes 'subtle
+              light-theme 'modus-operandi
+              dark-theme 'modus-vivendi)
+
+)
+
+
+(let ((theme (condition-case nil
+                 (with-temp-buffer
+                   (insert-file-contents "~/.config/cur-theme")
+                   (buffer-string))
+               (error "light"))))
+  (load-theme (if (string= theme "light")
+                  light-theme
+                dark-theme)
+              t))
+
+(defun change-theme (&rest args)
+  "Like `load-theme', but disables all themes before loading the new one."
+  ;; The `interactive' magic is for creating a future-proof passthrough.
+  (interactive (advice-eval-interactive-spec
+                (cadr (interactive-form #'load-theme))))
+  (mapcar #'disable-theme custom-enabled-themes)
+  (apply (if (called-interactively-p 'any) #'funcall-interactively #'funcall)
+         #'load-theme args))
 
 (defun switch-theme ()
   (interactive)
   (let* ((light-mode (not (custom-theme-enabled-p dark-theme)))
          (target-theme (if light-mode dark-theme light-theme))
          (inhibit-redisplay t))
-    (dolist (theme custom-enabled-themes)
-      (disable-theme theme))
-
-    (when target-theme (load-theme target-theme t))
-    ))
-
+    (change-theme target-theme t)
+    (with-temp-buffer
+      (insert (if light-mode "dark" "light"))
+      (write-region (point-min) (point-max) "~/.config/cur-theme"))))
 
 (bind-key "<f6>" 'switch-theme)
 
@@ -316,30 +318,10 @@
   :custom
   (visual-line-fringe-indicators '(nil right-curly-arrow)))
 
-;; (use-package browse-kill-ring
-;;   :commands browse-kill-ring
-;;   :ensure t
-;;   :init
-;;   (defadvice yank-pop (around kill-ring-browse-maybe (arg))
-;;     "If last action was not a yank, run `browse-kill-ring' instead."
-;;     ;; pinched from browse-kill-ring, so we don't have to autoload it at startup
-;;     (interactive "p")
-;;     (if (not (eq last-command 'yank))
-;;         (counsel-yank-pop)
-;;       (barf-if-buffer-read-only)
-;;       ad-do-it))
-;;   (ad-activate 'yank-pop)
-;;   :custom
-;;   (browse-kill-ring-show-preview nil)
-;;   (counsel-yank-pop-preselect-last t)
-;;   :config
-;;   (bind-key "M-y" 'browse-kill-ring-forward browse-kill-ring-mode-map))
-
-
 (use-package savehist
   :config
   (setq savehist-file
-        (concat user-emacs-directory "savehist")
+        (concat state-directory "savehist")
         savehist-additional-variables
         '(kill-ring))
   (savehist-mode t))
@@ -350,77 +332,6 @@
   (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
   :custom
   (calendar-date-style (quote european)))
-
-;; Hack dbus so that it keeps working even when it's broken by change
-;; of address. Stupid dbus.
-(use-package dbus
-  :config
-  (require 'subr-x)
-
-  (defvar dbus-real-session-bus :session)
-
-  (defun update-dbus-session-bus-address ()
-    (interactive)
-    
-    (condition-case nil
-        (let ((sbus
-               (with-temp-buffer
-                 (insert-file-contents "~/.dbus_session_bus_address")
-                 (string-trim (buffer-string)))))
-          (setenv "DBUS_SESSION_BUS_ADDRESS" sbus)
-          (setq dbus-real-session-bus sbus)
-          (dbus-init-bus sbus))
-      
-      (error nil)))
-
-  (update-dbus-session-bus-address)
-
-  (condition-case nil
-      (inotify-add-watch
-       (expand-file-name "~/.dbus_session_bus_address")
-       'close-write
-       (lambda (_) (update-dbus-session-bus-address)))
-    (error nil))
-  
-  (defun replace-session-bus (args)
-    (when (eq :session (car args))
-      ;; this is a bit dodge, since I am directly editing the cons
-      ;; cell
-      (setcar args dbus-real-session-bus))
-    args)
-
-  (dolist (fn '(dbus-call-method
-                dbus-call-method-asynchronously
-                dbus-send-signal
-                dbus-register-service
-                dbus-unregister-service
-                dbus-register-signal
-                dbus-register-method
-                dbus-list-activatable-names
-                dbus-list-names
-                dbus-list-known-names
-                dbus-list-queued-owners
-                dbus-get-name-owner
-                dbus-ping
-                dbus-introspect
-                dbus-introspect-xml
-                dbus-introspect-get-node-names
-                dbus-introspect-get-all-nodes
-                dbus-introspect-get-interface-names
-                dbus-introspect-get-interface
-                dbus-introspect-get-method-names
-                dbus-introspect-get-method
-                dbus-introspect-get-signal-names
-                dbus-introspect-get-signal
-                dbus-introspect-get-property-names
-                dbus-introspect-get-property
-                dbus-introspect-get-argument-names
-                dbus-introspect-get-argument
-                dbus-get-property
-                dbus-set-property
-                dbus-get-all-properties
-                dbus-get-all-managed-objects))
-    (advice-add fn :filter-args 'replace-session-bus)))
 
 (defun unfill-paragraph (&optional region)
   "Takes a multi-line paragraph and makes it into a single line of text."
@@ -434,14 +345,15 @@
 
 (diminish 'defining-kbd-macro (propertize " M" 'face '(error bold)))
 
-(use-package so-long
-  :config
-  (so-long-enable))
+;; (use-package so-long
+;;   :config
+;;   (so-long-enable))
 
-(use-package mode-line-bell
-  :ensure t
-  :config
-  (mode-line-bell-mode 1))
+;; (use-package mode-line-bell
+;;   :ensure t
+;;   :config
+;;   (mode-line-bell-mode 1))
+
 
 (use-package buffer-table
   :bind ("C-x C-b" . buffer-table))
@@ -514,3 +426,12 @@
 
 (global-set-key (kbd "M-u") 'upcase-dwim)
 (global-set-key (kbd "M-l") 'downcase-dwim)
+
+(when (fboundp 'malloc-trim)
+  (defun gc-and-trim ()
+    (interactive)
+    (garbage-collect)
+    (malloc-trim))
+
+  (run-with-idle-timer 5 t 'gc-and-trim))
+

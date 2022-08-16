@@ -360,7 +360,7 @@
 
     (when icalendar-element
       (let* ((events (icalendar--all-events icalendar-element))
-             (zone-map (icalendar--convert-all-timezones events)))
+             (zone-map (icalendar--convert-all-timezones icalendar-element)))
         (insert "#+BEGIN_EXAMPLE\n")
         (dolist (event events)
           ;; insert event description string

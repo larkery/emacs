@@ -43,138 +43,159 @@
   :init
   (add-hook 'notmuch-message-mode-hook 'orgalist-mode))
 
+
 (use-package org-mime
   :ensure t
   :commands org-mime-htmlize
-  :bind
-  (:map notmuch-message-mode-map
-        ("C-c h" . org-mime-htmlize)
-        ("C-c C-c" . maybe-htmlize-send-and-exit))
   :custom
-  (org-mime-default-header
-   "#+OPTIONS: latex:t toc:nil H:3 ^:{} broken-links:t
-")
-  (org-mime-beautify-quoted-mail nil)
-  :config
+  (org-mime-export-ascii 'utf-8)
+  (org-mime-beautify-quoted-mail-p t)
+  )
 
-  (defun narrow-to-message ()
-    (interactive)
-    (message-goto-body)
-    (narrow-to-region
-     (point)
-     (save-excursion
-       (point)
-       (or (and (search-forward-regexp
-                 (rx "<#" (| "multipart" "part" "external" "mml"))
-                 nil t)
-                (progn (beginning-of-line) t)
-                (point))
-           (point-max))))
-    (goto-char (point-min)))
+;; (use-package org-mime
+;;   :ensure t
+;;   :commands org-mime-htmlize
+;;   :bind
+;;   (:map notmuch-message-mode-map
+;;         ("C-c h" . org-mime-htmlize)
+;;         ("C-c C-c" . maybe-htmlize-send-and-exit)
+;;         ("C-c C-s" . notmuch-mua-send))
+  
+;;   :custom
+;;   (org-mime-beautify-quoted-mail-p nil)
+  
+;;   :config
 
-  (defun org-mime-maybe-htmlize ()
-    (save-match-data
-      (save-excursion
-        (save-restriction
-          (narrow-to-message)
-          (mark-whole-buffer)
-          (org-mime-htmlize)))))
+;;   (setq org-mime-export-options
+;;         '(:with-author
+;;           nil
+;;           :with-toc nil
+;;           :with-sub-superscript nil
+;;           :with-latex dvipng
+;;           ))
+  
+;;   (defun narrow-to-message ()
+;;     (interactive)
+;;     (message-goto-body)
+;;     (narrow-to-region
+;;      (point)
+;;      (save-excursion
+;;        (point)
+;;        (or (and (search-forward-regexp
+;;                  (rx "<#" (| "multipart" "part" "external" "mml"))
+;;                  nil t)
+;;                 (progn (beginning-of-line) t)
+;;                 (point))
+;;            (point-max))))
+;;     (goto-char (point-min)))
 
-  ;; just do html part.
-  (defun org-mime-multipart (plain html &optional images)
-    "Markup a multipart/alternative with HTML alternatives.
-If html portion of message includes IMAGES they are wrapped in multipart/related part."
-    (concat (when images "<#multipart type=related>")
-            "<#part type=text/html>\n"
-            (if org-mime-beautify-quoted-mail
-                (org-mime-beautify-quoted html)
-              html)
-            images
-            (when images "<#/multipart>\n")))
+;;   (defun org-mime-maybe-htmlize ()
+;;     (save-match-data
+;;       (save-excursion
+;;         (save-restriction
+;;           (narrow-to-message)
+;;           (mark-whole-buffer)
+;;           (org-mime-htmlize)))))
 
-  (defun maybe-htmlize-send-and-exit ()
-    (interactive)
-    (org-mime-maybe-htmlize)
-    (notmuch-mua-send-and-exit))
+;;   ;; just do html part.
+;;   (defun org-mime-multipart (plain html &optional images)
+;;     "Markup a multipart/alternative with HTML alternatives.
+;; If html portion of message includes IMAGES they are wrapped in multipart/related part."
+;;     (concat (when images "<#multipart type=related>")
+;;             "<#part type=text/html>\n"
+;;             (if org-mime-beautify-quoted-mail-p
+;;                 (org-mime-beautify-quoted html)
+;;               html)
+;;             images
+;;             (when images "<#/multipart>\n")))
 
-  (defun org-mime-pre-quotify (&rest _)
-    (save-excursion
-      (goto-char (point-min))
-      (let ((qdepth 0)
-            (qdepth* 0)
-            (last-qlstart (make-marker)))
-        (set-marker-insertion-type last-qlstart t)
-        (while (not (eobp))
-          (cond
-           ((looking-at "^ *>+")
-            (setq qdepth*
-                  (progn (search-forward-regexp "^ *\\(>+\\)\\s-*" nil t)
-                         (length (match-string 1))))
+;;   (defun maybe-htmlize-send-and-exit (prefix)
+;;     (interactive "P")
+;;     (unless prefix (org-mime-maybe-htmlize))
+;;     (notmuch-mua-send-and-exit))
+
+;;   (defun org-mime-pre-quotify (&rest _)
+;;     (save-excursion
+;;       (goto-char (point-min))
+;;       (let ((qdepth 0)
+;;             (qdepth* 0)
+;;             (last-qlstart (make-marker)))
+;;         (set-marker-insertion-type last-qlstart t)
+;;         (while (not (eobp))
+;;           (cond
+;;            ((looking-at "^ *>+")
+;;             (setq qdepth*
+;;                   (progn (search-forward-regexp "^ *\\(>+\\)\\s-*" nil t)
+;;                          (length (match-string 1))))
             
-            (goto-char (match-beginning 0))
-            (set-marker last-qlstart (point))
-            (delete-forward-char (- (match-end 0) (point)))
-            (when (looking-at "^\\*") (insert " ")))
+;;             (goto-char (match-beginning 0))
+;;             (set-marker last-qlstart (point))
+;;             (delete-forward-char (- (match-end 0) (point)))
+;;             (when (looking-at "^\\*") (insert " ")))
            
-           ((looking-at "^\\s-*$")
-            (setq qdepth* qdepth))
+;;            ((looking-at "^\\s-*$")
+;;             (setq qdepth* qdepth))
            
-           (t (setq qdepth* 0)))
+;;            (t (setq qdepth* 0)))
 
-          (cond
-           ((> qdepth* qdepth)
-            (dotimes (_ (- qdepth* qdepth))
-              (insert "#+HTML: <blockquote>\n")))
-           ((< qdepth* qdepth)
-            (save-excursion
-              (goto-char last-qlstart)
-              (forward-line)
-              (dotimes (_ (- qdepth qdepth*))
-                (insert "#+HTML: </blockquote>\n")))))
+;;           (cond
+;;            ((> qdepth* qdepth)
+;;             (dotimes (_ (- qdepth* qdepth))
+;;               (insert "#+HTML: <blockquote>\n")))
+;;            ((< qdepth* qdepth)
+;;             (save-excursion
+;;               (goto-char last-qlstart)
+;;               (forward-line)
+;;               (dotimes (_ (- qdepth qdepth*))
+;;                 (insert "#+HTML: </blockquote>\n")))))
           
-          (setq qdepth qdepth*)
-          (forward-line))
-        (when (and (> qdepth 0)
-                   (not (looking-at "^$")))
-          (insert "\n"))
-        (when (and last-qlstart (> qdepth 0))
-          (save-excursion
-            (goto-char last-qlstart)
-            (forward-line)
-            (dotimes (_ qdepth)
-              (insert "#+HTML: </blockquote>\n")))
-          (set-marker last-qlstart nil))
-        )))
+;;           (setq qdepth qdepth*)
+;;           (forward-line))
+;;         (when (and (> qdepth 0)
+;;                    (not (looking-at "^$")))
+;;           (insert "\n"))
+;;         (when (and last-qlstart (> qdepth 0))
+;;           (save-excursion
+;;             (goto-char last-qlstart)
+;;             (forward-line)
+;;             (dotimes (_ qdepth)
+;;               (insert "#+HTML: </blockquote>\n")))
+;;           (set-marker last-qlstart nil))
+;;         )))
 
-  (defun org-mime-style-blockquote ()
-    (org-mime-change-element-style
-     "blockquote"
-     "margin:0 0 0 .8ex;border-left:3px #ccc solid;padding-left:1ex"))
+;;   (defun org-mime-style-blockquote ()
+;;     (org-mime-change-element-style
+;;      "blockquote"
+;;      "margin:0 0 0 .8ex;border-left:3px #ccc solid;padding-left:1ex"))
 
-  (advice-add 'org-mime-htmlize :before 'org-mime-pre-quotify)
-  (add-hook 'org-mime-html-hook 'org-mime-style-blockquote))
+;;   (advice-add 'org-mime-htmlize :before 'org-mime-pre-quotify)
+;;   (add-hook 'org-mime-html-hook 'org-mime-style-blockquote))
+
 
 (use-package notmuch
   :commands notmuch
   :bind
   (("C-c m" . counsel-notmuch)
+   ("C-x m" . notmuch-mua-new-mail)
    :map notmuch-search-mode-map
    ("O" . notmuch-search-other-place)
    ("f" . notmuch-flag)
    ("d" . notmuch-delete)
    ("u" . notmuch-mark-read)
    ("i" . notmuch-mark-inbox)
+   ("," . notmuch-mark-for-operation)
+   ("." . notmuch-do-operation)
    ("g" . notmuch-refresh-this-buffer)
    ("@" . notmuch-search-person)
    ("z" . notmuch-tree-from-search-thread)
    ("RET" . notmuch-search-show-or-tree)
-   ("G" . notmuch-start-idle)
+   ;; ("G" . notmuch-start-idle)
    :map notmuch-message-mode-map
    ("C-c f" . notmuch-switch-identity)
    ("C-c s" . message-remove-or-update-signature)
-   ("C-c z" . message-kill-remaining-quote)
-   ("C-c i" . message-insert-or-toggle-importance)
-   ("C-c q" . message-quotify-region)
+   ;; ("C-c z" . message-kill-remaining-quote)
+   ;; ("C-c i" . message-insert-or-toggle-importance)
+   ;; ("C-c q" . message-quotify-region)
    ("C-c C-s" . nil)
    ("M-n" . message-next-thing)
    :map notmuch-show-mode-map
@@ -193,11 +214,11 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
   (notmuch-multipart/alternative-discouraged '("text/plain")) ;; prefer html?
 
   (notmuch-saved-searches
-   '((:name "unread" :query "tag:unread" :key "u")
-     (:name "inbox" :query "tag:inbox or tag:flagged" :key "i")
+   '((:name "inbox" :query "tag:inbox or tag:flagged" :key "i")
+     (:name "unread" :query "tag:unread" :key "u")
      (:name "drafts" :query "tag:draft" :key "d")
      (:name "sent" :query "tag:sent" :key "s")
-     
+     (:name "flagged" :query "tag:flagged" :key "f")
      (:name "recent"
             :query "date:\"this week\""
             :key "r"
@@ -205,35 +226,33 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
      ))
 
   (notmuch-tag-formats
-   '(("unread" (propertize "•" 'face 'notmuch-tag-unread))
-     ("flagged" (propertize tag 'face 'notmuch-tag-flagged)
-      (notmuch-tag-format-image-data tag (notmuch-tag-star-icon)))
+   '(("unread"  (propertize "u" 'face 'highlight))
+     ("flagged" (propertize "f" 'face 'highlight))     
      ("low-importance" (propertize "_" 'face 'shadow))
      ("high-importance" (propertize "^" 'face 'error))
      ("normal-importance")
      ("medium-importance")
+     ("meeting" (propertize "m" 'face 'highlight))
 
      ("home")
      ("work")
      ("sent")
-     ("replied" "→")
-     ("attachment" "A")
-     ("inbox" "%")
-     ("deleted" (propertize "DEL"  'face '(error (:inverse-video t))))
+     ("replied" (propertize "r" 'face 'highlight))
+     ("attachment" (propertize "a" 'face 'highlight))
+     ("inbox" (propertize "i" 'face 'highlight))
+     ("deleted" (propertize "d"  'face '(error (:inverse-video t))))
      ))
 
   (notmuch-search-line-faces
    '(("unread" . notmuch-search-unread-face)
-;     ("deleted" . (:strike-through "red"))
-     ("flagged" . notmuch-search-flagged-face)
-     ))
+     ("flagged" . notmuch-search-flagged-face)))
   
   (notmuch-search-result-format
    '(("date" . "%12s  ")
      ("count" . "%-7s ")
      ("authors" . "%-20s ")
      ("subject" . "%s ")
-     ("tags" . "%s")))
+     ("tags" . "(%s)")))
   
   (notmuch-search-oldest-first nil)
   (notmuch-fcc-dirs
@@ -253,30 +272,14 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
   
   :config
   (require 'org-mime)
-  (require 'notmuch-fancy-html)
+  ;; (require 'notmuch-fancy-html)
 
-  (major-mode-hydra-define
-    notmuch-message-mode (:quit-key "x" :foreign-keys t)
+  ;; (defun message-quotify-region ()
+  ;;   (interactive)
+  ;;   (if (region-active-p)
+  ;;       (message-quote-here)
+  ;;     (message-split-quote-here)))
 
-    ("Field"
-     (("f" notmuch-switch-identity "from" :exit nil)
-      ("u" message-insert-or-toggle-importance "urgency"
-       :exit nil))
-     "Attach"
-     (("a" mml-attach-file "file" :exit nil)
-      ("i" notmuch-insert-image-link "img"))
-     "Text"
-     (("s" message-remove-or-update-signature "sig")
-      ("." message-split-quote-here "split quote")
-      ("," message-quote-here "enquote")
-      ("q" message-mark-end-quote :exit nil)
-      ("z" message-kill-remaining-quote :exit nil))))
-
-  (defun message-quotify-region ()
-    (interactive)
-    (if (region-active-p)
-        (message-quote-here)
-      (message-split-quote-here)))
   
   (defun message-next-thing ()
     (interactive)
@@ -292,40 +295,44 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
      ((not (search-forward-regexp (rx bol (* alphanumeric) ": ") nil t))
       (message-goto-body))))
   
-  (defun message-mark-end-quote ()
-    (interactive)
-    (unless (region-active-p)
-      (set-mark (point))
-      (activate-mark))
-    (search-forward-regexp
-     (rx bol "#+HTML: </blockquote>") nil t))
+  ;; (defun message-mark-end-quote ()
+  ;;   (interactive)
+  ;;   (unless (region-active-p)
+  ;;     (set-mark (point))
+  ;;     (activate-mark))
+  ;;   (search-forward-regexp
+  ;;    (rx bol "#+HTML: </blockquote>") nil t))
 
-  (defun message-kill-remaining-quote ()
-    (interactive)
-    (when (looking-at (rx bol "#+HTML: </blockquote>"))
-      (kill-line))
-    (message-mark-end-quote)
-    (beginning-of-line)
-    (kill-region (point) (mark)))
+
+  ;; (defun message-kill-remaining-quote ()
+  ;;   (interactive)
+  ;;   (when (looking-at (rx bol "#+HTML: </blockquote>"))
+  ;;     (kill-line))
+  ;;   (message-mark-end-quote)
+  ;;   (beginning-of-line)
+  ;;   (kill-region (point) (mark)))
+
   
-  (defun message-split-quote-here ()
-    (interactive)
-    (insert "#+HTML: </blockquote>\n")
-    (save-excursion
-      (insert "\n#+HTML: <blockquote>\n")))
+  ;; (defun message-split-quote-here ()
+  ;;   (interactive)
+  ;;   (insert "#+HTML: </blockquote>\n")
+  ;;   (save-excursion
+  ;;     (insert "\n#+HTML: <blockquote>\n")))
 
-  (defun message-quote-here ()
-    (interactive)
-    (if (region-active-p)
-        (progn
-          (save-excursion
-            (goto-char (region-beginning))
-            (beginning-of-line)
-            (insert "#+HTML: <blockquote>\n"))
-          (save-excursion
-            (goto-char (region-end))
-            (end-of-line)
-            (insert "\n#+HTML: </blockquote>\n")))))
+
+  ;; (defun message-quote-here ()
+  ;;   (interactive)
+  ;;   (if (region-active-p)
+  ;;       (progn
+  ;;         (save-excursion
+  ;;           (goto-char (region-beginning))
+  ;;           (beginning-of-line)
+  ;;           (insert "#+HTML: <blockquote>\n"))
+  ;;         (save-excursion
+  ;;           (goto-char (region-end))
+  ;;           (end-of-line)
+  ;;           (insert "\n#+HTML: </blockquote>\n")))))
+
     
   (defun notmuch-insert-image-link ()
     (interactive)
@@ -333,10 +340,6 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
       (when file
         (insert "[[" file "]]\n"))))
 
-  (defun notmuch-inbox ()
-    (interactive)
-    (notmuch-search "tag:inbox or tag:flagged"))
-  
   (defun notmuch-search-show-or-tree ()
     (interactive)
     (let* ((thread-id (notmuch-search-find-thread-id))
@@ -427,34 +430,6 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
 
   (advice-add 'notmuch :around 'in-home-directory)
 
-  (defun notmuch-search-buffer-title (query)
-    "Returns the title for a buffer with notmuch search results."
-    (let* ((saved-search
-            (let (longest
-                  (longest-length 0))
-              (cl-loop for tuple in notmuch-saved-searches
-                    if (let ((quoted-query (regexp-quote (notmuch-saved-search-get tuple :query))))
-                         (and (string-match (concat "^" quoted-query) query)
-                              (> (length (match-string 0 query))
-                                 longest-length)))
-                    do (setq longest tuple
-                             longest-length (length (match-string 0 query))))
-              longest))
-           (saved-search-name (notmuch-saved-search-get saved-search :name))
-           (saved-search-query (notmuch-saved-search-get saved-search :query)))
-      (cond ((and saved-search (equal saved-search-query query))
-             ;; Query is the same as saved search (ignoring case)
-             (concat "*notmuch-saved-search-" saved-search-name "*"))
-            (saved-search
-             (concat "*notmuch-search-"
-                     (replace-regexp-in-string (concat "^" (regexp-quote saved-search-query))
-                                               (concat "[ " saved-search-name " ]")
-                                               query)
-                     "*"))
-            (t
-             (concat "*notmuch-search-" query "*"))
-            )))
-
   (defun notmuch-toggle-tag (tags advance)
     (let* ((cur-tags
             (cl-case major-mode
@@ -480,13 +455,22 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
 	   (arg (mapcar (lambda (x) (concat action x)) tags)))
       (notmuch-search-tag arg)))
 
+  (defun notmuch-mark-for-operation ()
+    (interactive)
+    (notmuch-toggle-tag '("✦") t))
+
+  (defun notmuch-do-operation ()
+    (interactive)
+    (notmuch-search "tag:✦")
+    (mark-whole-buffer))
+    
   (defun notmuch-flag ()
     (interactive)
     (notmuch-toggle-tag '("flagged") t))
   
   (defun notmuch-delete ()
     (interactive)
-    (notmuch-toggle-tag '("deleted") t))
+    (notmuch-toggle-tag '("deleted") nil))
 
   (defun notmuch-mark-inbox ()
     (interactive)
@@ -519,9 +503,9 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
          (forward-line))
        (notmuch-tree-show-message nil))))
 
-  (defvar notmuch-reply-sender-regexes
-    (list (cons (regexp-quote "tom.hinton@cse.org.uk") "Tom Hinton")
-          (cons (regexp-quote "larkery.com") "Tom Hinton")))
+  (defvar mail-address-account-regexps
+    `((,(regexp-quote "tom.hinton@cse.org.uk") "Tom Hinton" "cse")
+      (,(regexp-quote "@larkery.com") "Tom Hinton" "fm")))
 
   (defun notmuch-mua-reply-guess-sender (o query-string &optional sender reply-all)
     (let ((sender (or sender
@@ -536,22 +520,43 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
                                 "--format-version=4"
                                 "--entire-thread=false"
                                 "--body=false"
-                                query-string)
-                               )
-                              )
+                                query-string)))
                              (to (apply #'nconc to))
                              (case-fold-search t))
                         ;; TODO check notmuch filing rules as well?
                         (cl-loop for a in to
                                  thereis
-                                 (cl-loop for i in notmuch-reply-sender-regexes
-                                          when (string-match-p (car i) (car a))
-                                          return (format "%s <%s>" (cdr i) (car a))))))))
+                                 (cl-loop for addr in mail-address-account-regexps
+                                          when (string-match-p (car addr) (car a))
+                                          return (format
+                                                  "%s <%s>"
+                                                  (nth 1 addr)
+                                                  (car a))))))))
       (funcall o query-string sender reply-all)))
 
 
   (advice-add 'notmuch-mua-reply :around 'notmuch-mua-reply-guess-sender)
 
+  (defun message-sendmail-add-account (o &rest args)
+    (let* ((from (message-sendmail-envelope-from))
+
+           (account (cl-loop for addr in mail-address-account-regexps
+                             when (string-match-p (car addr) from)
+                             return (nth 2 addr)))
+           
+           (message-sendmail-extra-arguments
+            (if account
+                (cons
+                 "-a"
+                 (cons
+                  account 
+                  message-sendmail-extra-arguments))
+              message-sendmail-extra-arguments)))
+      
+      (apply o args)))
+
+  (advice-add 'message-send-mail-with-sendmail :around 'message-sendmail-add-account)
+    
   (defun notmuch-search-other-place ()
     (interactive)
     (let ((search (notmuch-search-get-query))
@@ -568,11 +573,14 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
          (concat here " AND (" search ")"))))))
 
 
-  (defun notmuch-start-idle ()
-    (interactive)
-    (if-let ((existing-buffer (get-buffer "*idle*")))
-        (display-buffer-at-bottom existing-buffer nil)
-      (async-shell-command "idle" "*idle*")))
+  ;; (defun notmuch-start-idle ()
+  ;;   (interactive)
+  ;;   (if-let ((existing-buffer (get-buffer "*idle*")))
+  ;;       (display-buffer-at-bottom existing-buffer nil)
+  ;;     (async-shell-command "idle" "*idle*"))
+    
+  ;;   )
+
   )
 
 
@@ -588,7 +596,7 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
 (use-package message
   :defer t
   :custom
-  (mml-enable-flowed nil)
+
   (message-send-mail-function 'message-send-mail-with-sendmail)
   (message-sendmail-envelope-from 'header)
   (mail-envelope-from 'header)
@@ -596,7 +604,7 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
   (mail-specify-envelope-from t)
   (message-fill-column nil)
   (mm-coding-system-priorities '(utf-8))
-  (mm-inline-override-types '("image/tiff"))
+  (mm-inline-override-types '("image/tiff" "application/zip"))
   (mm-inline-large-images 'resize)
   (mm-inline-large-images-proportion 0.9)
   (mm-inline-text-html-with-images t)
@@ -654,6 +662,9 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
   :custom
   (shr-color-visible-luminance-min 75)
   (shr-use-fonts nil)
+  (shr-bullet "- ")
+  (shr-discard-aria-hidden t)
+  (shr-hr-line 45)
   :config
 
   (defun shr-ensure-paragraph ()
@@ -693,16 +704,18 @@ If html portion of message includes IMAGES they are wrapped in multipart/related
   (advice-add 'shr-colorize-region :around 'shr-colorise-region-ignore-bg)
 ;  (advice-remove 'shr-colorize-region 'shr-colorise-region-ignore-bg)
 
-  (defun disabling-gc (o &rest args)
-    (let* (;; (start (current-time))
+  ;; (defun disabling-gc (o &rest args)
+  ;;   (let* (;; (start (current-time))
 
-           (gc-cons-threshold (* 100 gc-cons-threshold))
-           (result (apply o args))
-           ;; (end (current-time))
+  ;;          (gc-cons-threshold (* 100 gc-cons-threshold))
+  ;;          (result (apply o args))
+  ;;          ;; (end (current-time))
 
-           )
-      ;; (message "%.2f" (float-time (subtract-time end start)))
+  ;;          )
+  ;;     ;; (message "%.2f" (float-time (subtract-time end start)))
 
-      result))
+  ;;     result))
 
-  (advice-add 'shr-insert-document :around 'disabling-gc))
+
+  ;; (advice-add 'shr-insert-document :around 'disabling-gc)
+  )

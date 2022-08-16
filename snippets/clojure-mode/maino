@@ -1,0 +1,44 @@
+# -*- mode: snippet -*-
+# name: maino
+# key: maino
+# --
+
+`(progn (cljr--insert-in-ns ":gen-class")
+        (cljr--insert-in-ns ":require")
+        (insert "[clojure.tools.cli :refer [parse-opts]]"))`
+
+(declare --main)
+
+(defn -main [& args]
+  (let [result (--main args (into {} (System/getEnv)))]
+    (if (int? result)
+      (System/exit result)
+      (System/exit 0))))
+
+(def options
+  [
+   ["-h" "--help" "This help"]])
+
+(defn- merge-env [args env]
+  args)
+
+(defn- --main
+  ([args env]
+   (let [{:keys [options arguments summary errors]}
+         (parse-opts (merge-env args env) options)]
+     (--main options arguments env summary errors)))
+  ([options arguments summary errors]
+   (cond
+     (:help options)
+     (println summary)
+
+     (seq errors)
+     (binding [*out* *err*]
+       (doseq [e errors]
+         (println e))
+       (println "Help:")
+       (println summary)
+       1)
+
+     :else
+     ${1:(println "go")})))

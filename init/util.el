@@ -91,39 +91,43 @@
   :defer nil
   :bind (("C-<" . winner-undo)
 	 ("C->" . winner-redo))
-  
   :config
   (winner-mode 1))
 
 (use-package project
-  :bind
-  (("M-j" . project-find-file)
-   ("M-J" . project-dired)
-   ("M-s p" . project-find-regexp)
-   ("C-c k" . project-kill))
+  ;; :bind
+  ;; (;; ("C-c f" . project-find-file)
+  ;;  ;; ("C-c d" . project-dired)
+  ;;  ;; ("M-s p" . project-find-regexp)
+
+  ;;  ;; ("C-c k" . project-kill)
+  ;;  )
+
   
   :config
-  (defun project-dired (prefix)
-    (interactive "P")
-    (if-let ((cur (and (not prefix)
-                       (project-current nil))))
-        (dired (car (project-roots cur)))
-      (counsel-bookmarked-directory)))
+  ;; (defun project-dired (&optional prefix)
+  ;;   (interactive "P")
+  ;;   (if-let ((cur (and (not prefix)
+  ;;                      (project-current nil))))
+  ;;       (dired (car (project-roots cur)))
+  ;;     (counsel-bookmarked-directory)))
+
   
-  (defun project-kill ()
-    (interactive)
-    (when (y-or-n-p "Kill project?")
-      (when-let ((cur (project-current nil)))
-        (cl-loop
-         for b being the buffers
-         when (with-current-buffer b (equal (project-current nil) cur))
-         do (kill-buffer b)))))
+  ;; (defun project-kill ()
+  ;;   (interactive)
+  ;;   (when (y-or-n-p "Kill project?")
+  ;;     (when-let ((cur (project-current nil)))
+  ;;       (cl-loop
+  ;;        for b being the buffers
+  ;;        when (with-current-buffer b (equal (project-current nil) cur))
+  ;;        do (kill-buffer b)))))
 
-  (defun project-name ()
-    (when-let ((root (project-root))) (file-name-nondirectory root)))
 
-  (defun project-root ()
+  (defun project-current-root ()
     (when-let ((cur (project-current nil))) (directory-file-name (cdr cur))))
+
+  (defun project-current-name ()
+    (when-let ((root (project-current-root))) (file-name-nondirectory root)))
   )
 
 (use-package pcre2el
@@ -221,85 +225,29 @@
 
 (use-package dumb-jump
   :ensure t
-  :defer t
-  :bind (("C-." . dumb-jump-go) ;; Go to Symbol, ish
-         ("C-," . dumb-jump-back))
   :custom
-  (dumb-jump-git-grep-cmd "git grep --no-recurse-submodules"))
+  (dumb-jump-git-grep-cmd "git grep --no-recurse-submodules")
+  :config
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
 (use-package hippie-exp
   :bind ("M-/" . hippie-expand)
   :custom
   (hippie-expand-try-functions-list
-   '(try-complete-file-name
-     try-complete-file-name-partially
+   '(try-expand-dabbrev-visible
      try-expand-dabbrev
      try-expand-dabbrev-all-buffers
-     try-expand-dabbrev-from-kill)))
+     try-expand-dabbrev-from-kill
+     
+     try-complete-file-name-partially
+     try-complete-file-name
+     )))
 
 (use-package auth-source-pass
   :ensure t
   :after auth-source
   :config
   (auth-source-pass-enable))
-
-;; (use-package god-mode
-;;   :ensure t
-;;   :bind (("<escape>" . god-mode-all))
-;;   :diminish god-local-mode
-;;   :config
-
-;;   (define-key god-local-mode-map (kbd ".") 'repeat)
-
-;;   (add-to-list 'god-exempt-major-modes 'notmuch-search-mode)
-;;   (add-to-list 'god-exempt-major-modes 'notmuch-show-mode)
-
-;;   (lexical-let (cookie)
-;;     (defun god-mode-hl-line ()
-;;       (if god-local-mode
-;;           (setq cookie
-;;                 (face-remap-add-relative 'mode-line
-;;                                          '(:background "darkred" :foreground "white")))
-;;         (face-remap-remove-relative cookie))))
-    
-;;   (add-hook 'god-local-mode-hook #'god-mode-hl-line)
-  
-;;   (defun god-mode-lookup-command (key-string)
-;;     "Execute extended keymaps such as C-c, or if it is a command,
-;; call it."
-;;     (let* ((key-vector (read-kbd-macro key-string t))
-;;            (binding (key-binding key-vector)))
-;;       (cond ((commandp binding)
-;;              (setq last-command-event (aref key-vector (- (length key-vector) 1)))
-;;              binding)
-;;             ((keymapp binding)
-;;              (god-mode-lookup-key-sequence nil key-string))
-            
-;;             (:else
-;;              (let* ((end-pos (- (length key-vector) 1))
-;;                     (end-elt (elt key-vector end-pos))
-;;                     (mods (event-modifiers end-elt))
-;;                     (raw (event-basic-type end-elt)))
-;;                (if (equal mods '(control))
-;;                    (progn (aset key-vector end-pos raw)
-;;                           (god-mode-lookup-command
-;;                            (format-kbd-macro key-vector 1)))
-;;                  (error "God: Unknown key binding for `%s`" key-string)))))))
-
-;;   (with-eval-after-load 'which-key
-;;     (which-key-enable-god-mode-support)))
-
-
-(use-package editorconfig
-  :ensure t
-  :diminish
-  :custom
-  (editorconfig-exclude-regexps
-   '("\\`\\(?:ftp\\|https?\\|rsync\\|sftp\\):"
-     "\\`/net/"))
-    
-  :config
-  (editorconfig-mode 1))
 
 (use-package ediff
   :defer t
@@ -308,12 +256,14 @@
 
 (use-package multiple-cursors
   :defer t
-  :bind (("C-/" . mc/mark-more-like-this-extended)
-         ("C-M-/" . mc/mark-all-dwim)
-         :map mc/keymap
-         ("C-c SPC" . mc/vertical-align-with-space)
-         ("C-c n" . mc/insert-numbers)
-         ("C-c l" . mc/insert-letters)))
+  :bind
+  (("C-/" . mc/mark-more-like-this-extended)
+   ("C-M-/" . mc/mark-all-dwim)
+   :map mc/keymap
+   ("C-c SPC" . mc/vertical-align-with-space)
+   ("C-c n" . mc/insert-numbers)
+   ("C-c l" . mc/insert-letters))
+  )
 
 (use-package edit-as-root
   :bind ("C-x C-a" . edit-as-root))
@@ -353,11 +303,13 @@
 (use-package yasnippet
   :ensure t
   :defer nil
+  :diminish yas-minor-mode
   :commands yas/expand
   :init
   
   :config
   (require 'yasnippet-snippets)
+  (add-to-list 'warning-suppress-types '(yasnippet backquote-change))
   (yas-reload-all)
   (bind-key "C-<return>" #'yas-expand yas-minor-mode-map)
   (define-key yas-minor-mode-map [(tab)] nil)
@@ -372,9 +324,10 @@
   :ensure t
   :bind ("M-;" . comment-dwim-2))
 
-(use-package goto-chg
-  :ensure t
-  :bind ("C-=" . goto-last-change))
+;; (use-package goto-chg
+;;   :ensure t
+;;   :bind ("C-=" . goto-last-change))
+
 
 (use-package executable
   :ensure nil
@@ -387,12 +340,15 @@
   :custom
   (calc-multiplication-has-precedence nil)
   :config
-  (require 'calc-hydras)
+  ;; (require 'calc-hydras)
   
   (with-eval-after-load 'calc
     (defalias 'calcFunc-uconv 'math-convert-units)))
 
-(use-package dictionary :ensure t)
+(use-package dictionary :ensure t
+  :bind ("C-c ?" . dictionary-search)
+  :custom
+  (dictionary-server "dict.org"))
 
 (defun byte-recompile-user-directory ()
   (interactive)
@@ -401,23 +357,24 @@
      "find . -iname \\*.elc -exec rm '{}' ';'"))
   (byte-recompile-directory user-emacs-directory 0 t))
 
-(use-package hydra :ensure t)
+;; (use-package hydra :ensure t)
 
-(use-package pretty-hydra :ensure t)
+;; (use-package pretty-hydra :ensure t)
 
-(use-package major-mode-hydra :ensure t
-  :bind ("<f1>" . major-mode-hydra)
-  :commands major-mode-hydra major-mode-hydra-define)
+;; (use-package major-mode-hydra :ensure t
+;;   :bind ("<f1>" . major-mode-hydra)
+;;   :commands major-mode-hydra major-mode-hydra-define)
 
-(use-package diff-hl :ensure t
-  :custom (diff-hl-side 'right))
+;; (use-package diff-hl :ensure t
+;;   :custom (diff-hl-side 'right))
 
 (use-package scf-mode
   :commands scf-mode
   :bind (:map grep-mode-map (")" . scf-mode)))
 
-(use-package macro-math
-  :bind (("C-c e" . macro-math-eval-region)))
+;; (use-package macro-math
+;;   :bind (("C-c e" . macro-math-eval-region)))
+
 
 (use-package literate-calc-mode
   :ensure t
@@ -438,10 +395,7 @@
       (goto-char (point-min))
       (while (search-forward-regexp literate-calc--result nil t)
         (goto-char (match-beginning 1))
-        (kill-line))
-      
-      )
-    )
+        (kill-line))))
 
   (defun literate-calc-toggle ()
     (if literate-calc-minor-mode
@@ -455,3 +409,125 @@
 (use-package halp
   :bind ("C-?" . halp-inline)
   )
+
+(use-package minibuffer :config
+  ;; this is to make filenames always completeable with C-M-i
+  
+  (autoload 'ffap-file-at-point "ffap")
+  (defun complete-path-at-point+ ()
+    "Return completion data for UNIX path at point."
+    (let ((fn (ffap-file-at-point))
+          (fap (thing-at-point 'filename)))
+      (when (and (or fn (equal "/" fap))
+                 (save-excursion
+                   (search-backward fap (line-beginning-position) t)))
+        (list (match-beginning 0)
+              (match-end 0)
+              #'completion-file-name-table :exclusive 'no))))
+
+  (add-hook 'completion-at-point-functions
+            #'complete-path-at-point+
+            'append))
+
+;; (use-package rainbow-mode
+;;   :commands rainbow-mode
+;;   :config
+
+;;   (put 'color 'bounds-of-thing-at-point
+;;        'color-bounds-at-point)
+
+;;   (defun color-bounds-at-point ()
+;;     (save-excursion
+;;       (skip-chars-backward "#0123456789abcdefABCDEF")
+;;       (if (looking-at (rx "#" (| (= 6 hex) (= 3 hex))))
+;;           (cons (point) (match-end 0))
+;;         nil)))
+
+;;   (defun color-adjust-at-point (component amount)
+;;     (when-let ((bounds (bounds-of-thing-at-point 'color)))
+;;       (replace-region-contents
+;;        (car bounds) (cdr bounds)
+;;        (lambda ()
+;;          (let* ((amount (/ (or amount 5) 100.0))
+;;                 (color (color-name-to-rgb (buffer-string)))
+;;                 (color (apply 'color-rgb-to-hsl color))
+;;                 (bounds (bounds-of-thing-at-point 'color)))
+
+;;            (setf (nth component color)
+;;                  (min 1.0 (max 0.0 (+ amount (nth component color)))))
+;;            (apply 'color-rgb-to-hex (nconc (apply 'color-hsl-to-rgb color)
+;;                                            '(2))))))))
+
+;;   (define-minor-mode rainbow-colors-and-keys-mode
+;;     "rainbow mode + keybindings"
+;;     :keymap
+;;     (let ((map (make-sparse-keymap)))
+;;       (define-key map (kbd "C-c c l") 'color-lighten-at-point)
+;;       (define-key map (kbd "C-c c s") 'color-saturate-at-point)
+;;       (define-key map (kbd "C-c c h") 'color-rotate-at-point)
+;;       map))
+  
+;;   (defun color-lighten-at-point (prefix)
+;;     (interactive "P")
+;;     (color-adjust-at-point 2 prefix))
+  
+;;   (defun color-saturate-at-point (prefix)
+;;     (interactive "P")
+;;     (color-adjust-at-point 1 prefix))
+  
+;;   (defun color-rotate-at-point (prefix)
+;;     (interactive "P")
+;;     (color-adjust-at-point 0 prefix))
+  
+;;   )
+
+(use-package eldoc :diminish eldoc-mode)
+
+(use-package saveplace :config (save-place-mode))
+
+(use-package autoinsert
+  :custom
+  (auto-insert-query nil)
+  (auto-insert-alist
+   `((,(rx "/shell.nix" eos) . ["shell.nix" autoinsert-yas-expand]))
+   
+   )
+  
+  :config
+
+  (auto-insert-mode t)
+  
+  (setq auto-insert-directory (concat user-emacs-directory "template"))
+  (defun autoinsert-yas-expand()
+    "Replace text in yasnippet template."
+    (yas/expand-snippet (buffer-string) (point-min) (point-max)))
+  )
+
+(defun browse-url-at-or-after-point ()
+  (interactive)
+
+  (if (thing-at-point 'url)
+      (browse-url-at-point)
+    
+      )
+  )
+
+(use-package key-seq
+  :ensure t
+  :config
+
+  (key-seq-define-global ",s" 'save-buffer)
+  (key-seq-define-global ",." "C-c C-c")
+  (key-chord-mode 1))
+
+
+
+(defun tramp-cleanup-connections-harder ()
+  (interactive)
+  (cl-loop
+   for b being the buffers
+   when (with-current-buffer b
+          (and (not buffer-file-name)
+               (not (string-match-p (rx bos "*tramp/") (buffer-name)))
+               (tramp-tramp-file-p default-directory)))
+   do (with-current-buffer b (setq default-directory "~/"))))
