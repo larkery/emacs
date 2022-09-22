@@ -80,17 +80,19 @@
         (cl-loop
          for block in blocks
          do (setq dotime (and block (get-text-property 0 'dotime block)))
-         when (and dotime
-                   (string-match-p org-repeat-re dotime)
-                   (string-match org-ts-regexp dotime))
-         when (= current (org-time-string-to-absolute (match-string 1 dotime)
-                                                      current
-                                                      'future))
+         when (let ((matches-repeat (string-match-p org-repeat-re dotime))
+                    (matches-ts (string-match org-ts-regexp dotime)))
+                (or (and dotime matches-repeat matches-td
+                         (= current (org-time-string-to-absolute (match-string 1 dotime)
+                                                                 current
+                                                                 'future)))
+                    (not (and matches-repeat matches-ts))))
          collect block)))
 
     (advice-add 'org-agenda-get-blocks
                 :filter-return
                 #'filter-org-agenda-get-blocks)
+
     )
   
   (defun org-read-date-analyze-no-stupid-endian (o ans org-def org-defdecode)
