@@ -512,15 +512,6 @@
       )
   )
 
-(use-package key-seq
-  :ensure t
-  :config
-
-  (key-seq-define-global ",s" 'save-buffer)
-  (key-seq-define-global ",." "C-c C-c")
-  (key-chord-mode 1))
-
-
 
 (defun tramp-cleanup-connections-harder ()
   (interactive)
@@ -531,3 +522,29 @@
                (not (string-match-p (rx bos "*tramp/") (buffer-name)))
                (tramp-tramp-file-p default-directory)))
    do (with-current-buffer b (setq default-directory "~/"))))
+
+(defun calc-eval-line-or-region ()
+  (interactive)
+  (if (region-active-p)
+      (let ((e (calc-eval
+                (buffer-substring-no-properties
+                 (mark)
+                 (point)))))
+        (delete-region (mark) (point))
+        (insert e))
+    
+      (save-excursion
+        (beginning-of-line)
+        (if (re-search-forward " *=.*" (line-end-position) t)
+            (replace-match ""))
+        (end-of-line)
+        (insert " = "
+                (calc-eval
+                 (buffer-substring-no-properties
+                  (line-beginning-position)
+                  (line-end-position)
+                  ))))))
+
+
+(bind-key "C-=" #'calc-eval-line-or-region)
+
