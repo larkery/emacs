@@ -435,3 +435,12 @@
 
   (run-with-idle-timer 5 t 'gc-and-trim))
 
+
+(defun diary-today ()
+  (interactive)
+  (let ((path (format-time-string
+               "~/notes/Diary/%Y/%m/%d.md")))
+    (find-file path)
+    (goto-char (point-max))))
+
+(bind-key "C-c d" #'diary-today)
