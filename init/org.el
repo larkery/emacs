@@ -12,6 +12,7 @@
          ("C-M-b" . org-backward-heading-same-level)
          ("C-M-d" . outline-next-heading)
          ("C-M-SPC" . org-mark-element)
+         ("C-c C-." . org-inactive-time-stamp)
          )
   :custom
   (org-refile-use-outline-path 'file)
@@ -22,7 +23,7 @@
    '(("P" . org-set-property)
      ("m" . org-send-invitation)))
   (org-agenda-files '("~/notes/agenda"
-                      "~/notes/work/todo.org"))
+                      "~/notes/todo"))
   (org-agenda-todo-list-sublevels nil)
   (org-agenda-diary-file "~/notes/agenda/calendar.org")
   (org-id-locations-file "~/notes/.metadata/org-id-locations")
@@ -30,20 +31,10 @@
   (org-adapt-indentation nil)
   (org-agenda-span 'week)
   (org-babel-load-languages '((emacs-lisp . t) (dot . t) (ditaa . t) (gnuplot . t)))
-  (org-link-abbrev-alist
-   '(("nhm" . "https://support.deccnhm.org.uk/thread/"))
-   )
   (org-latex-pdf-process
    '("xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f" "xelatex -interaction nonstopmode -output-directory %o %f"))
   (org-refile-targets '((nil :maxlevel . 3) (org-agenda-files :maxlevel . 2)))
   (org-refile-use-outline-path 'file)
-
-  (org-capture-templates
-   '(("p" "Person" entry (file"~/notes/work/people.org")
-      "* %^{Name} %^g
-%u")
-     )
-   )
   :config
 
   ;; (major-mode-hydra-define
@@ -59,6 +50,10 @@
   ;;     (">" (org-time-stamp nil t) "[time]"))))
 
 
+  (defun org-inactive-time-stamp (prefix)
+    (interactive "P")
+    (org-time-stamp prefix t))
+  
   (require 'org-notmuch-link)
   
   (with-eval-after-load 'org-agenda

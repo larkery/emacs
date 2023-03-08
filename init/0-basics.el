@@ -121,14 +121,14 @@
 (setq auto-revert-interval 1)
 (global-auto-revert-mode 1)
 
+(setq revert-without-query (list (rx (* any))))
+
 (use-package diminish :ensure t)
 
 (use-package ivy
   :diminish
   :ensure t
   :defer nil
-  :custom
-  (ivy-use-virtual-buffers nil)
   :config (ivy-mode)
 
   (with-eval-after-load
